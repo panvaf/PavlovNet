@@ -16,7 +16,7 @@ def logistic(x,x0=1,k=1,b=2.5,s=.15):
 
 
 # Create sets of USs and corresponding CSs
-    
+
 def gen_US_CS(n_pat,n_in,H_d):
     # n_pat: number of US-CS patterns we want to associate
     # n_in: size of binary number representing each pattern
@@ -43,7 +43,7 @@ def gen_US_CS(n_pat,n_in,H_d):
                 if not sw:
                     break
             patterns[st,i,:] = patt
-    
+            
     US = patterns[0,:]
     CS = patterns[1,:]
     

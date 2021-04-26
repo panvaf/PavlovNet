@@ -5,7 +5,6 @@ Functions that set up the associative network.
 import numpy as np
 import util
 
-
 # Define dynamics of associative network
 
 def dynamics(r,in_ff,in_fb,w_rec,w_ff,w_fb,V,I_d,V_d,PSP,I_PSP,dt,n_sigma,tau_s=65,tau_l=10,gD=2,gL=1):
