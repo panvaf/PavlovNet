@@ -5,7 +5,20 @@ Utilities.
 import numpy as np
 from scipy.spatial.distance import hamming
 
-# Logistic activation function
+
+# Choose activation function
+
+def act_fun(x,fun):
+    
+    if fun == 'rect':
+        r = rect(x)
+    elif fun == 'logistic':
+        r = logistic(x)
+    
+    return r
+
+
+# Logistic function
     
 def logistic(x,x0=1,k=1,b=2.5,s=.15):
     # s: maximum firing rate in kHz
@@ -13,6 +26,13 @@ def logistic(x,x0=1,k=1,b=2.5,s=.15):
     # b: steepness of gain
     
     return s/(1+k*np.exp(-b*(x-x0)))
+
+
+# Rectification function
+
+def rect(x,b=50):
+    x[x<0] = 0
+    return b*x
 
 
 # Create sets of USs and corresponding CSs
@@ -30,7 +50,7 @@ def gen_US_CS(n_pat,n_in,H_d):
         for i in range(n_pat):
             while True:
                 sw = 0
-                patt = np.random.randint(0,2,n_in)
+                patt = np.random.choice([-1,1],n_in)
                 # Make sure Hamming distance with existing patterns is acceptable.
                 # Algo is greedy, not trying to spread codewords evenly.
                 for j in range(i):

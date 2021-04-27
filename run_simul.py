@@ -2,7 +2,6 @@
 Run simulation.
 """
 
-import numpy as np
 import main
 
 params = {
@@ -17,11 +16,13 @@ params = {
     'n_trial': 1e4,      # number of trials
     't_dur': 2,          # duration of trial
     'train': True,       # whether to train network or not
-    'w_rec': None,       # recurrent weights of associative network
-    'w_ff': None,        # feedforward weights to associative neurons
-    'w_fb': None,        # feedback weights to associative neurons
+    'W_rec': None,       # recurrent weights of associative network
+    'W_ff': None,        # feedforward weights to associative neurons
+    'W_fb': None,        # feedback weights to associative neurons
     'US': None,          # set of US inputs
-    'CS': None           # set of CS inputs
+    'CS': None,          # set of CS inputs
+    'exc': 1,            # excitatory input to the soma  
+    'fun': 'rect'        # activation function of associative network
     }
 
 sim = main.simulation(params)
