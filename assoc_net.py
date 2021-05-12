@@ -7,27 +7,34 @@ import util
 
 # Define dynamics of associative network
 
-def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,dt,n_sigma,exc,
-                                         fun,tau_s=65,tau_l=10,gD=2,gL=1):
+def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e, g_i,dt,
+             n_sigma,g_sh,fun,tau_s=65,tau_l=10,gD=2,gL=1,E_e=14/3,E_i=-1/3):
     
     # units in ms or ms^-1, C is considered unity and the unit is embedded in g
     n_neu = np.size(r)
     
     # Create noise that will be added to all origins of input
-    N = np.random.normal(0,n_sigma,n_neu)
-    N_d = np.random.normal(0,n_sigma,n_neu)
+    n = np.random.normal(0,n_sigma,n_neu)
+    n_d = np.random.normal(0,n_sigma,n_neu)
         
     # input to the dendrites
-    I_d += (- I_d + np.dot(W_rec,r) + np.dot(W_fb,I_fb) + N_d) * dt/tau_s
+    I_d += (- I_d + np.dot(W_rec,r) + np.dot(W_fb,I_fb) + n_d) * dt/tau_s
     
     # Dentritic potential is a low-pass filtered version of the dentritic current
     V_d += (-V_d+I_d)*dt/tau_l
     
-    # input to the soma (teacher signal)
-    V += (-gL*V + gD*(V_d-V) + np.dot(W_ff,I_ff) + exc + N)*dt
+    # Time-dependent conductances
+    g_e += (-g_e + np.dot(W_ff.clip(min=0),I_ff))*dt/tau_s
+    g_i += (-g_i - np.dot(W_ff.clip(max=0),I_ff))*dt/tau_s
+    
+    # Input to the soma (teacher signal)
+    I = g_e*(E_e-V) + (g_i+g_sh)*(E_i-V)
+    
+    # Somatic voltage
+    V += (-gL*V + gD*(V_d-V) + I + n)*dt
     
     r = util.act_fun(V,fun)
-    # Strong coupling of the soma to the dentrite
+    # Strong coupling of the dentrite to the soma
     V_ss = V_d*gD/(gD+gL)
     error = r - util.act_fun(V_ss,fun)
 

@@ -50,7 +50,7 @@ def gen_US_CS(n_pat,n_in,H_d):
         for i in range(n_pat):
             while True:
                 sw = 0
-                patt = np.random.choice([-1,1],n_in)
+                patt = np.random.choice([0,1],n_in)
                 # Make sure Hamming distance with existing patterns is acceptable.
                 # Algo is greedy, not trying to spread codewords evenly.
                 for j in range(i):

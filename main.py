@@ -29,8 +29,9 @@ class simulation:
         self.train = params['train']
         self.US = params['US']
         self.CS = params['CS']
-        self.exc = params['exc']
         self.fun = params['fun']
+        # Shunting inhibition, to motivate lower firing rates
+        self.g_sh = 2*np.sqrt(1/self.n_assoc)
         
         # Weights
         if params['W_rec'] is None:
@@ -72,7 +73,7 @@ class simulation:
                 r, V, I_d, V_d, error, PSP, I_PSP = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,self.dt,
-                                self.n_sigma, self.exc, self.fun)
+                                self.n_sigma, self.inh, self.fun)
                 
                 # Weight modification
                 if self.train:
@@ -97,9 +98,10 @@ class simulation:
         V_d = np.random.uniform(0,1,self.n_assoc); V = np.random.uniform(0,1,self.n_assoc)
         I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_in))
         PSP = np.zeros(self.n_assoc+self.n_in); I_PSP = np.zeros(self.n_assoc+self.n_in)
+        g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
         r = np.random.uniform(0,.15,self.n_assoc)
         
-        return r, V, I_d, V_d, Delta, PSP, I_PSP
+        return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i
     
     
     def est_US(self,t_mult=2):
@@ -121,14 +123,14 @@ class simulation:
             I_fb = CS
             
             # initialize network
-            r, V, I_d, V_d, Delta, PSP, I_PSP = self.init_net()
+            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
             
             for j in range(n_settle-1):
                 
                 # One-step forward dynamics
-                r, V, I_d, V_d, error, PSP, I_PSP = assoc_net.dynamics(r,
+                r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
                                 I_ff,I_fb,self.W_rec,self.W_ff,
-                                self.W_fb,V,I_d,V_d,PSP,I_PSP,self.dt,
+                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt,
                                 self.n_sigma, self.exc, self.fun)
             
             # Decode US from firing rates of associative net

@@ -21,7 +21,6 @@ params = {
     'W_fb': None,        # feedback weights to associative neurons
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
-    'exc': 1,            # excitatory input to the soma  
     'fun': 'rect'        # activation function of associative network
     }
 
