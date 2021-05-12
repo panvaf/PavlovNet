@@ -23,7 +23,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e, g_i,dt,
     # Dentritic potential is a low-pass filtered version of the dentritic current
     V_d += (-V_d+I_d)*dt/tau_l
     
-    # Time-dependent conductances
+    # Time-dependent somatic conductances
     g_e += (-g_e + np.dot(W_ff.clip(min=0),I_ff))*dt/tau_s
     g_i += (-g_i - np.dot(W_ff.clip(max=0),I_ff))*dt/tau_s
     

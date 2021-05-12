@@ -65,14 +65,14 @@ class simulation:
             I_fb[:] = self.CS[trial,:]
             
             # initialize network
-            r, V, I_d, V_d, Delta, PSP, I_PSP = self.init_net()
+            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
             
             for i in range(self.n_time-1):
                 
                 # One-step forward dynamics
-                r, V, I_d, V_d, error, PSP, I_PSP = assoc_net.dynamics(r,
+                r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
-                                self.W_fb,V,I_d,V_d,PSP,I_PSP,self.dt,
+                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt,
                                 self.n_sigma, self.inh, self.fun)
                 
                 # Weight modification
@@ -85,11 +85,16 @@ class simulation:
         
         self.US, self.CS = util.gen_US_CS(self.n_pat,self.n_in,self.H_d)
     
-    def get_decoder(self):
+    def get_decoder(self,mode='analytic'):
         # Compute decoder of US from associative network
         
-        if self.fun == 'rect':
+        if mode == 'pseudoinv':
             self.D = np.linalg.pinv(self.W_ff)
+            
+        elif mode == 'analytic':
+            self.ss_fr()
+            self.D = np.dot(np.linalg.pinv(self.Phi),self.US)
+    
     
     def init_net(self):
         # Initializes network to random state
@@ -104,7 +109,7 @@ class simulation:
         return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i
     
     
-    def est_US(self,t_mult=2):
+    def est_US(self,t_mult=5):
         # Computes estimated USs from all CSs after learning
         
         # Compute decoder matrix
@@ -135,3 +140,31 @@ class simulation:
             
             # Decode US from firing rates of associative net
             self.US_est[i,:] = np.dot(self.D,r)
+            
+    def ss_fr(self,t_mult=5):
+        # Finds steady-state firing rates for all USs
+        
+        # Time to settle is defined as multiple of synaptic time constant
+        n_settle = int(t_mult*self.tau_s/self.dt_ms)
+        
+        self.Phi = np.zeros(self.n_pat,self.n_assoc)
+        I_fb = np.zeros(self.n_in)
+        
+        for i, US in enumerate(self.US):
+            
+            # US is only input to the network
+            I_ff = US
+            
+            # initialize network
+            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
+            
+            for j in range(n_settle-1):
+                
+                # One-step forward dynamics
+                r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
+                                I_ff,I_fb,self.W_rec,self.W_ff,
+                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt,
+                                self.n_sigma, self.exc, self.fun)
+            
+            # Save steady-state firing rate
+            self.Phi[i,:] = r
