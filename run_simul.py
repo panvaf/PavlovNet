@@ -21,8 +21,9 @@ params = {
     'W_fb': None,        # feedback weights to associative neurons
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
-    'fun': 'rect'        # activation function of associative network
+    'fun': 'logistic'    # activation function of associative network
     }
 
 sim = main.simulation(params)
+sim.est_decoder()
 sim.simulate()

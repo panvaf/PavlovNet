@@ -33,6 +33,10 @@ class simulation:
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 2*np.sqrt(1/self.n_assoc)
         
+        # Generate US and CS patterns if not available
+        if self.US is None:
+            self.gen_US_CS()
+        
         # Weights
         if params['W_rec'] is None:
             self.W_rec = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
@@ -46,10 +50,6 @@ class simulation:
         
     def simulate(self):
         # Simulation method
-        
-        # Generate US and CS patterns if not available
-        if self.US is None:
-            self.gen_US_CS()
         
         # Get random trials
         trials = np.random.choice(range(self.n_pat),self.n_trial,replace=True)
@@ -72,20 +72,20 @@ class simulation:
                 # One-step forward dynamics
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
-                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt,
-                                self.n_sigma, self.inh, self.fun)
+                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
+                                self.n_sigma, self.g_sh, self.fun)
                 
                 # Weight modification
                 if self.train:
                     self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,
-                                    self.W_fb,error,Delta,PSP,self.eta,self.dt)
+                                    self.W_fb,error,Delta,PSP,self.eta,self.dt_ms)
     
     def gen_US_CS(self):
         # Obtain set of US and corresponding CS
         
         self.US, self.CS = util.gen_US_CS(self.n_pat,self.n_in,self.H_d)
     
-    def get_decoder(self,mode='analytic'):
+    def est_decoder(self,mode='analytic'):
         # Compute decoder of US from associative network
         
         if mode == 'pseudoinv':
@@ -135,8 +135,8 @@ class simulation:
                 # One-step forward dynamics
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
                                 I_ff,I_fb,self.W_rec,self.W_ff,
-                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt,
-                                self.n_sigma, self.exc, self.fun)
+                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
+                                self.n_sigma, self.g_sh, self.fun)
             
             # Decode US from firing rates of associative net
             self.US_est[i,:] = np.dot(self.D,r)
@@ -147,7 +147,7 @@ class simulation:
         # Time to settle is defined as multiple of synaptic time constant
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
         
-        self.Phi = np.zeros(self.n_pat,self.n_assoc)
+        self.Phi = np.zeros((self.n_pat,self.n_assoc))
         I_fb = np.zeros(self.n_in)
         
         for i, US in enumerate(self.US):
@@ -162,9 +162,9 @@ class simulation:
                 
                 # One-step forward dynamics
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
-                                I_ff,I_fb,self.W_rec,self.W_ff,
-                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt,
-                                self.n_sigma, self.exc, self.fun)
+                                I_ff,I_fb,0,self.W_ff,
+                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
+                                self.n_sigma, self.g_sh, self.fun,gD=0,gL=0)
             
             # Save steady-state firing rate
             self.Phi[i,:] = r

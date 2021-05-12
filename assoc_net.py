@@ -7,7 +7,7 @@ import util
 
 # Define dynamics of associative network
 
-def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e, g_i,dt,
+def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
              n_sigma,g_sh,fun,tau_s=65,tau_l=10,gD=2,gL=1,E_e=14/3,E_i=-1/3):
     
     # units in ms or ms^-1, C is considered unity and the unit is embedded in g
@@ -43,7 +43,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e, g_i,dt,
     I_PSP += (- I_PSP + r_in) * dt/tau_s
     PSP += (-PSP+I_PSP) * dt/tau_l
     
-    return r, V, I_d, V_d, error, PSP, I_PSP
+    return r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i
 
 
 # Define learning rule dynamics
