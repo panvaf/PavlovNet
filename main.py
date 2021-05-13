@@ -16,7 +16,7 @@ class simulation:
         # Constants
         self.dt = params['dt']
         self.dt_ms = self.dt*1e3
-        self.n_sigma = params['dt']
+        self.n_sigma = params['n_sigma']
         self.n_assoc = int(params['n_assoc'])
         self.tau_s = params['tau_s']
         self.n_pat = int(params['n_pat'])
@@ -30,8 +30,9 @@ class simulation:
         self.US = params['US']
         self.CS = params['CS']
         self.fun = params['fun']
+        self.every_perc = params['every_perc']
         # Shunting inhibition, to motivate lower firing rates
-        self.g_sh = 2*np.sqrt(1/self.n_assoc)
+        self.g_sh = 4*np.sqrt(1/self.n_assoc)
         
         # Generate US and CS patterns if not available
         if self.US is None:
@@ -58,7 +59,13 @@ class simulation:
         I_ff = np.empty((self.n_time,self.n_in))
         I_fb = np.empty((self.n_time,self.n_in))
         
-        for trial in trials:
+        # Save average errors across simulation
+        batch_size = int(self.every_perc/100*self.n_trial)
+        t_sampl = int(100/self.every_perc)
+        self.avg_err = np.zeros((t_sampl,self.n_assoc))
+        batch_num = 0
+        
+        for j, trial in enumerate(trials):
             
             # Inputs to the network
             I_ff[:] = self.US[trial,:]
@@ -67,10 +74,13 @@ class simulation:
             # initialize network
             r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
             
-            for i in range(self.n_time-1):
+            # Store errors from a single trial
+            err = np.zeros((self.n_time,self.n_assoc))
+            
+            for i in range(1,self.n_time):
                 
                 # One-step forward dynamics
-                r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
+                r, V, I_d, V_d, err[i,:], PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
                                 self.n_sigma, self.g_sh, self.fun)
@@ -78,7 +88,16 @@ class simulation:
                 # Weight modification
                 if self.train:
                     self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,
-                                    self.W_fb,error,Delta,PSP,self.eta,self.dt_ms)
+                                    self.W_fb,err[i,:],Delta,PSP,self.eta,self.dt_ms)
+            
+            # Obtain average error every batch_size trials
+            if (j % batch_size == 0):
+                print('{} % of the simulation complete'.format(round(j/self.n_trial*100)))
+                err = np.abs(err)
+                self.avg_err[batch_num,:] = np.average(err,0)
+                print('Average error is {} Hz'.format(round(1000*np.average(err),2)))
+                batch_num += 1
+                
     
     def gen_US_CS(self):
         # Obtain set of US and corresponding CS

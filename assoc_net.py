@@ -8,7 +8,7 @@ import util
 # Define dynamics of associative network
 
 def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
-             n_sigma,g_sh,fun,tau_s=65,tau_l=10,gD=2,gL=1,E_e=14/3,E_i=-1/3):
+             n_sigma,g_sh,fun,tau_s=10,tau_l=10,gD=.2,gL=.1,E_e=14/3,E_i=-1/3):
     
     # units in ms or ms^-1, C is considered unity and the unit is embedded in g
     n_neu = np.size(r)
@@ -16,7 +16,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
     # Create noise that will be added to all origins of input
     n = np.random.normal(0,n_sigma,n_neu)
     n_d = np.random.normal(0,n_sigma,n_neu)
-        
+    
     # input to the dendrites
     I_d += (- I_d + np.dot(W_rec,r) + np.dot(W_fb,I_fb) + n_d) * dt/tau_s
     
