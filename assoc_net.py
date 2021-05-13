@@ -63,3 +63,20 @@ def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,tau_d=100):
     W_fb += dW_fb
     
     return W_rec, W_fb
+
+
+# Find instructed steady-state firing rate for given feedforward input
+
+def ss_fr(I_ff,W_ff,g_sh,fun,E_e=14/3,E_i=-1/3):
+    
+    # Steady-state somatic conductances
+    g_e = np.dot(W_ff.clip(min=0),I_ff)
+    g_i = - np.dot(W_ff.clip(max=0),I_ff)
+    
+    # Matching potential (equilibrium)
+    V_m = (g_e*E_e+(g_i+g_sh)*E_i)/(g_e+g_i+g_sh)
+    
+    # Teacher-imposed firing rate
+    r_m = util.act_fun(V_m,fun)
+    
+    return r_m

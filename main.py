@@ -5,6 +5,7 @@ Main simulation classes.
 import numpy as np
 import util
 import assoc_net
+from time import time
 
 
 # Main simulation class
@@ -51,6 +52,7 @@ class simulation:
         
     def simulate(self):
         # Simulation method
+        start = time()
         
         # Get random trials
         trials = np.random.choice(range(self.n_pat),self.n_trial,replace=True)
@@ -97,7 +99,11 @@ class simulation:
                 self.avg_err[batch_num,:] = np.average(err,0)
                 print('Average error is {} Hz'.format(round(1000*np.average(err),2)))
                 batch_num += 1
-                
+        
+        end = time.time()
+        self.sim_time = round((end-start)/3600,2)
+        print("The simulation ran for {} hours".format(self.sim_time)) 
+           
     
     def gen_US_CS(self):
         # Obtain set of US and corresponding CS
@@ -111,8 +117,8 @@ class simulation:
             self.D = np.linalg.pinv(self.W_ff)
             
         elif mode == 'analytic':
-            self.ss_fr()
-            self.D = np.dot(np.linalg.pinv(self.Phi),self.US)
+            self.get_Phi()
+            self.D = np.dot(np.linalg.pinv(self.Phi),self.US).T
     
     
     def init_net(self):
@@ -133,12 +139,13 @@ class simulation:
         
         # Compute decoder matrix
         if not hasattr(self,'D'):
-            self.get_decoder()
+            self.est_decoder()
         
         # Time to settle is defined as multiple of synaptic time constant
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
         
         self.US_est = np.zeros(self.CS.shape)
+        self.Phi_est = np.zeros(self.Phi.shape)
         I_ff = np.zeros(self.n_in)
         
         for i, CS in enumerate(self.CS):
@@ -155,35 +162,25 @@ class simulation:
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
                                 I_ff,I_fb,self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma, self.g_sh, self.fun)
+                                self.n_sigma, 0, self.fun)
             
             # Decode US from firing rates of associative net
+            self.Phi_est[i,:] = r
             self.US_est[i,:] = np.dot(self.D,r)
             
-    def ss_fr(self,t_mult=5):
-        # Finds steady-state firing rates for all USs
-        
-        # Time to settle is defined as multiple of synaptic time constant
-        n_settle = int(t_mult*self.tau_s/self.dt_ms)
+            
+    def get_Phi(self):
+        # Finds and stores steady-state firing rates for all USs
         
         self.Phi = np.zeros((self.n_pat,self.n_assoc))
-        I_fb = np.zeros(self.n_in)
         
         for i, US in enumerate(self.US):
             
             # US is only input to the network
             I_ff = US
             
-            # initialize network
-            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
+            # Find the steady-state firing rate
+            r_m = assoc_net.ss_fr(I_ff,self.W_ff,self.g_sh,self.fun)
             
-            for j in range(n_settle-1):
-                
-                # One-step forward dynamics
-                r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
-                                I_ff,I_fb,0,self.W_ff,
-                                self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma, self.g_sh, self.fun,gD=0,gL=0)
-            
-            # Save steady-state firing rate
-            self.Phi[i,:] = r
+            # Store steady-state firing rate
+            self.Phi[i,:] = r_m

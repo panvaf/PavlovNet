@@ -2,7 +2,11 @@
 Run simulation.
 """
 
+import os
+from pathlib import Path
 import main
+import pickle
+import util
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -12,7 +16,7 @@ params = {
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 10,          # size of patterns
     'H_d': 4,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
+    'eta': 1e-2,         # learning rate
     'n_trial': 1e4,      # number of trials
     't_dur': 2,          # duration of trial
     'train': True,       # whether to train network or not
@@ -25,6 +29,15 @@ params = {
     'every_perc': 1      # store errors this often
     }
 
+# Save directory
+data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
+filename = util.filename(params)
+
+# Run simulation
 sim = main.simulation(params)
-sim.est_decoder()
 sim.simulate()
+sim.est_US()
+
+# Save results
+with open(data_path + filename + '.pkl','wb') as f:
+    pickle.dump(sim, f)

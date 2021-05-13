@@ -68,3 +68,20 @@ def gen_US_CS(n_pat,n_in,H_d):
     CS = patterns[1,:]
     
     return US, CS
+
+
+# Returns filename from network parameters
+
+def filename(params):
+    
+    filename =  format(params['n_trial'],'.0e').replace('+0','')  + \
+        'trials' + str(params['n_pat']) + 'pat' + \
+        (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
+        (('insz' + str(params['n_in'])) if params['n_in'] != 10 else '') + \
+        (('Hd' + str(params['H_d'])) if params['H_d'] != 4 else '') + \
+        (('taus' + str(params['tau_s'])) if params['tau_s'] != 10 else '') + \
+        (('n' + str(params['n_sigma']).replace(".","")) if params['n_sigma'] != 0 else '') + \
+        (('N' + str(params['n_assoc'])) if params['n_assoc'] != 128 else '') + \
+        (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '')
+        
+    return filename
