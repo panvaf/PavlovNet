@@ -1,5 +1,5 @@
 """
-Main simulation classes.
+Main network class.
 """
 
 import numpy as np
@@ -10,7 +10,7 @@ from time import time
 
 # Main simulation class
 
-class simulation:
+class network:
     
     def __init__(self,params):
         
@@ -100,7 +100,7 @@ class simulation:
                 print('Average error is {} Hz'.format(round(1000*np.average(err),2)))
                 batch_num += 1
         
-        end = time.time()
+        end = time()
         self.sim_time = round((end-start)/3600,2)
         print("The simulation ran for {} hours".format(self.sim_time)) 
            

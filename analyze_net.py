@@ -1,12 +1,15 @@
 """
-Run simulation.
+Analyze trained network.
 """
 
 import os
 from pathlib import Path
-import main
 import pickle
 import util
+import matplotlib.pyplot as plt
+
+
+# Load network
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -29,15 +32,32 @@ params = {
     'every_perc': 1      # store errors this often
     }
 
-# Save directory
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 filename = util.filename(params)
 
-# Run simulation
-net = main.network(params)
-net.simulate()
-net.est_US()
+with open(data_path+filename+'.pkl', 'rb') as f:
+    net = pickle.load(f)
+    
 
-# Save results
-with open(data_path + filename + '.pkl','wb') as f:
-    pickle.dump(net, f)
+# Plot steady-state firing rate and decoding errors
+
+err = net.Phi_est - net.Phi
+dec_err = net.US_est - net.US
+
+plt.hist(err.flatten()*1000,100)
+plt.xlabel('Error (spikes/s)')
+plt.ylabel('Count')
+plt.title('Difference btw predicted and instructed firing rates')
+plt.show()
+
+plt.hist(net.Phi.flatten()*1000,100)
+plt.xlabel('Firing rate (spikes/s)')
+plt.ylabel('Count')
+plt.title('Instructed firing rates')
+plt.show()
+
+plt.hist(dec_err.flatten(),100)
+plt.xlabel('Error')
+plt.ylabel('Count')
+plt.title('Binary digit decoding error')
+plt.show()
