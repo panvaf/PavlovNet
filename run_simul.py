@@ -23,10 +23,12 @@ params = {
     'W_rec': None,       # recurrent weights of associative network
     'W_ff': None,        # feedforward weights to associative neurons
     'W_fb': None,        # feedback weights to associative neurons
+    'S': None,           # sign of neurons
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1      # store errors this often
+    'every_perc': 1,     # store errors this often
+    'dale': False        # whether the network respects Dale's law
     }
 
 # Save directory

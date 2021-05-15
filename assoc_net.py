@@ -8,7 +8,7 @@ import util
 # Define dynamics of associative network
 
 def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
-             n_sigma,g_sh,fun,tau_s=10,tau_l=10,gD=.05,gL=.05,E_e=14/3,E_i=-1/3):
+             n_sigma,g_sh,fun,tau_s=10,tau_l=10,gD=.2,gL=.1,E_e=14/3,E_i=-1/3):
     
     # units in ms or ms^-1, C is considered unity and the unit is embedded in g
     n_neu = np.size(r)
@@ -48,7 +48,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 # Define learning rule dynamics
 
-def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,tau_d=100):
+def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,dale,S,tau_d=100):
     
     n_neu = W_rec.shape[0]
     
@@ -61,6 +61,10 @@ def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,tau_d=100):
     dW_rec, dW_fb = np.split(dW,[n_neu],axis=1)
     W_rec += dW_rec
     W_fb += dW_fb
+    
+    # Set every weight that violates Dale's law to zero
+    if dale:
+        W_rec[np.dot(np.abs(W_rec),S)>0] = 0
     
     return W_rec, W_fb
 

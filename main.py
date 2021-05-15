@@ -34,6 +34,7 @@ class network:
         self.every_perc = params['every_perc']
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 4*np.sqrt(1/self.n_assoc)
+        self.dale = params['dale']
         
         # Generate US and CS patterns if not available
         if self.US is None:
@@ -44,11 +45,18 @@ class network:
             self.W_rec = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
             self.W_ff = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
             self.W_fb = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+            if self.dale:
+                # 20 % inhibitory, 80 % excitatory
+                S = np.ones(self.n_assoc); S[-int(self.n_assoc*.2):] = -1
+                self.S = np.diag(S)
+                self.W_rec = np.dot(np.abs(self.W_rec),self.S)
+                
         else:
             self.W_rec = params['W_rec']
             self.W_ff = params['W_ff']
             self.W_fb = params['W_fb']
-       
+            self.S = params['S']
+            
         
     def simulate(self):
         # Simulation method
@@ -89,8 +97,8 @@ class network:
                 
                 # Weight modification
                 if self.train:
-                    self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,
-                                    self.W_fb,err[i,:],Delta,PSP,self.eta,self.dt_ms)
+                    self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,self.W_fb,
+                                    err[i,:],Delta,PSP,self.eta,self.dt_ms,self.dale,self.S)
             
             # Obtain average error every batch_size trials
             if (j % batch_size == 0):

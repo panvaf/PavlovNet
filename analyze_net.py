@@ -29,7 +29,8 @@ params = {
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1      # store errors this often
+    'every_perc': 1,     # store errors this often
+    'dale': False        # whether the network respects Dale's law
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
