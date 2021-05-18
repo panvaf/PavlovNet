@@ -52,7 +52,7 @@ class network:
                 S = np.ones(self.n_assoc); S[-int(self.n_assoc*.2):] = -1
                 self.S = np.diag(S)
                 self.W_rec = np.dot(np.abs(self.W_rec),self.S)
-              
+            
         else:
             self.W_rec = params['W_rec']
             self.W_ff = params['W_ff']
@@ -86,21 +86,23 @@ class network:
             # initialize network
             r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
             
-            # Store errors from a single trial
-            err = np.zeros((self.n_time,self.n_assoc))
+            # Store errors from a single trial, omitting transition in the beginning
+            n_trans = int(2*self.tau_s/self.dt_ms)
+            err = np.zeros((self.n_time-n_trans,self.n_assoc))
             
             for i in range(1,self.n_time):
                 
                 # One-step forward dynamics
-                r, V, I_d, V_d, err[i,:], PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
+                r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
                                 self.n_sigma,self.g_sh,self.I_inh,self.fun,self.tau_s)
                 
                 # Weight modification
-                if self.train:
+                if self.train and i>n_trans:
                     self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,self.W_fb,
-                                    err[i,:],Delta,PSP,self.eta,self.dt_ms,self.dale,self.S)
+                                    error,Delta,PSP,self.eta,self.dt_ms,self.dale,self.S)
+                    err[i-n_trans,:] = error
             
             # Obtain average error every batch_size trials
             if (j % batch_size == 0):

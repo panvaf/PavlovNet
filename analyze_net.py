@@ -14,9 +14,9 @@ import numpy as np
 
 params = {
     'dt': 1e-3,          # euler integration step size
-    'n_assoc': 64,      # number of associative neurons
+    'n_assoc': 64,       # number of associative neurons
     'n_sigma': 0,        # input noise standard deviation
-    'tau_s': 10,        # synaptic delay in the network, in ms
+    'tau_s': 100,        # synaptic delay in the network, in ms
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
