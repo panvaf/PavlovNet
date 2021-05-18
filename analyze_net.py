@@ -7,20 +7,21 @@ from pathlib import Path
 import pickle
 import util
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # Load network
 
 params = {
     'dt': 1e-3,          # euler integration step size
-    'n_assoc': 128,      # number of associative neurons
+    'n_assoc': 64,      # number of associative neurons
     'n_sigma': 0,        # input noise standard deviation
-    'tau_s': 10,         # synaptic delay in the network, in ms
+    'tau_s': 10,        # synaptic delay in the network, in ms
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 1e-2,         # learning rate
-    'n_trial': 1e4,      # number of trials
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
@@ -30,11 +31,12 @@ params = {
     'CS': None,          # set of CS inputs
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
-    'dale': False        # whether the network respects Dale's law
+    'dale': False,       # whether the network respects Dale's law
+    'I_inh': 0           # global inhibition to dendritic compartment
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
-filename = util.filename(params)
+filename = util.filename(params) + 'gsh3gD2gL1taul20'
 
 with open(data_path+filename+'.pkl', 'rb') as f:
     net = pickle.load(f)
@@ -62,3 +64,5 @@ plt.xlabel('Error')
 plt.ylabel('Count')
 plt.title('Binary digit decoding error')
 plt.show()
+
+print('Average bit error per pattern is {} bits'.format(round(np.sqrt(np.mean(np.sum(dec_err**2,1))),2)))

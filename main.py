@@ -30,11 +30,13 @@ class network:
         self.train = params['train']
         self.US = params['US']
         self.CS = params['CS']
+        self.S = params['S']
         self.fun = params['fun']
         self.every_perc = params['every_perc']
         # Shunting inhibition, to motivate lower firing rates
-        self.g_sh = 4*np.sqrt(1/self.n_assoc)
+        self.g_sh = 3*np.sqrt(1/self.n_assoc)
         self.dale = params['dale']
+        self.I_inh = params['I_inh']
         
         # Generate US and CS patterns if not available
         if self.US is None:
@@ -50,7 +52,7 @@ class network:
                 S = np.ones(self.n_assoc); S[-int(self.n_assoc*.2):] = -1
                 self.S = np.diag(S)
                 self.W_rec = np.dot(np.abs(self.W_rec),self.S)
-                
+              
         else:
             self.W_rec = params['W_rec']
             self.W_ff = params['W_ff']
@@ -93,7 +95,7 @@ class network:
                 r, V, I_d, V_d, err[i,:], PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma, self.g_sh, self.fun)
+                                self.n_sigma,self.g_sh,self.I_inh,self.fun,self.tau_s)
                 
                 # Weight modification
                 if self.train:
@@ -170,7 +172,7 @@ class network:
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
                                 I_ff,I_fb,self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma, 0, self.fun)
+                                self.n_sigma,0,self.I_inh,self.fun,self.tau_s)
             
             # Decode US from firing rates of associative net
             self.Phi_est[i,:] = r

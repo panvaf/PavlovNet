@@ -20,12 +20,12 @@ def act_fun(x,fun):
 
 # Logistic function
     
-def logistic(x,x0=1,k=1,b=2.5,s=.15):
+def logistic(x,x0=1.5,b=2,s=.1):
     # s: maximum firing rate in kHz
     # x0: 50 % firing rate point
     # b: steepness of gain
     
-    return s/(1+k*np.exp(-b*(x-x0)))
+    return s/(1+np.exp(-b*(x-x0)))
 
 
 # Rectification function
@@ -77,11 +77,13 @@ def filename(params):
     filename =  format(params['n_trial'],'.0e').replace('+0','')  + \
         'trials' + str(params['n_pat']) + 'pat' + \
         (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
-        (('insz' + str(params['n_in'])) if params['n_in'] != 10 else '') + \
-        (('Hd' + str(params['H_d'])) if params['H_d'] != 4 else '') + \
+        (('insz' + str(params['n_in'])) if params['n_in'] != 20 else '') + \
+        (('Hd' + str(params['H_d'])) if params['H_d'] != 8 else '') + \
         (('taus' + str(params['tau_s'])) if params['tau_s'] != 10 else '') + \
+        (('inh' + str(params['I_inh'])) if params['I_inh'] else '') + \
         (('n' + str(params['n_sigma']).replace(".","")) if params['n_sigma'] != 0 else '') + \
         (('N' + str(params['n_assoc'])) if params['n_assoc'] != 128 else '') + \
-        (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '')
+        (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
+        ('Dale' if params['dale'] else '')
         
     return filename

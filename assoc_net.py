@@ -8,17 +8,17 @@ import util
 # Define dynamics of associative network
 
 def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
-             n_sigma,g_sh,fun,tau_s=10,tau_l=10,gD=.2,gL=.1,E_e=14/3,E_i=-1/3):
+             n_sigma,g_sh,I_inh,fun,tau_s,tau_l=20,gD=.2,gL=.1,E_e=14/3,E_i=-1/3):
     
     # units in ms or ms^-1, C is considered unity and the unit is embedded in g
-    n_neu = np.size(r)
+    n_neu = np.size(r); p = gD/gL
     
     # Create noise that will be added to all origins of input
     n = np.random.normal(0,n_sigma,n_neu)
     n_d = np.random.normal(0,n_sigma,n_neu)
     
     # input to the dendrites
-    I_d += (- I_d + np.dot(W_rec,r) + np.dot(W_fb,I_fb) + n_d) * dt/tau_s
+    I_d += (- I_d + np.dot(W_rec,r) + np.dot(W_fb,I_fb) + I_inh + n_d)*dt/tau_s
     
     # Dentritic potential is a low-pass filtered version of the dentritic current
     V_d += (-V_d+I_d)*dt/tau_l
@@ -31,7 +31,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
     I = g_e*(E_e-V) + (g_i+g_sh)*(E_i-V)
     
     # Somatic voltage
-    V += (-gL*V + gD*(V_d-V) + I + n)*dt
+    V += (-V + p*(V_d-V) + I/gL + n)*dt/tau_l
     
     r = util.act_fun(V,fun)
     # Strong coupling of the dentrite to the soma
@@ -40,8 +40,8 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
     # Compute PSP for every input to associative neurons
     r_in = np.concatenate((r,I_fb))
-    I_PSP += (- I_PSP + r_in) * dt/tau_s
-    PSP += (-PSP+I_PSP) * dt/tau_l
+    I_PSP += (- I_PSP + r_in)*dt/tau_s
+    PSP += (- PSP + I_PSP)*dt/tau_l
     
     return r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i
 
@@ -64,7 +64,7 @@ def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,dale,S,tau_d=100):
     
     # Set every weight that violates Dale's law to zero
     if dale:
-        W_rec[np.dot(np.abs(W_rec),S)>0] = 0
+        W_rec[np.dot(W_rec,S)<0] = 0
     
     return W_rec, W_fb
 
