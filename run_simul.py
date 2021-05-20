@@ -11,6 +11,7 @@ import util
 params = {
     'dt': 1e-3,          # euler integration step size
     'n_assoc': 64,       # number of associative neurons
+    'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_pat': 16,         # number of US/CS pattern associations to be learned
@@ -29,7 +30,8 @@ params = {
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
     'dale': False,       # whether the network respects Dale's law
-    'I_inh': 0           # global inhibition to dendritic compartment
+    'I_inh': 0,          # global inhibition to dendritic compartment
+    'mem_net': 'MemNet64tdur3iter1e5Noise0.1'
     }
 
 # Save directory

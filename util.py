@@ -4,6 +4,7 @@ Utilities.
 
 import numpy as np
 from scipy.spatial.distance import hamming
+import torch
 
 
 # Choose activation function
@@ -87,3 +88,16 @@ def filename(params):
         ('Dale' if params['dale'] else '')
         
     return filename
+
+
+# Weighted mean squared error loss
+
+def MSELoss_weighted(output,target,mask):
+    loss = torch.sum(mask*(output - target)**2)
+    size = torch.numel(target)
+    norm = torch.sum(mask)
+    
+    avg_loss = loss/size
+    normed_loss = loss/norm
+    
+    return avg_loss, normed_loss
