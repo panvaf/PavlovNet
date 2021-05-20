@@ -78,6 +78,8 @@ def filename(params):
     filename =  format(params['n_trial'],'.0e').replace('+0','')  + \
         'trials' + str(params['n_pat']) + 'pat' + \
         (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
+        (('CSdis' + str(params['CS_disap'])) if params['CS_disap'] != params['t_dur'] else '') + \
+        (('USap' + str(params['US_ap'])) if params['US_ap'] != 0 else '') + \
         (('insz' + str(params['n_in'])) if params['n_in'] != 20 else '') + \
         (('Hd' + str(params['H_d'])) if params['H_d'] != 8 else '') + \
         (('taus' + str(params['tau_s'])) if params['tau_s'] != 10 else '') + \
@@ -85,7 +87,9 @@ def filename(params):
         (('n' + str(params['n_sigma']).replace(".","")) if params['n_sigma'] != 0 else '') + \
         (('N' + str(params['n_assoc'])) if params['n_assoc'] != 128 else '') + \
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
-        ('Dale' if params['dale'] else '')
+        ('Dale' if params['dale'] else '') + \
+        ('MemNet' if params['mem_net_id'] is not None else '') + \
+        ('Out' if params['out'] else '')
         
     return filename
 

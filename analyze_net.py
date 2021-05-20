@@ -23,7 +23,9 @@ params = {
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 1e-2,         # learning rate
     'n_trial': 1e3,      # number of trials
-    't_dur': 2,          # duration of trial
+    't_dur': 5,          # duration of trial
+    'CS_disap': .5,      # time in trial that CS disappears
+    'US_ap': 4,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
     'W_ff': None,        # feedforward weights to associative neurons
@@ -34,7 +36,8 @@ params = {
     'every_perc': 1,     # store errors this often
     'dale': False,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
-    'mem_net': 'MemNet64tdur3iter1e5Noise0.1'
+    'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
+    'out': True          # whether to feed output of RNN to associative net
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'

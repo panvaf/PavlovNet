@@ -31,8 +31,7 @@ class network:
         self.H_d = params['H_d']
         self.eta = params['eta']
         self.n_trial = int(params['n_trial'])
-        self.t_dur = params['t_dur']
-        self.n_time = int(self.t_dur/self.dt)
+        self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
         self.US = params['US']
         self.CS = params['CS']
@@ -43,18 +42,24 @@ class network:
         self.I_inh = params['I_inh']
         self.n_mem = int(params['n_mem'])
         self.n_fb = int(params['n_in'])
+        self.mem_net_id = params['mem_net_id']
+        self.out = params['out']
+        self.CS_disap = params['CS_disap']; self.n_CS_disap = int(self.CS_disap/self.dt)
+        self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
         
         # Memory network implemented by RNN
-        if params['mem_net'] is not None:
+        if self.mem_net_id is not None:
             net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms)
-            checkpoint = torch.load(data_path + params['mem_net'] + '.pth')
+            checkpoint = torch.load(data_path + self.mem_net_id + '.pth')
             net.load_state_dict(checkpoint['state_dict'])
             net.eval()
             self.mem_net = net
-            self.n_fb = self.n_mem
+            # Determine number of feedback elements
+            if not self.out:
+                self.n_fb = self.n_mem
         
         # Generate US and CS patterns if not available
         if self.US is None:
@@ -94,14 +99,17 @@ class network:
         for j, trial in enumerate(trials):
             
             # Inputs to the network
-            I_ff = np.zeros((self.n_time,self.n_in)); I_ff[:] = self.US[trial,:]
-            if self.mem_net is None:
-                I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[:] = self.CS[trial,:]
+            I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
+            if self.mem_net_id is None:
+                I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
             else:
-                inp = torch.from_numpy(self.CS[trial,:]).type(torch.float)
-                inp = inp.repeat(1,self.n_time,1)
-                _, fr = self.mem_net(inp)
-                I_fb = fr[0,:].detach().numpy()
+                inp = torch.zeros(1,self.n_time,self.n_in)
+                inp[0,0:self.n_CS_disap,:] = torch.from_numpy(self.CS[trial,:]).type(torch.float)
+                out, fr = self.mem_net(inp)
+                if self.out:
+                    I_fb = out[0,:].detach().numpy()
+                else:
+                    I_fb = fr[0,:].detach().numpy()
             
             # initialize network
             r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
@@ -119,7 +127,7 @@ class network:
                                 self.n_sigma,self.g_sh,self.I_inh,self.fun,self.tau_s)
                 
                 # Weight modification
-                if self.train and i>n_trans:
+                if self.train and i>self.n_US_ap+n_trans:
                     self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,self.W_fb,
                                     error,Delta,PSP,self.eta,self.dt_ms,self.dale,self.S)
                     err[i-n_trans,:] = error
@@ -135,7 +143,7 @@ class network:
         end = time()
         self.sim_time = round((end-start)/3600,2)
         print("The simulation ran for {} hours".format(self.sim_time)) 
-           
+        
     
     def gen_US_CS(self):
         # Obtain set of US and corresponding CS
@@ -184,13 +192,16 @@ class network:
         for i, CS in enumerate(self.CS):
             
             # CS is only input to the network
-            if self.mem_net is None:
+            if self.mem_net_id is None:
                 I_fb = np.repeat(CS[None,:],n_settle,axis=0)
             else:
                 inp = torch.from_numpy(CS).type(torch.float)
-                inp.repeat(1,self.n_time,1)
-                _, fr = self.mem_net(inp)
-                I_fb = fr[0,:].detach().numpy()
+                inp = inp.repeat(1,n_settle,1)
+                out, fr = self.mem_net(inp)
+                if self.out:
+                    I_fb = out[0,:].detach().numpy()
+                else:
+                    I_fb = fr[0,:].detach().numpy()
             
             # initialize network
             r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()

@@ -18,7 +18,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
     n_d = np.random.normal(0,n_sigma,n_neu)
     
     # input to the dendrites
-    I_d += (- I_d + np.dot(W_fb,I_fb) + I_inh + n_d)*dt/tau_s
+    I_d += (- I_d + np.dot(W_rec,r) + np.dot(W_fb,I_fb) + I_inh + n_d)*dt/tau_s
     
     # Dentritic potential is a low-pass filtered version of the dentritic current
     V_d += (-V_d+I_d)*dt/tau_l
@@ -59,7 +59,7 @@ def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,dale,S,tau_d=100):
     
     # Separate matrices
     dW_rec, dW_fb = np.split(dW,[n_neu],axis=1)
-    #W_rec += dW_rec
+    W_rec += dW_rec
     W_fb += dW_fb
     
     # Set every weight that violates Dale's law to zero
