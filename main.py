@@ -35,6 +35,7 @@ class network:
         self.train = params['train']
         self.US = params['US']
         self.CS = params['CS']
+        self.R = params['R']
         self.S = params['S']
         self.fun = params['fun']
         self.every_perc = params['every_perc']
@@ -64,6 +65,7 @@ class network:
         # Generate US and CS patterns if not available
         if self.US is None:
             self.gen_US_CS()
+            self.R = np.random.uniform(low=.5,high=1,size=self.n_pat)
         
         # Weights
         if params['W_rec'] is None:
@@ -81,6 +83,9 @@ class network:
             self.W_ff = params['W_ff']
             self.W_fb = params['W_fb']
             self.S = params['S']
+        
+        # Compute decoder matrix
+        self.est_decoder()
             
         
     def simulate(self):
@@ -96,10 +101,14 @@ class network:
         self.avg_err = np.zeros((t_sampl,self.n_assoc))
         batch_num = 0
         
+        # Transduction delays for perception of reward
+        n_trans = int(2*self.tau_s/self.dt_ms)
+        
         for j, trial in enumerate(trials):
             
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
+            R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R[trial]
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
             else:
@@ -111,12 +120,11 @@ class network:
                 else:
                     I_fb = fr[0,:].detach().numpy()
             
-            # initialize network
-            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
+            # Initialize network
+            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r = self.init_net()
             
-            # Store errors from a single trial, omitting transition in the beginning
-            n_trans = int(2*self.tau_s/self.dt_ms)
-            err = np.zeros((self.n_time-n_trans,self.n_assoc))
+            # Store errors after US appears, omitting transduction delays
+            err = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
             
             for i in range(1,self.n_time):
                 
@@ -126,11 +134,24 @@ class network:
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
                                 self.n_sigma,self.g_sh,self.I_inh,self.fun,self.tau_s)
                 
+                # Estimate US
+                US_est = np.dot(self.D,r)
+                
+                # Estimate reward
+                R_est, _ = self.est_R(US_est)
+                
+                # Diffuse dopamine signal dynamics
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i]-R_est,self.dt_ms)
+                
+                # Learning rate
+                eta = assoc_net.learn_rate(DA_u,self.eta)
+                
                 # Weight modification
-                if self.train and i>self.n_US_ap+n_trans:
+                if self.train:
                     self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,self.W_fb,
-                                    error,Delta,PSP,self.eta,self.dt_ms,self.dale,self.S)
-                    err[i-n_trans,:] = error
+                                    error,Delta,PSP,eta,self.dt_ms,self.dale,self.S)
+                    if i>self.n_US_ap+n_trans:
+                        err[i-self.n_US_ap-n_trans,:] = error
             
             # Obtain average error every batch_size trials
             if (j % batch_size == 0):
@@ -170,17 +191,13 @@ class network:
         I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_fb))
         PSP = np.zeros(self.n_assoc+self.n_fb); I_PSP = np.zeros(self.n_assoc+self.n_fb)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
-        r = np.random.uniform(0,.15,self.n_assoc)
+        r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0 
         
-        return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i
+        return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
     
     
     def est_US(self,t_mult=5):
         # Computes estimated USs from all CSs after learning
-        
-        # Compute decoder matrix
-        if not hasattr(self,'D'):
-            self.est_decoder()
         
         # Time to settle is defined as multiple of synaptic time constant
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
@@ -204,7 +221,7 @@ class network:
                     I_fb = fr[0,:].detach().numpy()
             
             # initialize network
-            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i = self.init_net()
+            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, _, _ = self.init_net()
             
             for j in range(1,n_settle):
                 
@@ -218,6 +235,16 @@ class network:
             self.Phi_est[i,:] = r
             self.US_est[i,:] = np.dot(self.D,r)
             
+    
+    def est_R(self,US_est):
+        # Estimate predicted reward
+        
+        k = (8/self.H_d)**2
+        d = np.sqrt(np.sum((np.expand_dims(US_est,axis=0) - self.US)**2,1))
+        R_est = np.dot(self.R,np.exp(-k*d**2))
+        
+        return R_est, d
+        
             
     def get_Phi(self):
         # Finds and stores steady-state firing rates for all USs

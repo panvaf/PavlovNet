@@ -31,9 +31,9 @@ def logistic(x,x0=1.5,b=2,s=.1):
 
 # Rectification function
 
-def rect(x,b=50):
+def rect(x,beta=50):
     x[x<0] = 0
-    return b*x
+    return beta*x
 
 
 # Create sets of USs and corresponding CSs

@@ -21,17 +21,18 @@ params = {
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 1e-2,         # learning rate
+    'eta': 5e-2,         # learning rate
     'n_trial': 1e3,      # number of trials
-    't_dur': 5,          # duration of trial
-    'CS_disap': .5,      # time in trial that CS disappears
-    'US_ap': 4,          # time in trial that US appears
+    't_dur': 2,          # duration of trial
+    'CS_disap': 2,      # time in trial that CS disappears
+    'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
     'W_ff': None,        # feedforward weights to associative neurons
     'W_fb': None,        # feedback weights to associative neurons
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
+    'R': None,           # reward associated with every US
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
     'dale': False,       # whether the network respects Dale's law
@@ -41,7 +42,7 @@ params = {
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
-filename = util.filename(params) + 'gsh3gD2gL1taul20'
+filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
 
 with open(data_path+filename+'.pkl', 'rb') as f:
     net = pickle.load(f)
@@ -70,4 +71,4 @@ plt.ylabel('Count')
 plt.title('Binary digit decoding error')
 plt.show()
 
-print('Average bit error per pattern is {} bits'.format(round(np.sqrt(np.mean(np.sum(dec_err**2,1))),2)))
+print('Average bit error per pattern is {} bits'.format(round(np.mean(np.sqrt(np.sum(dec_err**2,1))),2)))

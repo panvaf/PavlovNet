@@ -46,6 +46,28 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
     return r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i
 
 
+# Dopamine uptake and release dynamics
+
+def DA_dynamics(DA_u,DA_r,dR,dt,tau_r=200,tau_u=300):
+    
+    # Only positive surprise signal results in delta-like relase of dopamine
+    DA_r += np.maximum(dR,0) * 1e3/tau_r
+    
+    # Amount of available dopamine decays with time
+    DA_r += -DA_r * dt/tau_r
+    
+    # Amount of dopamine uptake lags behind available concentration of dopamine
+    DA_u += (-DA_u + DA_r) * dt/tau_u
+    
+    return DA_u, DA_r
+
+
+# Learning rate as a function of dopamine uptake
+    
+def learn_rate(DA_u,eta):
+    return eta*DA_u
+
+
 # Define learning rule dynamics
 
 def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,dale,S,tau_d=100):
