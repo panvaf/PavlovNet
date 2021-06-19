@@ -21,8 +21,8 @@ params = {
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-2,         # learning rate
-    'n_trial': 1e3,      # number of trials
+    'eta': 1e-2,         # learning rate
+    'n_trial': 1e4,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,      # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -38,15 +38,16 @@ params = {
     'dale': False,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
-    'out': True          # whether to feed output of RNN to associative net
+    'out': True,         # whether to feed output of RNN to associative net
+    'est_every': False   # whether to estimate US and reward after every trial
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
-filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
+filename = util.filename(params) + 'gsh3gD2gL1taul20DAtrans3'
 
 with open(data_path+filename+'.pkl', 'rb') as f:
     net = pickle.load(f)
-    
+
 
 # Plot steady-state firing rate and decoding errors
 

@@ -89,7 +89,7 @@ def filename(params):
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
         ('Dale' if params['dale'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
-        ('Out' if params['out'] else '')
+        ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '')
         
     return filename
 

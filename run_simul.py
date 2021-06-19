@@ -35,17 +35,17 @@ params = {
     'dale': False,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
-    'out': True          # whether to feed output of RNN to associative net
+    'out': True,         # whether to feed output of RNN to associative net
+    'est_every': False   # whether to estimate US and reward after every trial
     }
 
 # Save directory
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
-filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
+filename = util.filename(params) + 'gsh3gD2gL1taul20DAtrans3'
 
 # Run simulation
 net = main.network(params)
 net.simulate()
-net.est_US()
 
 # Save results
 with open(data_path + filename + '.pkl','wb') as f:

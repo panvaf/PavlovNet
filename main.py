@@ -47,6 +47,7 @@ class network:
         self.out = params['out']
         self.CS_disap = params['CS_disap']; self.n_CS_disap = int(self.CS_disap/self.dt)
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
+        self.est_every = params['est_every']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -86,8 +87,8 @@ class network:
         
         # Compute decoder matrix
         self.est_decoder()
-            
         
+    
     def simulate(self):
         # Simulation method
         start = time()
@@ -101,8 +102,14 @@ class network:
         self.avg_err = np.zeros((t_sampl,self.n_assoc))
         batch_num = 0
         
+        # Store network estimates in single trial levels
+        if self.est_every:
+            self.US_est = np.zeros(tuple([self.n_trial])+self.CS.shape)
+            self.Phi_est = np.zeros(tuple([self.n_trial])+self.Phi.shape)
+            self.R_est = np.zeros(tuple([self.n_trial])+self.R.shape)
+        
         # Transduction delays for perception of reward
-        n_trans = int(2*self.tau_s/self.dt_ms)
+        n_trans = int(3*self.tau_s/self.dt_ms)
         
         for j, trial in enumerate(trials):
             
@@ -138,7 +145,7 @@ class network:
                 US_est = np.dot(self.D,r)
                 
                 # Estimate reward
-                R_est, _ = self.est_R(US_est)
+                R_est, _ = self.est_R(np.expand_dims(US_est,axis=0))
                 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i]-R_est,self.dt_ms)
@@ -152,6 +159,11 @@ class network:
                                     error,Delta,PSP,eta,self.dt_ms,self.dale,self.S)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
+                        
+            # Save network estimates after each trial
+            if self.est_every:
+                self.US_est[j,:], self.Phi_est[j,:] = self.est_US()
+                self.R_est[j,:], _ = self.est_R(self.US_est[j,:])
             
             # Obtain average error every batch_size trials
             if (j % batch_size == 0):
@@ -163,7 +175,12 @@ class network:
         
         end = time()
         self.sim_time = round((end-start)/3600,2)
-        print("The simulation ran for {} hours".format(self.sim_time)) 
+        print("The simulation ran for {} hours".format(self.sim_time))
+        
+        # Final network estimates
+        if not self.est_every:
+            self.US_est, self.Phi_est = self.est_US()
+            self.R_est, _ = self.est_R(self.US_est)
         
     
     def gen_US_CS(self):
@@ -202,8 +219,8 @@ class network:
         # Time to settle is defined as multiple of synaptic time constant
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
         
-        self.US_est = np.zeros(self.CS.shape)
-        self.Phi_est = np.zeros(self.Phi.shape)
+        US_est = np.zeros(self.CS.shape)
+        Phi_est = np.zeros(self.Phi.shape)
         I_ff = np.zeros(self.n_in)
         
         for i, CS in enumerate(self.CS):
@@ -232,15 +249,17 @@ class network:
                                 self.n_sigma,0,self.I_inh,self.fun,self.tau_s)
             
             # Decode US from firing rates of associative net
-            self.Phi_est[i,:] = r
-            self.US_est[i,:] = np.dot(self.D,r)
+            Phi_est[i,:] = r
+            US_est[i,:] = np.dot(self.D,r)
+            
+            return US_est, Phi_est
             
     
     def est_R(self,US_est):
         # Estimate predicted reward
         
         k = (8/self.H_d)**2
-        d = np.sqrt(np.sum((np.expand_dims(US_est,axis=0) - self.US)**2,1))
+        d = np.sqrt(np.sum((US_est - self.US)**2,1))
         R_est = np.dot(self.R,np.exp(-k*d**2))
         
         return R_est, d
