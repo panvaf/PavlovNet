@@ -75,7 +75,7 @@ def gen_US_CS(n_pat,n_in,H_d):
 
 def filename(params):
     
-    filename =  format(params['n_trial'],'.0e').replace('+0','')  + \
+    filename =  format(params['n_trial'],'.0e').replace('+0','') + \
         'trials' + str(params['n_pat']) + 'pat' + \
         (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
         (('CSdis' + str(params['CS_disap'])) if params['CS_disap'] != params['t_dur'] else '') + \
@@ -90,6 +90,23 @@ def filename(params):
         ('Dale' if params['dale'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '')
+        
+    return filename
+
+
+def filename2(params):
+    
+    filename =  format(params['n_trial'],'.0e').replace('+0','') + 'trials' + \
+        (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
+        (('USap' + str(params['US_ap'])) if params['US_ap'] != 0 else '') + \
+        (('CS2ap' + str(params['CS_2_ap_tr'])) if params['CS_2_ap_tr'] != 0 else '') + \
+        (('insz' + str(params['n_in'])) if params['n_in'] != 20 else '') + \
+        (('taus' + str(params['tau_s'])) if params['tau_s'] != 10 else '') + \
+        (('inh' + str(params['I_inh'])) if params['I_inh'] else '') + \
+        (('n' + str(params['n_sigma']).replace(".","")) if params['n_sigma'] != 0 else '') + \
+        (('N' + str(params['n_assoc'])) if params['n_assoc'] != 64 else '') + \
+        (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
+        ('Dale' if params['dale'] else '') + ('EstEv' if params['est_every'] else '')
         
     return filename
 

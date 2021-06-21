@@ -14,7 +14,7 @@ import torch.nn as nn
 # File directory
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 
-# Main simulation class
+# Single associative network class
 
 class network:
     
@@ -109,13 +109,16 @@ class network:
             self.R_est = np.zeros(tuple([self.n_trial])+self.R.shape)
         
         # Transduction delays for perception of reward
-        n_trans = int(3*self.tau_s/self.dt_ms)
+        n_trans = int(2*self.tau_s/self.dt_ms)
         
         for j, trial in enumerate(trials):
             
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
+            g_sh = np.zeros(self.n_time); g_sh[self.n_US_ap:] = self.g_sh
             R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R[trial]
+            R_est = 0
+            
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
             else:
@@ -139,13 +142,16 @@ class network:
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma,self.g_sh,self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,g_sh[i],self.I_inh,self.fun,self.tau_s)
                 
-                # Estimate US
-                US_est = np.dot(self.D,r)
-                
-                # Estimate reward
-                R_est, _ = self.est_R(np.expand_dims(US_est,axis=0))
+                # Estimate reward before US arrives
+                if i==self.n_US_ap-1:
+                    
+                    # Estimate US
+                    US_est = np.dot(self.D,r)
+                    
+                    # Estimate reward
+                    R_est, _ = self.est_R(US_est[None:,])
                 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i]-R_est,self.dt_ms)
@@ -252,7 +258,7 @@ class network:
             Phi_est[i,:] = r
             US_est[i,:] = np.dot(self.D,r)
             
-            return US_est, Phi_est
+        return US_est, Phi_est
             
     
     def est_R(self,US_est):
@@ -281,6 +287,268 @@ class network:
             # Store steady-state firing rate
             self.Phi[i,:] = r_m
             
+
+# Two associative networks class
+
+class network2:
+    
+    def __init__(self,params):
+        
+        # Constants
+        self.dt = params['dt']
+        self.dt_ms = self.dt*1e3
+        self.n_sigma = params['n_sigma']
+        self.n_assoc = int(params['n_assoc'])
+        self.tau_s = params['tau_s']
+        self.n_in = int(params['n_in'])
+        self.eta = params['eta']
+        self.n_trial = int(params['n_trial'])
+        self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
+        self.train = params['train']
+        self.fun = params['fun']
+        self.every_perc = params['every_perc']
+        self.dale = params['dale']
+        self.I_inh = params['I_inh']
+        self.CS_2_ap_tr = params['CS_2_ap_tr']
+        self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
+        self.est_every = params['est_every']
+        
+        # Shunting inhibition, to motivate lower firing rates
+        self.g_sh = 3*np.sqrt(1/self.n_assoc)
+        
+        # Generate US and CS patterns
+        self.US = np.random.choice([0,1],self.n_in)
+        self.CS_1 = np.random.choice([0,1],self.n_in)
+        self.CS_2 = np.random.choice([0,1],self.n_in)
+        self.R = np.random.uniform(low=.5,high=1)
+        
+        # Weights
+        self.W_rec_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
+        self.W_rec_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
+        self.W_ff_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        self.W_ff_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        self.W_fb_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        self.W_fb_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        if self.dale:
+            # 20 % inhibitory, 80 % excitatory
+            S = np.ones(self.n_assoc); S[-int(self.n_assoc*.2):] = -1
+            self.S = np.diag(S)
+            self.W_rec_1 = np.dot(np.abs(self.W_rec_1),self.S)
+            self.W_rec_2 = np.dot(np.abs(self.W_rec_2),self.S)
+        else:
+            self.S = None
+        
+        # Compute decoder matrix
+        self.est_decoders()
+        
+    
+    def simulate(self):
+        # Simulation method
+        start = time()
+        
+        # Save average errors across simulation
+        batch_size = int(self.every_perc/100*self.n_trial)
+        t_sampl = int(100/self.every_perc)
+        self.avg_err_1 = np.zeros((t_sampl,self.n_assoc))
+        self.avg_err_2 = np.zeros((t_sampl,self.n_assoc))
+        batch_num = 0
+        
+        # Store network estimates in single trial levels
+        if self.est_every:
+            self.US_est_1 = np.zeros((self.n_trial,self.n_in))
+            self.US_est_2 = np.zeros((self.n_trial,self.n_in))
+            self.Phi_1_est = np.zeros((self.n_trial,self.n_assoc))
+            self.Phi_2_est = np.zeros((self.n_trial,self.n_assoc))
+            self.R_est_1 = np.zeros(self.n_trial)
+            self.R_est_2 = np.zeros(self.n_trial)
+            
+        # Transduction delays for perception of reward
+        n_trans = int(2*self.tau_s/self.dt_ms)
+        
+        # Inputs to network
+        I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
+        g_sh = np.zeros(self.n_time); g_sh[self.n_US_ap:] = self.g_sh
+        R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R
+        I_fb_1 = np.zeros((self.n_time,self.n_in)); I_fb_1[:] = self.CS_1
+        I_fb_2 = np.zeros((self.n_time,self.n_in))
+        
+        for j in range(self.n_trial):
+            
+            # Introduce CS_2 with delay
+            if j >= self.CS_2_ap_tr:
+                I_fb_2[:] = self.CS_2
+            
+            # Initialize networks
+            r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, \
+                DA_u, DA_r = self.init_net()
+            r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, \
+                _, _ = self.init_net()
+            R_est = 0
+            
+            # Store errors after US appears, omitting transduction delays
+            err_1 = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
+            err_2 = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
+            
+            for i in range(1,self.n_time):
+                
+                # One-step forward dynamics
+                r_1, V_1, I_d_1, V_d_1, error_1, PSP_1, I_PSP_1, g_e_1, g_i_1 = \
+                                assoc_net.dynamics(r_1,I_ff[i,:],I_fb_1[i,:],
+                                self.W_rec_1,self.W_ff_1,self.W_fb_1,V_1,I_d_1,
+                                V_d_1,PSP_1,I_PSP_1,g_e_1,g_i_1,self.dt_ms,
+                                self.n_sigma,g_sh[i],self.I_inh,self.fun,self.tau_s)
+                                
+                r_2, V_2, I_d_2, V_d_2, error_2, PSP_2, I_PSP_2, g_e_2, g_i_2 = \
+                                assoc_net.dynamics(r_2,I_ff[i,:],I_fb_2[i,:],
+                                self.W_rec_2,self.W_ff_2,self.W_fb_2,V_2,I_d_2,
+                                V_d_2,PSP_2,I_PSP_2,g_e_2,g_i_2,self.dt_ms,
+                                self.n_sigma,g_sh[i],self.I_inh,self.fun,self.tau_s)
+                
+
+                # Estimate reward before US arrives
+                if i==self.n_US_ap-1:
+                    
+                    # Estimate US
+                    US_est_1 = np.dot(self.D_1,r_1)
+                    US_est_2 = np.dot(self.D_2,r_2)
+
+                    # Estimate reward
+                    R_est_1, _ = self.est_R(US_est_1[None,:])
+                    R_est_2, _ = self.est_R(US_est_2[None,:])                    
+                    R_est = R_est_1 + R_est_2
+
+                # Diffuse dopamine signal dynamics
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i]-R_est,self.dt_ms)
+                
+                # Learning rate
+                eta = assoc_net.learn_rate(DA_u,self.eta)
+                
+                # Weight modification
+                if self.train:
+                    self.W_rec_1, self.W_fb_1 = assoc_net.learn_rule(self.W_rec_1,
+                                    self.W_fb_1,error_1,Delta_1,PSP_1,eta,
+                                    self.dt_ms,self.dale,self.S)
+                    self.W_rec_2, self.W_fb_2 = assoc_net.learn_rule(self.W_rec_2,
+                                    self.W_fb_2,error_2,Delta_2,PSP_2,eta,
+                                    self.dt_ms,self.dale,self.S)
+                    if i>self.n_US_ap+n_trans:
+                        err_1[i-self.n_US_ap-n_trans,:] = error_1
+                        err_2[i-self.n_US_ap-n_trans,:] = error_2
+                        
+            # Save network estimates after each trial
+            if self.est_every:
+                [self.US_est_1[j,:], self.US_est_2[j,:]], [self.Phi_1_est[j,:], 
+                                         self.Phi_2_est[j,:]] = self.est_US()
+                self.R_est_1[j], _ = self.est_R(self.US_est_1[j,:][None,:])
+                self.R_est_2[j], _ = self.est_R(self.US_est_2[j,:][None,:])
+            
+            
+            # Obtain average error every batch_size trials
+            if (j % batch_size == 0):
+                print('{} % of the simulation complete'.format(round(j/self.n_trial*100)))
+                err_1 = np.abs(err_1)
+                err_2 = np.abs(err_2)
+                self.avg_err_1[batch_num,:] = np.average(err_1,0)
+                self.avg_err_2[batch_num,:] = np.average(err_2,0)
+                print('Average error for network 1 is {} Hz'.format(round(1000*np.average(err_1),2)))
+                print('Average error for network 2 is {} Hz'.format(round(1000*np.average(err_2),2)))
+                batch_num += 1
+        
+        end = time()
+        self.sim_time = round((end-start)/3600,2)
+        print("The simulation ran for {} hours".format(self.sim_time))
+        
+        # Final network estimates
+        if not self.est_every:
+            [self.US_est_1, self.US_est_2], [self.Phi_1_est, self.Phi_2_est] = self.est_US()
+            self.R_est_1, _ = self.est_R(self.US_est_1[None,:])
+            self.R_est_2, _ = self.est_R(self.US_est_2[None,:])
+            
+    
+    def est_decoders(self):
+        # Compute decoders of US from associative network
+        
+        self.get_Phis()
+        self.D_1 = np.dot(np.linalg.pinv(self.Phi_1[None,:]),self.US[None,:]).T
+        self.D_2 = np.dot(np.linalg.pinv(self.Phi_2[None,:]),self.US[None,:]).T
+    
+    
+    def init_net(self):
+        # Initializes network to random state
+        
+        # initialize voltages, currents and weight updates
+        V_d = np.random.uniform(0,1,self.n_assoc); V = np.random.uniform(0,1,self.n_assoc)
+        I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_in))
+        PSP = np.zeros(self.n_assoc+self.n_in); I_PSP = np.zeros(self.n_assoc+self.n_in)
+        g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
+        r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0 
+        
+        return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
+    
+    
+    def est_US(self,t_mult=5):
+        # Computes estimated USs from all CSs after learning
+        
+        # Time to settle is defined as multiple of synaptic time constant
+        n_settle = int(t_mult*self.tau_s/self.dt_ms)
+        
+        # CSs are only input to the networks
+        I_fb_1 = np.repeat(self.CS_1[None,:],n_settle,axis=0)
+        I_fb_2 = np.repeat(self.CS_2[None,:],n_settle,axis=0)
+        I_ff = np.zeros(self.n_in)
+        
+        # initialize networks
+        r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, _, _ = self.init_net()
+        r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, _, _ = self.init_net()
+        
+        for i in range(1,n_settle):
+            
+            # One-step forward dynamics
+            r_1, V_1, I_d_1, V_d_1, error_1, PSP_1, I_PSP_1, g_e_1, g_i_1 = \
+                            assoc_net.dynamics(r_1,I_ff,I_fb_1[i,:],self.W_rec_1,
+                            self.W_ff_1,self.W_fb_1,V_1,I_d_1,V_d_1,PSP_1,I_PSP_1,
+                            g_e_1,g_i_1,self.dt_ms,self.n_sigma,0,self.I_inh,
+                            self.fun,self.tau_s)
+                            
+            r_2, V_2, I_d_2, V_d_2, error_2, PSP_2, I_PSP_2, g_e_2, g_i_2 = \
+                            assoc_net.dynamics(r_2,I_ff,I_fb_2[i,:],self.W_rec_2,
+                            self.W_ff_2,self.W_fb_2,V_2,I_d_2,V_d_2,PSP_2,I_PSP_2,
+                            g_e_2,g_i_2,self.dt_ms,self.n_sigma,0,self.I_inh,
+                            self.fun,self.tau_s)
+        
+        # Decode US from firing rates of associative net
+        Phi_1_est = r_1
+        Phi_2_est = r_2
+        US_est_1 = np.dot(self.D_1,r_1)
+        US_est_2 = np.dot(self.D_2,r_2)
+        
+        return [US_est_1, US_est_2], [Phi_1_est, Phi_2_est]
+    
+    
+    def est_R(self,US_est):
+        # Estimate predicted reward
+        
+        k = 1
+        d = np.sqrt(np.sum((US_est - self.US)**2,1))
+        R_est = np.dot(self.R,np.exp(-k*d**2))
+        
+        return R_est, d
+        
+    
+    def get_Phis(self):
+        # Finds and stores steady-state firing rates for all USs
+        
+        # US is only input to the network
+        I_ff = self.US
+        
+        # Find the steady-state firing rate
+        r_m_1 = assoc_net.ss_fr(I_ff,self.W_ff_1,self.g_sh,self.fun)
+        r_m_2 = assoc_net.ss_fr(I_ff,self.W_ff_2,self.g_sh,self.fun)
+        
+        # Store steady-state firing rate
+        self.Phi_1 = r_m_1
+        self.Phi_2 = r_m_2
+
 
 # RNN class
 
