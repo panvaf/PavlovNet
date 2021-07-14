@@ -19,7 +19,7 @@ params = {
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-4,         # learning rate
+    'eta': 5e-2,         # learning rate
     'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,      # time in trial that CS disappears
@@ -48,7 +48,7 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'n_trial': 5e2,      # number of trials
+    'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 1e2,   # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears

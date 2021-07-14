@@ -154,7 +154,7 @@ class network:
                     R_est, _ = self.est_R(US_est[None:,])
                 
                 # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i]-R_est,self.dt_ms)
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -418,7 +418,7 @@ class network2:
                     R_est = R_est_1 + R_est_2
 
                 # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i]-R_est,self.dt_ms)
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
