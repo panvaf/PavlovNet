@@ -312,6 +312,7 @@ class network2:
         self.CS_2_ap_tr = params['CS_2_ap_tr']
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
         self.est_every = params['est_every']
+        self.overexp = params['overexp']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -365,18 +366,25 @@ class network2:
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
         
+        # In which trials each CS is present
+        if self.overexp:
+            CS_1_pr = np.concatenate((np.arange(self.CS_2_ap_tr),np.arange(2*self.CS_2_ap_tr,self.n_trial)))
+        else:
+            CS_1_pr = np.arange(self.n_trial)
+        CS_2_pr = np.arange(self.CS_2_ap_tr,self.n_trial)
+        
         # Inputs to network
         I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
         g_sh = np.zeros(self.n_time); g_sh[self.n_US_ap:] = self.g_sh
         R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R
-        I_fb_1 = np.zeros((self.n_time,self.n_in)); I_fb_1[:] = self.CS_1
+        I_fb_1 = np.zeros((self.n_time,self.n_in))
         I_fb_2 = np.zeros((self.n_time,self.n_in))
         
         for j in range(self.n_trial):
             
-            # Introduce CS_2 with delay
-            if j >= self.CS_2_ap_tr:
-                I_fb_2[:] = self.CS_2
+            # Feedback inputs to network
+            I_fb_1[:] = self.CS_1 if j in CS_1_pr else 0
+            I_fb_2[:] = self.CS_2 if j in CS_2_pr else 0
             
             # Initialize networks
             r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, \
