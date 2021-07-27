@@ -48,9 +48,9 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'n_trial': 3e2,      # number of trials
+    'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
-    'CS_2_ap_tr': 1e2,   # trial number in which CS 2 appears
+    'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'fun': 'logistic',   # activation function of associative network
@@ -58,7 +58,8 @@ params2 = {
     'dale': False,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'est_every': True,   # whether to estimate US and reward after every trial
-    'overexp': True      # whether to test for overexpectation effects
+    'overexp': False,    # whether to test for overexpectation effects
+    'salience': 1        # relative saliance of CSs
     }
 
 # Save directory

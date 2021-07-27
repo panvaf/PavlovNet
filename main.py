@@ -313,13 +313,14 @@ class network2:
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
         self.est_every = params['est_every']
         self.overexp = params['overexp']
+        self.salience = params['salience']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
         
         # Generate US and CS patterns
         self.US = np.random.choice([0,1],self.n_in)
-        self.CS_1 = np.random.choice([0,1],self.n_in)
+        self.CS_1 = self.salience * np.random.choice([0,1],self.n_in)
         self.CS_2 = np.random.choice([0,1],self.n_in)
         self.R = np.random.uniform(low=.5,high=1)
         

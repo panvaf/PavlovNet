@@ -107,7 +107,8 @@ def filename2(params):
         (('N' + str(params['n_assoc'])) if params['n_assoc'] != 64 else '') + \
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
         ('Dale' if params['dale'] else '') + ('EstEv' if params['est_every'] else '') + \
-        ('Overexp' if params['overexp'] else '')
+        ('Overexp' if params['overexp'] else '') + \
+        (('sal' + str(params['salience'])) if params['salience'] != 1 else '')
         
     return filename
 
