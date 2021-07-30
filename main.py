@@ -151,7 +151,7 @@ class network:
                     US_est = np.dot(self.D,r)
                     
                     # Estimate reward
-                    R_est, _ = self.est_R(US_est[None:,])
+                    R_est, _ = self.est_R(US_est[None,:])
                 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,self.dt_ms)
@@ -263,10 +263,12 @@ class network:
     
     def est_R(self,US_est):
         # Estimate predicted reward
+        if len(US_est.shape) == 1:
+            US_est = US_est[None,:]
         
         k = (8/self.H_d)**2
-        d = np.sqrt(np.sum((US_est - self.US)**2,1))
-        R_est = np.dot(self.R,np.exp(-k*d**2))
+        d = np.sqrt(np.sum((US_est[:,None,:] - self.US[None,:])**2,2))
+        R_est = np.dot(self.R,np.exp(-k*d**2).T)
         
         return R_est, d
         

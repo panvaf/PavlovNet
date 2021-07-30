@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load network
-n_CS = 2
+n_CS = 1
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -21,10 +21,10 @@ params = {
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-2,         # learning rate
-    'n_trial': 1e3,      # number of trials
+    'eta': 5e-3,         # learning rate
+    'n_trial': 2e3,      # number of trials
     't_dur': 2,          # duration of trial
-    'CS_disap': 2,      # time in trial that CS disappears
+    'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
@@ -38,9 +38,9 @@ params = {
     'every_perc': 1,     # store errors this often
     'dale': False,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
-    'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
-    'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False   # whether to estimate US and reward after every trial
+    'mem_net_id': None,  # Memory RNN to load
+    'out': False,         # whether to feed output of RNN to associative net
+    'est_every': True   # whether to estimate US and reward after every trial
     }
 
 params2 = {
@@ -65,7 +65,7 @@ params2 = {
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAreprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DA'
 
