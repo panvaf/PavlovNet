@@ -33,6 +33,7 @@ params = {
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
     'R': None,           # reward associated with every US
+    'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
     'dale': False,       # whether the network respects Dale's law
