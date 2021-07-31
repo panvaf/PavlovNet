@@ -48,6 +48,7 @@ class network:
         self.CS_disap = params['CS_disap']; self.n_CS_disap = int(self.CS_disap/self.dt)
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
         self.est_every = params['est_every']
+        self.flip = params['flip']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -112,6 +113,12 @@ class network:
         n_trans = int(2*self.tau_s/self.dt_ms)
         
         for j, trial in enumerate(trials):
+            
+            # Flip CS-US associations mid-learning
+            if self.flip and j == int(self.n_trial/2):
+                self.US = self.US[::-1]
+                self.Phi = self.Phi[::-1]
+                self.R = self.R[::-1]
             
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]

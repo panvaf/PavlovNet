@@ -11,7 +11,7 @@ import numpy as np
 
 n_CS = 1
 reprod = True
-n_pat = 16
+n_pat = 2
 
 if reprod:
     d = np.load('reproduce.npz'); W_rec = d['W_rec']; W_ff = d['W_ff']
@@ -29,7 +29,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'n_trial': 2e3,      # number of trials
+    'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -47,7 +47,8 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': None,  # Memory RNN to load
     'out': False,        # whether to feed output of RNN to associative net
-    'est_every': True    # whether to estimate US and reward after every trial
+    'est_every': True,   # whether to estimate US and reward after every trial
+    'flip': True        # whether to flip the US-CS associations mid-learning
     }
 
 params2 = {

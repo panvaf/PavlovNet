@@ -38,12 +38,11 @@ def rect(x,beta=50):
 
 # Create sets of USs and corresponding CSs
 
-def gen_US_CS(n_pat,n_in,H_d):
+def gen_US_CS(n_pat,n_in,H_d,exact=False):
     # n_pat: number of US-CS patterns we want to associate
     # n_in: size of binary number representing each pattern
-    # H_d: minimal acceptable Hamming distance between any two patterns of
-    #      the same type. Current algo is simple, but effective. Could maximize
-    #      distance with Reed-Solomon code, however not very biological..
+    # H_d: minimal Hamming distance between any two patterns of the same type
+    # exact: whether all generated patterns should have Hamming distance H_d
     
     patterns = np.empty((2,n_pat,n_in))
     
@@ -53,11 +52,14 @@ def gen_US_CS(n_pat,n_in,H_d):
                 sw = 0
                 patt = np.random.choice([0,1],n_in)
                 # Make sure Hamming distance with existing patterns is acceptable.
-                # Algo is greedy, not trying to spread codewords evenly.
                 for j in range(i):
                     h_d = hamming(patt,patterns[st,j,:])*n_in
                     if h_d < H_d:
                         # Patterns too close
+                        sw = 1
+                        break
+                    if exact and h_d > H_d:
+                        # Patterns too far
                         sw = 1
                         break
                 # If new pattern is spaced apart from others, break while loop
@@ -89,7 +91,8 @@ def filename(params):
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
         ('Dale' if params['dale'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
-        ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '')
+        ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
+        ('Flip' if params['flip'] else '')
         
     return filename
 

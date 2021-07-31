@@ -39,8 +39,9 @@ params = {
     'dale': False,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': None,  # Memory RNN to load
-    'out': False,         # whether to feed output of RNN to associative net
-    'est_every': True   # whether to estimate US and reward after every trial
+    'out': False,        # whether to feed output of RNN to associative net
+    'est_every': True,   # whether to estimate US and reward after every trial
+    'flip': False        # whether to flip the US-CS associations mid-learning
     }
 
 params2 = {
