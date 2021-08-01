@@ -49,6 +49,8 @@ class network:
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
         self.est_every = params['est_every']
         self.flip = params['flip']
+        self.exact = params['exact']
+        self.low = params['low']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -67,7 +69,7 @@ class network:
         # Generate US and CS patterns if not available
         if self.US is None:
             self.gen_US_CS()
-            self.R = np.random.uniform(low=.5,high=1,size=self.n_pat)
+            self.R = np.random.uniform(low=self.low,high=1,size=self.n_pat)
         
         # Weights
         if params['W_rec'] is None:
@@ -199,7 +201,7 @@ class network:
     def gen_US_CS(self):
         # Obtain set of US and corresponding CS
         
-        self.US, self.CS = util.gen_US_CS(self.n_pat,self.n_in,self.H_d)
+        self.US, self.CS = util.gen_US_CS(self.n_pat,self.n_in,self.H_d,self.exact)
     
     
     def est_decoder(self,mode='analytic'):

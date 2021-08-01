@@ -10,8 +10,8 @@ import util
 import numpy as np
 
 n_CS = 1
-reprod = True
-n_pat = 2
+reprod = False
+n_pat = 8
 
 if reprod:
     d = np.load('reproduce.npz'); W_rec = d['W_rec']; W_ff = d['W_ff']
@@ -48,7 +48,9 @@ params = {
     'mem_net_id': None,  # Memory RNN to load
     'out': False,        # whether to feed output of RNN to associative net
     'est_every': True,   # whether to estimate US and reward after every trial
-    'flip': True        # whether to flip the US-CS associations mid-learning
+    'flip': False,       # whether to flip the US-CS associations mid-learning
+    'exact': True,       # whether to demand an exact Hamming distance between patterns
+    'low': 1             # lowest possible reward
     }
 
 params2 = {
