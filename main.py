@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import torch
 import torch.nn as nn
+from random import sample
 
 # File directory
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
@@ -118,9 +119,17 @@ class network:
             
             # Flip CS-US associations mid-learning
             if self.flip and j == int(self.n_trial/2):
-                self.US = self.US[::-1]
-                self.Phi = self.Phi[::-1]
-                self.R = self.R[::-1]
+                if self.n_pat == 1:
+                    # If only one pattern available, generate new US with required H_d
+                    flip = np.zeros(self.n_in,dtype=bool)
+                    flip[sample(range(self.n_in),self.H_d)] = True
+                    self.US = np.concatenate((np.invert(self.US.astype(bool),where=flip).astype(float),self.US))
+                    self.R = np.concatenate((self.R,self.R))
+                    self.est_decoder()
+                else:
+                    self.US = self.US[::-1]
+                    self.Phi = self.Phi[::-1]
+                    self.R = self.R[::-1]
             
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
@@ -235,7 +244,7 @@ class network:
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
         
         US_est = np.zeros(self.CS.shape)
-        Phi_est = np.zeros(self.Phi.shape)
+        Phi_est = np.zeros((self.CS.shape[0],self.Phi.shape[1]))
         I_ff = np.zeros(self.n_in)
         
         for i, CS in enumerate(self.CS):
@@ -285,7 +294,7 @@ class network:
     def get_Phi(self):
         # Finds and stores steady-state firing rates for all USs
         
-        self.Phi = np.zeros((self.n_pat,self.n_assoc))
+        self.Phi = np.zeros((self.US.shape[0],self.n_assoc))
         
         for i, US in enumerate(self.US):
             
