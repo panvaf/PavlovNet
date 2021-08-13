@@ -71,13 +71,16 @@ def learn_rate(DA_u,eta):
 
 # Define learning rule dynamics
 
-def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,dale,S,tau_d=100):
+def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,dale,S,filt=False,tau_d=100):
     
     n_neu = W_rec.shape[0]
     
     # Weight update
     PI = np.outer(error,PSP)
-    Delta += (PI - Delta)*dt/tau_d
+    if filt:
+        Delta += (PI - Delta)*dt/tau_d
+    else:
+        Delta = PI
     dW = eta*Delta*dt
     
     # Separate matrices

@@ -92,7 +92,8 @@ def filename(params):
         ('Dale' if params['dale'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
-        ('Flip' if params['flip'] else '') +('Exact' if params['exact'] else '')
+        ('Flip' if params['flip'] else '') +('Exact' if params['exact'] else '') + \
+        ('NoFilt' if not params['filter'] else '')
         
     return filename
 

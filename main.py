@@ -52,6 +52,7 @@ class network:
         self.flip = params['flip']
         self.exact = params['exact']
         self.low = params['low']
+        self.filter = params['filter']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -179,7 +180,7 @@ class network:
                 # Weight modification
                 if self.train:
                     self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,self.W_fb,
-                                    error,Delta,PSP,eta,self.dt_ms,self.dale,self.S)
+                                    error,Delta,PSP,eta,self.dt_ms,self.dale,self.S,self.filter)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
                         

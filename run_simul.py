@@ -50,7 +50,8 @@ params = {
     'est_every': True,   # whether to estimate US and reward after every trial
     'flip': True,       # whether to flip the US-CS associations mid-learning
     'exact': True,       # whether to demand an exact Hamming distance between patterns
-    'low': 1             # lowest possible reward
+    'low': 1,            # lowest possible reward
+    'filter': False      # whether to filter the learning dynamics
     }
 
 params2 = {
