@@ -37,7 +37,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
     # Strong coupling of the dentrite to the soma
     V_ss = V_d*gD/(gD+gL)
     error = r - util.act_fun(V_ss,fun)
-
+    
     # Compute PSP for every input to associative neurons
     r_in = np.concatenate((r,I_fb))
     I_PSP += (- I_PSP + r_in)*dt/tau_s

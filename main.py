@@ -78,10 +78,9 @@ class network:
             self.W_ff = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
             self.W_fb = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_fb))
             if self.dale:
-                # 20 % inhibitory, 80 % excitatory
-                S = np.ones(self.n_assoc); S[-int(self.n_assoc*.2):] = -1
-                self.S = np.diag(S)
-                self.W_rec = np.dot(np.abs(self.W_rec),self.S)
+                # All recurrent connections should be excitatory
+                S = np.ones(self.n_assoc); self.S = np.diag(S)                
+                self.W_rec = np.abs(self.W_rec)
             
         else:
             self.W_rec = params['W_rec']
