@@ -112,7 +112,8 @@ def filename2(params):
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
         ('Dale' if params['dale'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('Overexp' if params['overexp'] else '') + \
-        (('sal' + str(params['salience'])) if params['salience'] != 1 else '')
+        (('sal' + str(params['salience'])) if params['salience'] != 1 else '') + \
+        ('NoFilt' if not params['filter'] else '')
         
     return filename
 

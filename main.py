@@ -334,6 +334,7 @@ class network2:
         self.est_every = params['est_every']
         self.overexp = params['overexp']
         self.salience = params['salience']
+        self.filter = params['filter']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -342,7 +343,7 @@ class network2:
         self.US = np.random.choice([0,1],self.n_in)
         self.CS_1 = self.salience * np.random.choice([0,1],self.n_in)
         self.CS_2 = np.random.choice([0,1],self.n_in)
-        self.R = np.random.uniform(low=.5,high=1)
+        self.R = 1
         
         # Weights
         self.W_rec_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
@@ -352,11 +353,10 @@ class network2:
         self.W_fb_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
         self.W_fb_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
         if self.dale:
-            # 20 % inhibitory, 80 % excitatory
-            S = np.ones(self.n_assoc); S[-int(self.n_assoc*.2):] = -1
-            self.S = np.diag(S)
-            self.W_rec_1 = np.dot(np.abs(self.W_rec_1),self.S)
-            self.W_rec_2 = np.dot(np.abs(self.W_rec_2),self.S)
+            # All recurrent connections should be excitatory
+            S = np.ones(self.n_assoc); self.S = np.diag(S)                
+            self.W_rec_1 = np.abs(self.W_rec_1)
+            self.W_rec_2 = np.abs(self.W_rec_2)
         else:
             self.S = None
         
@@ -456,10 +456,10 @@ class network2:
                 if self.train:
                     self.W_rec_1, self.W_fb_1 = assoc_net.learn_rule(self.W_rec_1,
                                     self.W_fb_1,error_1,Delta_1,PSP_1,eta,
-                                    self.dt_ms,self.dale,self.S)
+                                    self.dt_ms,self.dale,self.S,self.filter)
                     self.W_rec_2, self.W_fb_2 = assoc_net.learn_rule(self.W_rec_2,
                                     self.W_fb_2,error_2,Delta_2,PSP_2,eta,
-                                    self.dt_ms,self.dale,self.S)
+                                    self.dt_ms,self.dale,self.S,self.filter)
                     if i>self.n_US_ap+n_trans:
                         err_1[i-self.n_US_ap-n_trans,:] = error_1
                         err_2[i-self.n_US_ap-n_trans,:] = error_2

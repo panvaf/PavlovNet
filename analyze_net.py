@@ -13,7 +13,7 @@ import main
 import torch
 
 # Load network
-n_CS = 1
+n_CS = 2
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -39,15 +39,15 @@ params = {
     'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
-    'dale': False,       # whether the network respects Dale's law
+    'dale': True,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
-    'mem_net_id': None,  # Memory RNN to load
-    'out': False,        # whether to feed output of RNN to associative net
+    'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
+    'out': True,        # whether to feed output of RNN to associative net
     'est_every': True,   # whether to estimate US and reward after every trial
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'exact': False,      # whether to demand an exact Hamming distance between patterns
-    'low': .5,            # lowest possible reward
-    'filter': True      # whether to filter the learning dynamics
+    'low': 1,            # lowest possible reward
+    'filter': False      # whether to filter the learning dynamics
     }
 
 params2 = {
@@ -57,23 +57,24 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'n_trial': 3e2,      # number of trials
+    'n_trial': 2e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 1e2,   # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
-    'dale': False,       # whether the network respects Dale's law
+    'dale': True,       # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'est_every': True,   # whether to estimate US and reward after every trial
-    'overexp': True,     # whether to test for overexpectation effects
-    'salience': 1        # relative saliance of CSs
+    'overexp': False,     # whether to test for overexpectation effects
+    'salience': 1,       # relative saliance of CSs
+    'filter': False      # whether to filter the learning dynamics
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAreprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DA'
 
@@ -96,10 +97,19 @@ plt.rc('figure', titlesize=MEDIUM_SIZE)   # fontsize of the figure title
 
 if n_CS == 1:
     
+    Phi = net.Phi
+    US = net.US
+    if net.est_every:
+        Phi_est = net.Phi_est[-1,:,:]
+        US_est = net.US_est[-1,:,:]
+    else:
+        Phi_est = net.Phi_est
+        US_est = net.US_est
+    
     # Plot steady-state firing rate and decoding errors
     
-    err = net.Phi_est - net.Phi
-    dec_err = net.US_est - net.US
+    err = Phi_est - Phi
+    dec_err = US_est - US
     
     plt.hist(err.flatten()*1000,100)
     plt.xlabel('Error (spikes/s)')
@@ -107,7 +117,7 @@ if n_CS == 1:
     plt.title('Difference btw predicted and instructed firing rates')
     plt.show()
     
-    plt.hist(net.Phi.flatten()*1000,100)
+    plt.hist(Phi.flatten()*1000,100)
     plt.xlabel('Firing rate (spikes/s)')
     plt.ylabel('Count')
     plt.title('Instructed firing rates')
@@ -126,7 +136,8 @@ if n_CS == 1:
     
     fig, ax = plt.subplots(figsize=(1.5,1.5))
     ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0)
-    ax.scatter(net.Phi.flatten()*1000,net.Phi_est.flatten()*1000,s=.25,color='green',alpha=.5,zorder=1)
+    ax.scatter(Phi.flatten()*1000,Phi_est.flatten()*1000,s=.25,
+               color='green',alpha=.5,zorder=1)
     ax.set_xlim([0,100])
     ax.set_ylim([0,100])
     ax.set_xlabel('$f(\mathbf{V}) \|_{US}$ (spikes/s)')
@@ -145,7 +156,8 @@ if n_CS == 1:
     
     fig, ax = plt.subplots(figsize=(1.5,1.5))
     ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0)
-    ax.scatter(net.US.flatten()+np.random.normal(scale=.02,size=np.size(net.US)),net.US_est.flatten(),s=.25,color='green',alpha=.5,zorder=1)
+    ax.scatter(US.flatten()+np.random.normal(scale=.02,size=np.size(US)),
+               US_est.flatten(),s=.25,color='green',alpha=.5,zorder=1)
     ax.set_xlim([-.2,1.2])
     ax.set_ylim([-.2,1.2])
     ax.set_xlabel('$\mathbf{r}^{US}$ digit')
@@ -172,12 +184,12 @@ if n_CS == 1:
         
         # Input
         t_CS = .5; t_trial = 3
-        n_CS = int(t_CS/params['dt']); n_trial = int(t_trial/params['dt'])
+        n_CS_disap = int(t_CS/params['dt']); n_trial = int(t_trial/params['dt'])
         t = np.linspace(0,3,n_trial)
         torch.manual_seed(40)
         CS = torch.randint(low=0, high=2,size=(1,1,params['n_in']))
         inp = CS.repeat(1,n_trial,1).float()
-        inp[:,n_CS:,:] = 0
+        inp[:,n_CS_disap:,:] = 0
         
         out, _ = mem_net(inp)
         CS_est = out[0, :, :].detach().numpy()
@@ -212,8 +224,8 @@ if net.est_every:
         R_est = net.R_est
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
-        ax.plot(R_est,label='$\hat{R}$',c='green')
-        ax.axhline(y=net.R,c='black',linestyle='--',label='$R$')
+        ax.plot(R_est,label='$\hat{R}$',c='green',linewidth=2)
+        ax.axhline(y=net.R,c='black',linestyle='--',linewidth=2,label='$R$')
         ax.set_xlabel('Trials')
         ax.set_ylabel('Reward')
         ax.set_xlim([0,n_trial])
@@ -226,19 +238,21 @@ if net.est_every:
         ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
         ax.yaxis.set_major_locator(MultipleLocator(R/2))
         ax.yaxis.set_minor_locator(MultipleLocator(R/4))
-        fig.legend(frameon=False,ncol=2)
+        fig.legend(frameon=False,loc='right')
         
     elif n_CS == 2:
         R_est_1 = net.R_est_1
         R_est_2 = net.R_est_2
         R_est = R_est_1 + R_est_2
-        R_est_max = np.max(R_est); R_max = np.max([R_est_max,R])
+        R_est_max = np.max(R_est); R_max = np.ceil(10*np.max([R_est_max,R]))/10
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
-        ax.plot(R_est_1,label='$\hat{R}_1$',c='dodgerblue')
-        ax.plot(R_est_2,label='$\hat{R}_2$',c='darkorange')
-        ax.plot(R_est,label='$\hat{R}$',c='green')
-        ax.axhline(y=net.R,c='black',linestyle='--',label='$R$')
+        ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented')
+        # ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented')
+        ax.plot(R_est_1,c='dodgerblue',linewidth=2)
+        ax.plot(R_est_2,c='darkorange',linewidth=2)
+        #ax.plot(R_est,c='green',linewidth=2)
+        ax.axhline(y=net.R,c='black',linestyle='--',linewidth=2)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Reward')
         ax.set_xlim([0,n_trial])
@@ -251,6 +265,6 @@ if net.est_every:
         ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
         ax.yaxis.set_major_locator(MultipleLocator(R_max/2))
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
-        fig.legend(frameon=False,ncol=4)
+        fig.legend(frameon=False,loc='upper',bbox_to_anchor=(1.15, 1.3))
 
     #plt.savefig('3b.png',bbox_inches='tight',format='png',dpi=300)
