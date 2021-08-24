@@ -5,6 +5,8 @@ Utilities.
 import numpy as np
 from scipy.spatial.distance import hamming
 import torch
+import matplotlib.colors as mc
+import colorsys
 
 
 # Choose activation function
@@ -113,7 +115,8 @@ def filename2(params):
         ('Dale' if params['dale'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('Overexp' if params['overexp'] else '') + \
         (('sal' + str(params['salience'])) if params['salience'] != 1 else '') + \
-        ('NoFilt' if not params['filter'] else '')
+        ('NoFilt' if not params['filter'] else '') + \
+        (('run' + str(params['run'])) if params['run'] else '')
         
     return filename
 
@@ -129,3 +132,21 @@ def MSELoss_weighted(output,target,mask):
     normed_loss = loss/norm
     
     return avg_loss, normed_loss
+
+
+# Function to modify color saturation for plotting
+
+def saturation_mult(color, mult=0.5):
+    
+    try:
+        c = mc.cnames[color]
+    except:
+        c = color
+    c = colorsys.rgb_to_hls(*mc.to_rgb(c))
+    return colorsys.hls_to_rgb(c[0], 1 - mult * (1 - c[1]), c[2])
+
+
+# Exponential curve
+    
+def Exp(x, m, t):
+    return np.exp(m*x+t)

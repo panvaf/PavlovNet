@@ -13,7 +13,7 @@ import main
 import torch
 
 # Load network
-n_CS = 2
+n_CS = 1
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -21,11 +21,11 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 1,         # number of US/CS pattern associations to be learned
+    'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-4,         # learning rate
-    'n_trial': 1e2,      # number of trials
+    'eta': 5e-3,         # learning rate
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -43,11 +43,12 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,        # whether to feed output of RNN to associative net
-    'est_every': True,   # whether to estimate US and reward after every trial
+    'est_every': False,   # whether to estimate US and reward after every trial
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'exact': False,      # whether to demand an exact Hamming distance between patterns
-    'low': 1,            # lowest possible reward
-    'filter': False      # whether to filter the learning dynamics
+    'low': .5,            # lowest possible reward
+    'filter': False,     # whether to filter the learning dynamics
+    'run': 0             # number of run for many runs of same simulation
     }
 
 params2 = {
@@ -74,7 +75,7 @@ params2 = {
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DA' + 'reprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DA'
 
@@ -225,7 +226,7 @@ if net.est_every:
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
         ax.plot(R_est,label='$\hat{R}$',c='green',linewidth=2)
-        ax.axhline(y=net.R,c='black',linestyle='--',linewidth=2,label='$R$')
+        ax.axhline(y=R,c='black',linestyle='--',linewidth=2,label='$R$')
         ax.set_xlabel('Trials')
         ax.set_ylabel('Reward')
         ax.set_xlim([0,n_trial])
@@ -247,12 +248,13 @@ if net.est_every:
         R_est_max = np.max(R_est); R_max = np.ceil(10*np.max([R_est_max,R]))/10
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
-        ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented')
-        # ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented')
-        ax.plot(R_est_1,c='dodgerblue',linewidth=2)
-        ax.plot(R_est_2,c='darkorange',linewidth=2)
-        #ax.plot(R_est,c='green',linewidth=2)
-        ax.axhline(y=net.R,c='black',linestyle='--',linewidth=2)
+        ax.plot(R_est_1,c='dodgerblue',linewidth=2,label='$\hat{R}_1$',zorder=1)
+        ax.plot(R_est_2,c='darkorange',linewidth=2,label='$\hat{R}_2$',zorder=1)
+        ax.plot([],[],linestyle='',label='\n')
+        ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented',zorder=0)
+        #ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented',zorder=0)
+        #ax.plot(R_est,c='green',linewidth=2,zorder=1)
+        ax.axhline(y=R,c='black',linestyle='--',linewidth=2)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Reward')
         ax.set_xlim([0,n_trial])
@@ -265,6 +267,6 @@ if net.est_every:
         ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
         ax.yaxis.set_major_locator(MultipleLocator(R_max/2))
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
-        fig.legend(frameon=False,loc='upper',bbox_to_anchor=(1.15, 1.3))
-
+        fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.3, 1.5))
+        
     #plt.savefig('3b.png',bbox_inches='tight',format='png',dpi=300)
