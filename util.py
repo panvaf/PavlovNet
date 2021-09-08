@@ -115,8 +115,8 @@ def filename2(params):
         ('Dale' if params['dale'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('Overexp' if params['overexp'] else '') + \
         (('sal' + str(params['salience'])) if params['salience'] != 1 else '') + \
-        ('NoFilt' if not params['filter'] else '') + \
-        (('run' + str(params['run'])) if params['run'] else '')
+        (('con' + str(params['contingency'])) if params['contingency'] != 1 else '') + \
+        ('NoFilt' if not params['filter'] else '')
         
     return filename
 

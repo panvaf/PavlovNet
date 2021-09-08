@@ -9,8 +9,8 @@ import pickle
 import util
 import numpy as np
 
-n_CS = 1
-reprod = True
+n_CS = 2
+reprod = False
 n_pat = 16
 
 if reprod:
@@ -30,9 +30,9 @@ params = {
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'n_trial': 1e3,      # number of trials
-    't_dur': 5,          # duration of trial
+    't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
-    'US_ap': 4,          # time in trial that US appears
+    'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'W_rec': W_rec,      # recurrent weights of associative network
     'W_ff': W_ff,        # feedforward weights to associative neurons
@@ -43,14 +43,14 @@ params = {
     'S': S,              # sign of neurons
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
-    'dale': True,       # whether the network respects Dale's law
+    'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': False,  # whether to estimate US and reward after every trial
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'exact': False,       # whether to demand an exact Hamming distance between patterns
-    'low': .5,            # lowest possible reward
+    'exact': False,      # whether to demand an exact Hamming distance between patterns
+    'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
     'run': 0             # number of run for many runs of same simulation
     }
@@ -64,16 +64,17 @@ params2 = {
     'eta': 5e-4,         # learning rate
     'n_trial': 3e2,      # number of trials
     't_dur': 2,          # duration of trial
-    'CS_2_ap_tr': 1e2,     # trial number in which CS 2 appears
+    'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
-    'dale': True,       # whether the network respects Dale's law
+    'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'est_every': True,   # whether to estimate US and reward after every trial
-    'overexp': True,    # whether to test for overexpectation effects
+    'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs
+    'contingency': .5,    # relative contingency of CSs
     'filter': False      # whether to filter the learning dynamics
     }
 

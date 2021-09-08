@@ -66,7 +66,7 @@ plt.rc('figure', titlesize=MEDIUM_SIZE)   # fontsize of the figure title
 
 # ISI curve
 
-delays = [-1,0,1]
+delays = np.arange(-1,9)
 
 perc_CR = np.zeros((len(delays),params['n_pat']))
 perc_CR_mean = np.zeros(len(delays))
@@ -74,14 +74,14 @@ perc_CR_025 = np.zeros(len(delays))
 perc_CR_975 = np.zeros(len(delays))
 
 for i, t_d in enumerate(delays):
-
+    
     params['US_ap'] = params['CS_disap'] + t_d
     params['t_dur'] = params['US_ap'] + 1
     
     filename = util.filename(params) + 'gsh3gD2gL1taul20DAreprod'
     with open(data_path+filename+'.pkl', 'rb') as f:
         net = pickle.load(f)
-        
+    
     perc_CR[i] = 100*np.divide(net.R_est,net.R)
     perc_CR_mean[i] = np.mean(perc_CR[i])
     (perc_CR_025[i], perc_CR_975[i]) = st.t.interval(alpha=0.95,
@@ -96,15 +96,14 @@ plt.ylabel('Conditioned Response %')
 plt.xlabel('$τ_d$ (s)')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.spines['left'].set_position(('data', -1.2))
-ax.spines['bottom'].set_position(('data', 12.5))
-plt.xlim([delays[0]-.1,delays[-1]+.1])
-#plt.ylim([250,750])
-ax.yaxis.set_major_locator(MultipleLocator(25))
-ax.yaxis.set_minor_locator(MultipleLocator(12.5))
-ax.xaxis.set_major_locator(MultipleLocator(1))
-ax.xaxis.set_minor_locator(MultipleLocator(.5))
-
+ax.spines['left'].set_position(('data', -1.5))
+ax.spines['bottom'].set_position(('data', -5))
+plt.xlim([delays[0]-.3,delays[-1]+.3])
+plt.ylim([0,100])
+ax.yaxis.set_major_locator(MultipleLocator(50))
+ax.yaxis.set_minor_locator(MultipleLocator(25))
+ax.xaxis.set_major_locator(MultipleLocator(2))
+ax.xaxis.set_minor_locator(MultipleLocator(1))
 
 # Rate of acquisition as a function of reward size plot
 
@@ -228,6 +227,7 @@ ax.spines['right'].set_visible(False)
 #ax.spines['bottom'].set_position(('data', 240))
 plt.legend(loc='upper center',markerscale=1,frameon=False)
 
+
 # Effect of Hamming distance on learning rate
 
 H_d = [4,6,8,10]
@@ -290,7 +290,6 @@ for i, h_d in enumerate(H_d):
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
     
 plt.tight_layout()
-plt.savefig('SupFig2.eps',bbox_inches='tight',format='eps',dpi=300)
 
 coeff_inv,_,_,_ = np.linalg.lstsq(1/np.array(H_d)[:,np.newaxis],t_learned_mean)
 x = np.linspace(H_d[0],H_d[-1],1000)
@@ -308,4 +307,4 @@ ax.spines['right'].set_visible(False)
 #ax.spines['bottom'].set_position(('data', 240))
 plt.legend(loc='upper center',markerscale=1,frameon=False)
 
-plt.savefig('4c.eps',bbox_inches='tight',format='eps',dpi=300)
+#plt.savefig('4c.eps',bbox_inches='tight',format='eps',dpi=300)
