@@ -334,7 +334,7 @@ class network2:
         self.est_every = params['est_every']
         self.overexp = params['overexp']
         self.salience = params['salience']
-        self.contingency = params['contingency']
+        self.cont = params['cont']
         self.filter = params['filter']
         
         # Shunting inhibition, to motivate lower firing rates
@@ -395,8 +395,11 @@ class network2:
             CS_1_pr = np.arange(self.n_trial)
         CS_2_pr = np.arange(self.CS_2_ap_tr,self.n_trial)
         
-        # Remove trials where CS_2 is present to test for contingency effects
-        keep = np.random.permutation(np.arange(CS_2_pr.size))[:int(CS_2_pr.size*self.contingency)]
+        
+        # Remove trials where CSs are present to test for contingency effects
+        keep = np.random.permutation(np.arange(CS_1_pr.size))[:int(CS_1_pr.size*self.cont[0])]
+        keep.sort(); CS_1_pr = CS_1_pr[keep]
+        keep = np.random.permutation(np.arange(CS_2_pr.size))[:int(CS_2_pr.size*self.cont[1])]
         keep.sort(); CS_2_pr = CS_2_pr[keep]
         
         # Inputs to network

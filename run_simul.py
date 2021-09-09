@@ -62,7 +62,7 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'n_trial': 3e2,      # number of trials
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
@@ -74,7 +74,7 @@ params2 = {
     'est_every': True,   # whether to estimate US and reward after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs
-    'contingency': .5,    # relative contingency of CSs
+    'cont': [.75,.5],       # contingencies of CSs
     'filter': False      # whether to filter the learning dynamics
     }
 
