@@ -13,7 +13,7 @@ import main
 import torch
 
 # Load network
-n_CS = 2
+n_CS = 1
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -48,6 +48,8 @@ params = {
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
+    'rule': 'Hebb',      # learning rule used in associative network
+    'norm': 40,        # normalization strenght for learning rule
     'run': 0             # number of run for many runs of same simulation
     }
 
@@ -58,7 +60,7 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'n_trial': 1e3,      # number of trials
+    'n_trial': 5e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
@@ -70,13 +72,16 @@ params2 = {
     'est_every': True,   # whether to estimate US and reward after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative saliance of CSs
-    'cont': [.75,.5],       # contingencies of CSs
-    'filter': False      # whether to filter the learning dynamics
+    'cont': [.8,.4],       # contingencies of CSs
+    'cond_dep': False,   # whether one CS is conditionally dependent on the other
+    'filter': False,     # whether to filter the learning dynamics
+    'rule': 'Pred',      # learning rule used in associative network
+    'norm': None         # normalization strenght for learning rule
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DA' + 'reprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DA'
 
@@ -152,7 +157,8 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(25))
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
-    
+    plt.savefig('Sub.png',bbox_inches='tight',format='png',dpi=300)
+    plt.savefig('Sub.eps',bbox_inches='tight',format='eps',dpi=300)
     
     # Scatterplot of actual and decoded US digits
     
@@ -162,8 +168,8 @@ if n_CS == 1:
                US_est.flatten(),s=.25,color='green',alpha=.5,zorder=1)
     ax.set_xlim([-.2,1.2])
     ax.set_ylim([-.2,1.2])
-    ax.set_xlabel('$\mathbf{r}^{US}$ digit')
-    ax.set_ylabel('$\hat{\mathbf{r}}^{US}_{opt}$ digit')
+    ax.set_xlabel('$\mathbf{r}^{US}$ element')
+    ax.set_ylabel('$\hat{\mathbf{r}}^{US}_{opt}$ element')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_position(('data', -.25))
@@ -172,6 +178,8 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(.25))
     ax.yaxis.set_major_locator(MultipleLocator(.5))
     ax.yaxis.set_minor_locator(MultipleLocator(.25))
+    plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
+    plt.savefig('USdec.eps',bbox_inches='tight',format='eps',dpi=300)
 
 
     # Short-term memory leak plot
@@ -204,7 +212,7 @@ if n_CS == 1:
         ax.set_xlim([t_skip,t_trial])
         ax.set_ylim([-.2,1.5])
         ax.set_xlabel('Time (s)')
-        ax.set_ylabel('$\hat{\mathbf{r}}^{CS}$ digit')
+        ax.set_ylabel('$\hat{\mathbf{r}}^{CS}$ element')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', t_skip -.15))
@@ -246,7 +254,7 @@ if net.est_every:
         R_est_1 = net.R_est_1
         R_est_2 = net.R_est_2
         R_est = R_est_1 + R_est_2
-        R_est_max = np.max(R_est); R_max = np.ceil(10*np.max([R_est_max,R]))/10
+        R_est_max = np.max(R_est); R_max = np.ceil(10*np.max([R_est_max,R]))/10; R_max = R
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
         ax.plot(R_est_1,c='dodgerblue',linewidth=2,label='$\hat{R}_1$',zorder=1)
@@ -270,4 +278,5 @@ if net.est_every:
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
         
-    #plt.savefig('3b.png',bbox_inches='tight',format='png',dpi=300)
+    plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
+    plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)

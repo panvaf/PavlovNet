@@ -94,8 +94,9 @@ def filename(params):
         ('Dale' if params['dale'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
-        ('Flip' if params['flip'] else '') +('Exact' if params['exact'] else '') + \
-        ('NoFilt' if not params['filter'] else '')
+        ('Flip' if params['flip'] else '') + ('Exact' if params['exact'] else '') + \
+        ('NoFilt' if not params['filter'] else '') + \
+        ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '')
         
     return filename
 
@@ -116,7 +117,8 @@ def filename2(params):
         ('Overexp' if params['overexp'] else '') + \
         (('sal' + str(params['salience'])) if params['salience'] != 1 else '') + \
         (('con' + ''.join(str(x) for x in params['cont'])) if np.any(params['cont'] != 1) else '') + \
-        ('NoFilt' if not params['filter'] else '')
+        ('CondDep' if params['cond_dep'] else '') + ('NoFilt' if not params['filter'] else '') + \
+        ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '')
         
     return filename
 

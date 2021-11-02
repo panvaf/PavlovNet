@@ -45,6 +45,8 @@ params = {
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': .5,           # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
+    'rule': 'Pred',      # learning rule used in associative network
+    'norm': None,        # normalization strenght for learning rule
     'run': 0             # number of run for many runs of same simulation
     }
 

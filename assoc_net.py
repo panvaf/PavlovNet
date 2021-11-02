@@ -71,18 +71,24 @@ def learn_rate(DA_u,eta):
 
 # Define learning rule dynamics
 
-def learn_rule(W_rec,W_fb,error,Delta,PSP,eta,dt,dale,S,filt=False,tau_d=100):
+def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
+               rule='Pred',norm=10,tau_d=100):
     
     n_neu = W_rec.shape[0]
     
     # Weight update
-    PI = np.outer(error,PSP)
+    if rule == 'Pred':
+        PI = np.outer(error,PSP)
+    elif rule == 'Hebb':
+        W = np.concatenate((W_rec,W_fb),axis=1)
+        PI = np.outer(r,PSP) - norm*np.multiply(r[:,np.newaxis]**2,W)
+    
     if filt:
         Delta += (PI - Delta)*dt/tau_d
     else:
         Delta = PI
     dW = eta*Delta*dt
-    
+        
     # Separate matrices
     dW_rec, dW_fb = np.split(dW,[n_neu],axis=1)
     W_rec += dW_rec

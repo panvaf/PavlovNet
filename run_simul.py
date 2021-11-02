@@ -9,9 +9,9 @@ import pickle
 import util
 import numpy as np
 
-n_CS = 2
+n_CS = 1
 reprod = False
-n_pat = 16
+n_pat = 1
 
 if reprod:
     d = np.load('reproduce1.npz'); W_rec = d['W_rec']; W_ff = d['W_ff']; S = np.diag(np.ones(W_rec.shape[0]))
@@ -28,8 +28,8 @@ params = {
     'n_pat': n_pat,      # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
-    'n_trial': 1e3,      # number of trials
+    'eta': 5e-4,         # learning rate
+    'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -47,11 +47,13 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
+    'est_every': True,  # whether to estimate US and reward after every trial
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
+    'rule': 'Hebb',      # learning rule used in associative network
+    'norm': 40,        # normalization strenght for learning rule
     'run': 0             # number of run for many runs of same simulation
     }
 
@@ -62,7 +64,7 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'n_trial': 1e3,      # number of trials
+    'n_trial': 5e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
@@ -74,8 +76,11 @@ params2 = {
     'est_every': True,   # whether to estimate US and reward after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs
-    'cont': [.75,.5],       # contingencies of CSs
-    'filter': False      # whether to filter the learning dynamics
+    'cont': [.8,.4],       # contingencies of CSs
+    'cond_dep': False,   # whether one CS is conditionally dependent on the other
+    'filter': False,     # whether to filter the learning dynamics
+    'rule': 'Pred',      # learning rule used in associative network
+    'norm': None         # normalization strenght for learning rule
     }
 
 # Save directory

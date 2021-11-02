@@ -39,10 +39,10 @@ net_file = 'MemNet' + str(n_neu) + \
 net = RNN(n_in,n_neu,n_in,n_sd,tau*1e3,dt*1e3)
 
 # Optimizer
-optimizer = optim.Adam(net.parameters(), lr=0.001)
+opt = optim.Adam(net.parameters(), lr=0.001)
 
 # Train RNN
-running_loss = 0; k = 0
+loss = 0; k = 0
 train_loss = np.zeros(100)
 
 for i in range(int(n_iter)):
@@ -56,19 +56,20 @@ for i in range(int(n_iter)):
     mask = torch.ones(n_batch,n_t,n_in); mask[:,0:n_grace,:] = 0
     
     # Training loop
-    optimizer.zero_grad()   # zero the gradient buffers
+    opt.zero_grad()
     output, fr = net(inputs)
     _, normed_loss = util.MSELoss_weighted(output,target,mask)
     normed_loss.backward()
-    optimizer.step()    # Does the update
+    opt.step()
+    loss += normed_loss.item()
     
-    running_loss += normed_loss.item()
+    # Store history of average training loss
     if (i % print_every == 0):
-        running_loss /= print_every
+        loss /= print_every
         print('{} % of the simulation complete'.format(round(i/n_iter*100)))
-        print('Loss {:0.3f}'.format(running_loss))
-        train_loss[k] = running_loss
-        running_loss = 0; k += 1
+        print('Loss {:0.3f}'.format(loss))
+        train_loss[k] = loss
+        loss = 0; k += 1
 
 # Save network
 torch.save({'state_dict': net.state_dict(),'train_loss': train_loss},

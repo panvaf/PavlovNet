@@ -53,6 +53,8 @@ class network:
         self.exact = params['exact']
         self.low = params['low']
         self.filter = params['filter']
+        self.rule = params['rule']
+        self.norm = params['norm']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -179,8 +181,9 @@ class network:
                 
                 # Weight modification
                 if self.train:
-                    self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,self.W_fb,
-                                    error,Delta,PSP,eta,self.dt_ms,self.dale,self.S,self.filter)
+                    self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,
+                                self.W_fb,r,error,Delta,PSP,eta,self.dt_ms,
+                                self.dale,self.S,self.filter,self.rule,self.norm)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
                         
@@ -335,7 +338,10 @@ class network2:
         self.overexp = params['overexp']
         self.salience = params['salience']
         self.cont = params['cont']
+        self.cond_dep = params['cond_dep']
         self.filter = params['filter']
+        self.rule = params['rule']
+        self.norm = params['norm']
         
         # Shunting inhibition, to motivate lower firing rates
         self.g_sh = 3*np.sqrt(1/self.n_assoc)
@@ -395,12 +401,15 @@ class network2:
             CS_1_pr = np.arange(self.n_trial)
         CS_2_pr = np.arange(self.CS_2_ap_tr,self.n_trial)
         
-        
         # Remove trials where CSs are present to test for contingency effects
         keep = np.random.permutation(np.arange(CS_1_pr.size))[:int(CS_1_pr.size*self.cont[0])]
         keep.sort(); CS_1_pr = CS_1_pr[keep]
-        keep = np.random.permutation(np.arange(CS_2_pr.size))[:int(CS_2_pr.size*self.cont[1])]
-        keep.sort(); CS_2_pr = CS_2_pr[keep]
+        if self.cond_dep:
+            keep = np.random.permutation(np.arange(CS_1_pr.size))[:int(CS_2_pr.size*self.cont[1])]
+            keep.sort(); CS_2_pr = CS_1_pr[keep]
+        else:
+            keep = np.random.permutation(np.arange(CS_2_pr.size))[:int(CS_2_pr.size*self.cont[1])]
+            keep.sort(); CS_2_pr = CS_2_pr[keep]
         
         # Inputs to network
         I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
@@ -463,11 +472,11 @@ class network2:
                 # Weight modification
                 if self.train:
                     self.W_rec_1, self.W_fb_1 = assoc_net.learn_rule(self.W_rec_1,
-                                    self.W_fb_1,error_1,Delta_1,PSP_1,eta,
-                                    self.dt_ms,self.dale,self.S,self.filter)
+                                self.W_fb_1,r_1,error_1,Delta_1,PSP_1,eta,self.dt_ms,
+                                self.dale,self.S,self.filter,self.rule,self.norm)
                     self.W_rec_2, self.W_fb_2 = assoc_net.learn_rule(self.W_rec_2,
-                                    self.W_fb_2,error_2,Delta_2,PSP_2,eta,
-                                    self.dt_ms,self.dale,self.S,self.filter)
+                                self.W_fb_2,r_2,error_2,Delta_2,PSP_2,eta,self.dt_ms,
+                                self.dale,self.S,self.filter,self.rule,self.norm)
                     if i>self.n_US_ap+n_trans:
                         err_1[i-self.n_US_ap-n_trans,:] = error_1
                         err_2[i-self.n_US_ap-n_trans,:] = error_2
@@ -627,7 +636,7 @@ class RNN(nn.Module):
 
 
     def forward(self,inp):
-        # Forward pass through the network
+        # Forward pass
         
         r = self.init(inp.shape)
         
