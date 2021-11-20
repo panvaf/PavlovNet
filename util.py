@@ -42,7 +42,7 @@ def rect(x,beta=50):
 
 def gen_US_CS(n_pat,n_in,H_d,exact=False):
     # n_pat: number of US-CS patterns we want to associate
-    # n_in: size of binary number representing each pattern
+    # n_in: size of binary vector representing each pattern
     # H_d: minimal Hamming distance between any two patterns of the same type
     # exact: whether all generated patterns should have Hamming distance H_d
     
@@ -50,10 +50,11 @@ def gen_US_CS(n_pat,n_in,H_d,exact=False):
     
     for st in range(2):
         for i in range(n_pat):
+            # Naive algorithm, sample randomly until conditions are met
             while True:
                 sw = 0
                 patt = np.random.choice([0,1],n_in)
-                # Make sure Hamming distance with existing patterns is acceptable.
+                # Make sure Hamming distance with existing patterns is acceptable
                 for j in range(i):
                     h_d = hamming(patt,patterns[st,j,:])*n_in
                     if h_d < H_d:

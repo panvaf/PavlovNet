@@ -1,5 +1,5 @@
 """
-Analyze trained network.
+Analyze trained network and produce figures.
 """
 
 import os
@@ -12,9 +12,10 @@ from matplotlib.ticker import MultipleLocator
 import main
 import torch
 
-# Load network
+# Which network type to load
 n_CS = 1
 
+# Determine parameters to load the appropriate network
 params = {
     'dt': 1e-3,          # euler integration step size
     'n_assoc': 64,       # number of associative neurons
@@ -79,6 +80,7 @@ params2 = {
     'norm': None         # normalization strenght for learning rule
     }
 
+# Load network
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 if n_CS == 1:    
     filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
@@ -87,7 +89,6 @@ elif n_CS == 2:
 
 with open(data_path+filename+'.pkl', 'rb') as f:
     net = pickle.load(f)
-
 
 # Fontsize appropriate for plots
 SMALL_SIZE = 7
@@ -104,6 +105,7 @@ plt.rc('figure', titlesize=MEDIUM_SIZE)   # fontsize of the figure title
 
 if n_CS == 1:
     
+    # Obtain results
     Phi = net.Phi
     US = net.US
     if net.est_every:
@@ -157,8 +159,8 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(25))
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
-    plt.savefig('Sub.png',bbox_inches='tight',format='png',dpi=300)
-    plt.savefig('Sub.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('Sub.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('Sub.eps',bbox_inches='tight',format='eps',dpi=300)
     
     # Scatterplot of actual and decoded US digits
     
@@ -178,8 +180,8 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(.25))
     ax.yaxis.set_major_locator(MultipleLocator(.5))
     ax.yaxis.set_minor_locator(MultipleLocator(.25))
-    plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
-    plt.savefig('USdec.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('USdec.eps',bbox_inches='tight',format='eps',dpi=300)
 
 
     # Short-term memory leak plot
@@ -278,5 +280,5 @@ if net.est_every:
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
         
-    plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
-    plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)

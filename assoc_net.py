@@ -33,12 +33,16 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
     # Somatic voltage
     V += (-V + c*(V_d-V) + I/gL + n)*dt/tau_l
     
+    # Firing rate
     r = util.act_fun(V,fun)
-    # Strong coupling of the dentrite to the soma
+    
+    # Dendritic prediction of somatic voltage
     V_ss = V_d*gD/(gD+gL)
+    
+    # Discrepancy between dendritic prediction and actual firing rate
     error = r - util.act_fun(V_ss,fun)
     
-    # Compute PSP for every input to associative neurons
+    # Compute PSP for every dendritic input to associative neurons
     r_in = np.concatenate((r,I_fb))
     I_PSP += (- I_PSP + r_in)*dt/tau_s
     PSP += (- PSP + I_PSP)*dt/tau_l
@@ -83,6 +87,7 @@ def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
         W = np.concatenate((W_rec,W_fb),axis=1)
         PI = np.outer(r,PSP) - norm*np.multiply(r[:,np.newaxis]**2,W)
     
+    # Low-pass filter weight updates
     if filt:
         Delta += (PI - Delta)*dt/tau_d
     else:
@@ -91,6 +96,8 @@ def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
         
     # Separate matrices
     dW_rec, dW_fb = np.split(dW,[n_neu],axis=1)
+    
+    # Perform weight updates
     W_rec += dW_rec
     W_fb += dW_fb
     
@@ -103,14 +110,14 @@ def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
 
 # Find instructed steady-state firing rate for given feedforward input
 
-def ss_fr(I_ff,W_ff,g_sh,fun,E_e=14/3,E_i=-1/3):
+def ss_fr(I_ff,W_ff,g_inh,fun,E_e=14/3,E_i=-1/3):
     
     # Steady-state somatic conductances
     g_e = np.dot(W_ff.clip(min=0),I_ff)
     g_i = - np.dot(W_ff.clip(max=0),I_ff)
     
     # Matching potential (equilibrium)
-    V_m = (g_e*E_e+(g_i+g_sh)*E_i)/(g_e+g_i+g_sh)
+    V_m = (g_e*E_e+(g_i+g_inh)*E_i)/(g_e+g_i+g_inh)
     
     # Teacher-imposed firing rate
     r_m = util.act_fun(V_m,fun)

@@ -84,6 +84,7 @@ for i, t_d in enumerate(delays):
     with open(data_path+filename+'.pkl', 'rb') as f:
         net = pickle.load(f)
     
+    # Find mean and 95 % intervals of conditioned response across CSs
     perc_CR[i] = 100*np.divide(net.R_est,net.R)
     perc_CR_mean[i] = np.mean(perc_CR[i])
     (perc_CR_025[i], perc_CR_975[i]) = st.t.interval(alpha=0.95,
@@ -95,7 +96,7 @@ fig, ax = plt.subplots(figsize=(2,1.5))
 plt.scatter(delays,perc_CR_mean,color = 'green',s=10)
 plt.errorbar(delays,perc_CR_mean,[perc_CR_mean-perc_CR_025,perc_CR_975-perc_CR_mean],color = 'green',linestyle='')
 plt.ylabel('Conditioned Response %')
-plt.xlabel('$τ_d$ (s)')
+plt.xlabel('$t_d$ (s)')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.spines['left'].set_position(('data', -1.5))
@@ -128,7 +129,7 @@ for i, reward in enumerate(rewards):
     norm_R = net.R_est/net.R
     n_trial = net.n_trial
 
-    ax.plot(norm_R,label='$\hat{R}=$'+'${}$'.format(reward),c=colors[i],linewidth=2)
+    ax.plot(norm_R,label='$R=$'+'${}$'.format(reward),c=colors[i],linewidth=2)
     
 ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
 ax.set_xlabel('Trials')
@@ -202,6 +203,7 @@ for i, pat in enumerate(n_pat):
                 
         t_learned[i,j] = loc
     
+    # Find mean and 95 % intervals of time to learn across runs
     t_learned_mean[i] = np.mean(t_learned[i])
     (t_learned_025[i], t_learned_975[i]) = st.t.interval(alpha=0.95,
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
@@ -287,6 +289,7 @@ for i, h_d in enumerate(H_d):
                 
         t_learned[i,j] = loc
     
+    # Find mean and 95 % intervals of time to learn across runs
     t_learned_mean[i] = np.mean(t_learned[i])
     (t_learned_025[i], t_learned_975[i]) = st.t.interval(alpha=0.95,
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))

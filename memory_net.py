@@ -43,7 +43,7 @@ opt = optim.Adam(net.parameters(), lr=0.001)
 
 # Train RNN
 loss = 0; k = 0
-train_loss = np.zeros(100)
+loss_hist = np.zeros(100)
 
 for i in range(int(n_iter)):
     # Generate data for current batch
@@ -55,22 +55,30 @@ for i in range(int(n_iter)):
     target = CS.repeat(1,n_t,1)
     mask = torch.ones(n_batch,n_t,n_in); mask[:,0:n_grace,:] = 0
     
-    # Training loop
+    # Empty gradient buffers
     opt.zero_grad()
+    
+    # Forward run
     output, fr = net(inputs)
+    
+    # Compute loss
     _, normed_loss = util.MSELoss_weighted(output,target,mask)
-    normed_loss.backward()
-    opt.step()
     loss += normed_loss.item()
+    
+    # Backpopagate loss
+    normed_loss.backward()
+    
+    # Update weights
+    opt.step()
     
     # Store history of average training loss
     if (i % print_every == 0):
         loss /= print_every
         print('{} % of the simulation complete'.format(round(i/n_iter*100)))
         print('Loss {:0.3f}'.format(loss))
-        train_loss[k] = loss
+        loss_hist[k] = loss
         loss = 0; k += 1
 
 # Save network
-torch.save({'state_dict': net.state_dict(),'train_loss': train_loss},
+torch.save({'state_dict': net.state_dict(),'loss_hist': loss_hist},
                     data_path + net_file + '.pth')

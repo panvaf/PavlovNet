@@ -15,7 +15,7 @@ from random import sample
 # File directory
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
 
-# Single associative network class
+# Single associative network class (fig. 1b)
 
 class network:
     
@@ -56,10 +56,10 @@ class network:
         self.rule = params['rule']
         self.norm = params['norm']
         
-        # Shunting inhibition, to motivate lower firing rates
-        self.g_sh = 3*np.sqrt(1/self.n_assoc)
+        # Constant inhibition, to motivate lower firing rates
+        self.g_inh = 3*np.sqrt(1/self.n_assoc)
         
-        # Memory network implemented by RNN
+        # Load memory network, implemented by pretrained RNN
         if self.mem_net_id is not None:
             net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms)
             checkpoint = torch.load(data_path + self.mem_net_id + '.pth')
@@ -108,7 +108,7 @@ class network:
         self.avg_err = np.zeros((t_sampl,self.n_assoc))
         batch_num = 0
         
-        # Store network estimates in single trial levels
+        # Store network estimates in single trial level
         if self.est_every:
             self.US_est = np.zeros(tuple([self.n_trial])+self.CS.shape)
             self.Phi_est = np.zeros(tuple([self.n_trial])+self.Phi.shape)
@@ -135,7 +135,7 @@ class network:
             
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
-            g_sh = np.zeros(self.n_time); g_sh[self.n_US_ap:] = self.g_sh
+            g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
             R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R[trial]
             R_est = 0
             
@@ -162,7 +162,7 @@ class network:
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma,g_sh[i],self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
                 
                 # Estimate reward before US arrives
                 if i==self.n_US_ap-1:
@@ -192,7 +192,7 @@ class network:
                 self.US_est[j,:], self.Phi_est[j,:] = self.est_US()
                 self.R_est[j,:], _ = self.est_R(self.US_est[j,:])
             
-            # Obtain average error every batch_size trials
+            # Obtain average error at the end of every batch of trials
             if (j % batch_size == 0):
                 print('{} % of the simulation complete'.format(round(j/self.n_trial*100)))
                 err = np.abs(err)
@@ -200,6 +200,7 @@ class network:
                 print('Average error is {} Hz'.format(round(1000*np.average(err),2)))
                 batch_num += 1
         
+        # Simulation time
         end = time()
         self.sim_time = round((end-start)/3600,2)
         print("The simulation ran for {} hours".format(self.sim_time))
@@ -211,7 +212,7 @@ class network:
         
     
     def gen_US_CS(self):
-        # Obtain set of US and corresponding CS
+        # Obtain set of USs and corresponding CSs
         
         self.US, self.CS = util.gen_US_CS(self.n_pat,self.n_in,self.H_d,self.exact)
     
@@ -241,11 +242,12 @@ class network:
     
     
     def est_US(self,t_mult=5):
-        # Computes estimated USs from all CSs after learning
+        # Computes estimated USs from CSs after learning
         
         # Time to settle is defined as multiple of synaptic time constant
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
         
+        # Initialize
         US_est = np.zeros(self.CS.shape)
         Phi_est = np.zeros((self.CS.shape[0],self.Phi.shape[1]))
         I_ff = np.zeros(self.n_in)
@@ -280,13 +282,14 @@ class network:
             US_est[i,:] = np.dot(self.D,r)
             
         return US_est, Phi_est
-            
+    
     
     def est_R(self,US_est):
         # Estimate predicted reward
         if len(US_est.shape) == 1:
             US_est = US_est[None,:]
         
+        # Find adjecency to RBF kernels
         k = (8/self.H_d)**2
         d = np.sqrt(np.sum((US_est[:,None,:] - self.US[None,:])**2,2))
         R_est = np.dot(self.R,np.exp(-k*d**2).T)
@@ -305,7 +308,7 @@ class network:
             I_ff = US
             
             # Find the steady-state firing rate
-            r_m = assoc_net.ss_fr(I_ff,self.W_ff,self.g_sh,self.fun)
+            r_m = assoc_net.ss_fr(I_ff,self.W_ff,self.g_inh,self.fun)
             
             # Store steady-state firing rate
             self.Phi[i,:] = r_m
@@ -343,8 +346,8 @@ class network2:
         self.rule = params['rule']
         self.norm = params['norm']
         
-        # Shunting inhibition, to motivate lower firing rates
-        self.g_sh = 3*np.sqrt(1/self.n_assoc)
+        # Constant inhibition, to motivate lower firing rates
+        self.g_inh = 3*np.sqrt(1/self.n_assoc)
         
         # Generate US and CS patterns
         self.US = np.random.choice([0,1],self.n_in)
@@ -367,7 +370,7 @@ class network2:
         else:
             self.S = None
         
-        # Compute decoder matrix
+        # Compute decoder matrices
         self.est_decoders()
         
     
@@ -382,7 +385,7 @@ class network2:
         self.avg_err_2 = np.zeros((t_sampl,self.n_assoc))
         batch_num = 0
         
-        # Store network estimates in single trial levels
+        # Store network estimates in single trial level
         if self.est_every:
             self.US_est_1 = np.zeros((self.n_trial,self.n_in))
             self.US_est_2 = np.zeros((self.n_trial,self.n_in))
@@ -394,7 +397,7 @@ class network2:
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
         
-        # In which trials each CS is present
+        # Determine in which trials each CS is present
         if self.overexp:
             CS_1_pr = np.concatenate((np.arange(self.CS_2_ap_tr),np.arange(2*self.CS_2_ap_tr,self.n_trial)))
         else:
@@ -413,14 +416,14 @@ class network2:
         
         # Inputs to network
         I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
-        g_sh = np.zeros(self.n_time); g_sh[self.n_US_ap:] = self.g_sh
+        g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
         R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R
         I_fb_1 = np.zeros((self.n_time,self.n_in))
         I_fb_2 = np.zeros((self.n_time,self.n_in))
         
         for j in range(self.n_trial):
             
-            # Feedback inputs to network
+            # Feedback inputs to networks
             I_fb_1[:] = self.CS_1 if j in CS_1_pr else 0
             I_fb_2[:] = self.CS_2 if j in CS_2_pr else 0
             
@@ -442,13 +445,13 @@ class network2:
                                 assoc_net.dynamics(r_1,I_ff[i,:],I_fb_1[i,:],
                                 self.W_rec_1,self.W_ff_1,self.W_fb_1,V_1,I_d_1,
                                 V_d_1,PSP_1,I_PSP_1,g_e_1,g_i_1,self.dt_ms,
-                                self.n_sigma,g_sh[i],self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
                                 
                 r_2, V_2, I_d_2, V_d_2, error_2, PSP_2, I_PSP_2, g_e_2, g_i_2 = \
                                 assoc_net.dynamics(r_2,I_ff[i,:],I_fb_2[i,:],
                                 self.W_rec_2,self.W_ff_2,self.W_fb_2,V_2,I_d_2,
                                 V_d_2,PSP_2,I_PSP_2,g_e_2,g_i_2,self.dt_ms,
-                                self.n_sigma,g_sh[i],self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
                 
 
                 # Estimate reward before US arrives
@@ -489,7 +492,7 @@ class network2:
                 self.R_est_2[j], _ = self.est_R(self.US_est_2[j,:][None,:])
             
             
-            # Obtain average error every batch_size trials
+            # Obtain average error at the end of every batch of trials
             if (j % batch_size == 0):
                 print('{} % of the simulation complete'.format(round(j/self.n_trial*100)))
                 err_1 = np.abs(err_1)
@@ -500,6 +503,7 @@ class network2:
                 print('Average error for network 2 is {} Hz'.format(round(1000*np.average(err_2),2)))
                 batch_num += 1
         
+        # Simulation time
         end = time()
         self.sim_time = round((end-start)/3600,2)
         print("The simulation ran for {} hours".format(self.sim_time))
@@ -512,7 +516,7 @@ class network2:
             
     
     def est_decoders(self):
-        # Compute decoders of US from associative network
+        # Compute decoders of US from associative networks
         
         self.get_Phis()
         self.D_1 = np.dot(np.linalg.pinv(self.Phi_1[None,:]),self.US[None,:]).T
@@ -533,7 +537,7 @@ class network2:
     
     
     def est_US(self,t_mult=5):
-        # Computes estimated USs from all CSs after learning
+        # Computes estimated US from all CSs after learning
         
         # Time to settle is defined as multiple of synaptic time constant
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
@@ -562,7 +566,7 @@ class network2:
                             g_e_2,g_i_2,self.dt_ms,self.n_sigma,0,self.I_inh,
                             self.fun,self.tau_s)
         
-        # Decode US from firing rates of associative net
+        # Decode US from firing rates of associative nets
         Phi_1_est = r_1
         Phi_2_est = r_2
         US_est_1 = np.dot(self.D_1,r_1)
@@ -574,6 +578,7 @@ class network2:
     def est_R(self,US_est):
         # Estimate predicted reward
         
+        # Find adjecency to RBF kernel
         k = 1
         d = np.sqrt(np.sum((US_est - self.US)**2,1))
         R_est = np.dot(self.R,np.exp(-k*d**2))
@@ -582,14 +587,14 @@ class network2:
         
     
     def get_Phis(self):
-        # Finds and stores steady-state firing rates for all USs
+        # Finds and stores steady-state firing rates for US
         
         # US is only input to the network
         I_ff = self.US
         
         # Find the steady-state firing rate
-        r_m_1 = assoc_net.ss_fr(I_ff,self.W_ff_1,self.g_sh,self.fun)
-        r_m_2 = assoc_net.ss_fr(I_ff,self.W_ff_2,self.g_sh,self.fun)
+        r_m_1 = assoc_net.ss_fr(I_ff,self.W_ff_1,self.g_inh,self.fun)
+        r_m_2 = assoc_net.ss_fr(I_ff,self.W_ff_2,self.g_inh,self.fun)
         
         # Store steady-state firing rate
         self.Phi_1 = r_m_1
@@ -617,7 +622,7 @@ class RNN(nn.Module):
         
 
     def init(self,inp_shape):
-        # Initializes network
+        # Initializes network activity to zero
         
         n_batch = inp_shape[0]
         r = torch.zeros(n_batch,self.rec_size)
@@ -625,8 +630,8 @@ class RNN(nn.Module):
         return r
 
 
-    def rec_dynamics(self,inp,r):
-        # Defines recurrent dynamics in the network
+    def dynamics(self,inp,r):
+        # Defines dynamics of the network
         
         h = self.inp_to_rec(inp) + self.rec_to_rec(r) + \
                     self.n_sd*torch.randn(self.rec_size)
@@ -638,12 +643,14 @@ class RNN(nn.Module):
     def forward(self,inp):
         # Forward pass
         
+        # Initialize network
         r = self.init(inp.shape)
-        
         out = []; fr = []
+        
+        # Simulate
         for i in range(inp.shape[1]):
-            r = self.rec_dynamics(inp[:,i],r)
-            # Store network output and recurrent activity for entire batch
+            r = self.dynamics(inp[:,i],r)
+            # Store network output and activity for entire batch
             fr.append(r)
             out.append(self.rec_to_out(r))
             
@@ -654,6 +661,7 @@ class RNN(nn.Module):
     
     
     def reset_params(self):
+        # Reset everything in the network
         for layer in self.children():
             if hasattr(layer, 'reset_parameters'):
                 layer.reset_parameters()
