@@ -49,6 +49,7 @@ class network:
         self.CS_disap = params['CS_disap']; self.n_CS_disap = int(self.CS_disap/self.dt)
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
         self.est_every = params['est_every']
+        self.DA_plot = params['DA_plot']
         self.flip = params['flip']
         self.exact = params['exact']
         self.low = params['low']
@@ -118,6 +119,10 @@ class network:
         self.Phi_est = np.zeros(tuple([store_size])+self.Phi.shape)
         self.R_est = np.zeros(tuple([store_size])+self.R.shape)
         
+        # Store expected reward for entire trial to create DA release plots
+        if self.DA_plot:
+            self.R_est_DA = np.zeros((self.n_trial,self.n_time))
+        
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
         
@@ -168,14 +173,15 @@ class network:
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
                 
-                # Estimate reward before US arrives
-                if i==self.n_US_ap-1:
+                # Estimate US
+                US_est = np.dot(self.D,r)
                     
-                    # Estimate US
-                    US_est = np.dot(self.D,r)
-                    
-                    # Estimate reward
-                    R_est, _ = self.est_R(US_est[None,:])
+                # Estimate reward
+                R_est, _ = self.est_R(US_est[None,:])
+                
+                # Save expected reward at any point in trial
+                if self.DA_plot:
+                    self.R_est_DA[j,i] = R_est
                 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,self.dt_ms)
@@ -462,18 +468,14 @@ class network2:
                                 V_d_2,PSP_2,I_PSP_2,g_e_2,g_i_2,self.dt_ms,
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
                 
+                # Estimate US
+                US_est_1 = np.dot(self.D_1,r_1)
+                US_est_2 = np.dot(self.D_2,r_2)
 
-                # Estimate reward before US arrives
-                if i==self.n_US_ap-1:
-                    
-                    # Estimate US
-                    US_est_1 = np.dot(self.D_1,r_1)
-                    US_est_2 = np.dot(self.D_2,r_2)
-
-                    # Estimate reward
-                    R_est_1, _ = self.est_R(US_est_1[None,:])
-                    R_est_2, _ = self.est_R(US_est_2[None,:])                    
-                    R_est = R_est_1 + R_est_2
+                # Estimate reward
+                R_est_1, _ = self.est_R(US_est_1[None,:])
+                R_est_2, _ = self.est_R(US_est_2[None,:])                    
+                R_est = R_est_1 + R_est_2
 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,self.dt_ms)

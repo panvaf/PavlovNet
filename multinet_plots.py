@@ -41,6 +41,7 @@ params = {
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': False,  # whether to estimate US and reward after every trial
+    'DA_plot': False,    # whether to keep track of expected reward within trial
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': .5,           # lowest possible reward
