@@ -49,8 +49,8 @@ params = {
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
-    'rule': 'Hebb',      # learning rule used in associative network
-    'norm': 40,        # normalization strenght for learning rule
+    'rule': 'Pred',      # learning rule used in associative network
+    'norm': None,        # normalization strenght for learning rule
     'run': 0             # number of run for many runs of same simulation
     }
 
@@ -81,7 +81,7 @@ params2 = {
     }
 
 # Load network
-data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
+data_path = str(Path(os.getcwd()).parent) + '/trained_networks/'
 if n_CS == 1:    
     filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
 elif n_CS == 2:
@@ -108,7 +108,9 @@ if n_CS == 1:
     # Obtain results
     Phi = net.Phi
     US = net.US
-    if net.est_every:
+    if net.Phi_est.ndim==3:
+        Phi_est_hist = net.Phi_est
+        US_est_hist = net.US_est
         Phi_est = net.Phi_est[-1,:,:]
         US_est = net.US_est[-1,:,:]
     else:
@@ -159,8 +161,38 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(25))
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
-    #plt.savefig('Sub.png',bbox_inches='tight',format='png',dpi=300)
-    #plt.savefig('Sub.eps',bbox_inches='tight',format='eps',dpi=300)
+    
+    
+    # Scatterplot of shaping history of CS-induced responses
+    
+    if net.Phi_est.ndim==3:
+        
+        snaps = np.array([0,2,9,59])
+        trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
+        cols = ['dodgerblue','darkslateblue','darkorange','green']
+        
+        fig, ax = plt.subplots(figsize=(1.5,1.5))
+        ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0)
+        for i, tr in enumerate(snaps): 
+            ax.scatter(Phi.flatten()*1000,Phi_est_hist[tr,:].flatten()*1000,s=.25,
+                       color=cols[i],alpha=.5,zorder=i+1,label='{}'.format(trials[i]))
+        ax.set_xlim([0,100])
+        ax.set_ylim([0,100])
+        ax.set_xlabel('$f(\mathbf{V}) \|_{US}$ (spikes/s)')
+        ax.set_ylabel('$f(\mathbf{V}) \|_{CS}$ (spikes/s)')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_position(('data', -5))
+        ax.spines['bottom'].set_position(('data', -5))
+        ax.xaxis.set_major_locator(MultipleLocator(50))
+        ax.xaxis.set_minor_locator(MultipleLocator(25))
+        ax.yaxis.set_major_locator(MultipleLocator(50))
+        ax.yaxis.set_minor_locator(MultipleLocator(25))
+        fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.3, .8),
+                   markerscale=3,title_fontsize=SMALL_SIZE)
+    
+    #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('Sub_his.eps',bbox_inches='tight',format='eps',dpi=300)
     
     # Scatterplot of actual and decoded US digits
     

@@ -86,7 +86,7 @@ params2 = {
     }
 
 # Save directory
-data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
+data_path = str(Path(os.getcwd()).parent) + '/trained_networks/'
 if n_CS == 1:    
     filename = util.filename(params) + 'gsh3gD2gL1taul20DA' + ('reprod' if reprod else '')
 elif n_CS == 2:

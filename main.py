@@ -13,7 +13,7 @@ import torch.nn as nn
 from random import sample
 
 # File directory
-data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
+data_path = str(Path(os.getcwd()).parent) + '/trained_networks/'
 
 # Single associative network class (fig. 1b)
 
@@ -110,9 +110,13 @@ class network:
         
         # Store network estimates in single trial level
         if self.est_every:
-            self.US_est = np.zeros(tuple([self.n_trial])+self.CS.shape)
-            self.Phi_est = np.zeros(tuple([self.n_trial])+self.Phi.shape)
-            self.R_est = np.zeros(tuple([self.n_trial])+self.R.shape)
+            store_size = self.n_trial
+        else:
+            store_size = t_sampl
+            
+        self.US_est = np.zeros(tuple([store_size])+self.CS.shape)
+        self.Phi_est = np.zeros(tuple([store_size])+self.Phi.shape)
+        self.R_est = np.zeros(tuple([store_size])+self.R.shape)
         
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
@@ -198,17 +202,18 @@ class network:
                 err = np.abs(err)
                 self.avg_err[batch_num,:] = np.average(err,0)
                 print('Average error is {} Hz'.format(round(1000*np.average(err),2)))
+                
+                # Save estimates at the end of every batch
+                if not self.est_every:
+                    self.US_est[batch_num,:], self.Phi_est[batch_num,:] = self.est_US()
+                    self.R_est[batch_num,:], _ = self.est_R(self.US_est[batch_num,:])
+                    
                 batch_num += 1
         
         # Simulation time
         end = time()
         self.sim_time = round((end-start)/3600,2)
         print("The simulation ran for {} hours".format(self.sim_time))
-        
-        # Final network estimates
-        if not self.est_every:
-            self.US_est, self.Phi_est = self.est_US()
-            self.R_est, _ = self.est_R(self.US_est)
         
     
     def gen_US_CS(self):
@@ -387,12 +392,16 @@ class network2:
         
         # Store network estimates in single trial level
         if self.est_every:
-            self.US_est_1 = np.zeros((self.n_trial,self.n_in))
-            self.US_est_2 = np.zeros((self.n_trial,self.n_in))
-            self.Phi_1_est = np.zeros((self.n_trial,self.n_assoc))
-            self.Phi_2_est = np.zeros((self.n_trial,self.n_assoc))
-            self.R_est_1 = np.zeros(self.n_trial)
-            self.R_est_2 = np.zeros(self.n_trial)
+            store_size = self.n_trial
+        else:
+            store_size = t_sampl    
+            
+        self.US_est_1 = np.zeros((store_size,self.n_in))
+        self.US_est_2 = np.zeros((store_size,self.n_in))
+        self.Phi_1_est = np.zeros((store_size,self.n_assoc))
+        self.Phi_2_est = np.zeros((store_size,self.n_assoc))
+        self.R_est_1 = np.zeros(store_size)
+        self.R_est_2 = np.zeros(store_size)
             
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
@@ -501,18 +510,22 @@ class network2:
                 self.avg_err_2[batch_num,:] = np.average(err_2,0)
                 print('Average error for network 1 is {} Hz'.format(round(1000*np.average(err_1),2)))
                 print('Average error for network 2 is {} Hz'.format(round(1000*np.average(err_2),2)))
+                
+                # Save estimates at the end of every batch
+                if not self.est_every:
+                    [self.US_est_1[batch_num,:], self.US_est_2[batch_num,:]], \
+                                [self.Phi_1_est[batch_num,:],
+                                 self.Phi_2_est[batch_num,:]] = self.est_US()
+                    self.R_est_1[batch_num,:], _ = self.est_R(self.US_est_1[batch_num,:][None,:])
+                    self.R_est_2[batch_num,:], _ = self.est_R(self.US_est_2[batch_num,:][None,:])
+                
                 batch_num += 1
         
         # Simulation time
         end = time()
         self.sim_time = round((end-start)/3600,2)
         print("The simulation ran for {} hours".format(self.sim_time))
-        
-        # Final network estimates
-        if not self.est_every:
-            [self.US_est_1, self.US_est_2], [self.Phi_1_est, self.Phi_2_est] = self.est_US()
-            self.R_est_1, _ = self.est_R(self.US_est_1[None,:])
-            self.R_est_2, _ = self.est_R(self.US_est_2[None,:])
+
             
     
     def est_decoders(self):
