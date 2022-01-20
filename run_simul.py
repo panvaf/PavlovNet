@@ -11,7 +11,7 @@ import numpy as np
 
 # Which network and how many CS-US associations to run
 n_CS = 1
-n_pat = 16
+n_pat = 1
 
 # Whether to use the same network initialization and CS-US sets
 reprod = False
@@ -30,11 +30,11 @@ params = {
     'n_pat': n_pat,      # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
-    'n_trial': 1e3,      # number of trials
-    't_dur': 2,          # duration of trial
-    'CS_disap': 2,       # time in trial that CS disappears
-    'US_ap': 1,          # time in trial that US appears
+    'eta': 1e-3,         # learning rate
+    'n_trial': 20,      # number of trials
+    't_dur': 4,          # duration of trial
+    'CS_disap': 4,       # time in trial that CS disappears
+    'US_ap': 3,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'W_rec': W_rec,      # recurrent weights of associative network
     'W_ff': W_ff,        # feedforward weights to associative neurons
@@ -44,13 +44,14 @@ params = {
     'R': R,              # reward associated with every US
     'S': S,              # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'est_every': True,  # whether to estimate US and reward after every trial
+    'DA_plot': True,    # whether to keep track of expected reward within trial
+    'GiveR': False,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward

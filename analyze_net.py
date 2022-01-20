@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib.ticker import MultipleLocator
 import main
 import torch
+from mpl_toolkits.mplot3d import axes3d
 
 # Which network type to load
 n_CS = 1
@@ -22,14 +23,14 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 16,         # number of US/CS pattern associations to be learned
+    'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
-    'n_trial': 1e3,      # number of trials
-    't_dur': 2,          # duration of trial
-    'CS_disap': 2,       # time in trial that CS disappears
-    'US_ap': 1,          # time in trial that US appears
+    'eta': 1e-3,         # learning rate
+    'n_trial': 20,      # number of trials
+    't_dur': 4,          # duration of trial
+    'CS_disap': 4,       # time in trial that CS disappears
+    'US_ap': 3,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
     'W_ff': None,        # feedforward weights to associative neurons
@@ -39,13 +40,14 @@ params = {
     'R': None,           # reward associated with every US
     'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'est_every': True,  # whether to estimate US and reward after every trial
+    'DA_plot': True,    # whether to keep track of expected reward within trial
+    'GiveR': False,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
@@ -84,9 +86,9 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline'
 elif n_CS == 2:
-    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DA'
+    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 
 with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
     net = pickle.load(f)
@@ -163,7 +165,26 @@ if n_CS == 1:
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
     
-    
+    # Dopamine uptake plot
+    if net.DA_plot:
+        Z = net.DA_u
+        x = np.linspace(0,net.t_dur,Z.shape[1])
+        y = np.arange(net.n_trial)+1
+        X, Y = np.meshgrid(x,y)
+        
+        # Plot a 3D surface
+        fig = plt.figure(figsize=(2,2))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(X,Y,Z, cmap = plt.get_cmap('jet'), linewidth = 0)
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Trial #')
+        ax.set_zlabel('Dopamine Uptake')
+        ax.set_xticks(np.linspace(0,net.t_dur,5))
+        ax.set_yticks(np.linspace(0,len(y),5))
+        ax.set_zticks([0,.5,1,1.5])
+        plt.show()
+
+
     # Scatterplot of shaping history of CS-induced responses
     
     if net.Phi_est.ndim==3:

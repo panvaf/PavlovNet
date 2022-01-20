@@ -50,6 +50,7 @@ class network:
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
         self.est_every = params['est_every']
         self.DA_plot = params['DA_plot']
+        self.GiveR = params['GiveR']
         self.flip = params['flip']
         self.exact = params['exact']
         self.low = params['low']
@@ -145,8 +146,9 @@ class network:
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
             g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
-            R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R[trial]
-            R_est = 0; R_est_prev = 0; R_rec = False
+            R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
+            if self.GiveR:
+                R[self.n_US_ap+n_trans] = self.R[trial]
             
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]

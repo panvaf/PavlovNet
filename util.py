@@ -92,7 +92,7 @@ def filename(params):
         (('n' + str(params['n_sigma']).replace(".","")) if params['n_sigma'] != 0 else '') + \
         (('N' + str(params['n_assoc'])) if params['n_assoc'] != 128 else '') + \
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
-        ('Dale' if params['dale'] else '') + \
+        ('Dale' if params['dale'] else '') + ('NoR' if not params['GiveR'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('DAplot' if params['DA_plot'] else '') + ('Flip' if params['flip'] else '') + \
