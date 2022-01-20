@@ -13,7 +13,7 @@ import torch.nn as nn
 from random import sample
 
 # File directory
-data_path = str(Path(os.getcwd()).parent) + '/trained_networks/'
+data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 
 # Single associative network class (fig. 1b)
 
@@ -63,7 +63,7 @@ class network:
         # Load memory network, implemented by pretrained RNN
         if self.mem_net_id is not None:
             net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms)
-            checkpoint = torch.load(data_path + self.mem_net_id + '.pth')
+            checkpoint = torch.load(os.path.join(data_path,self.mem_net_id + '.pth'))
             net.load_state_dict(checkpoint['state_dict'])
             net.eval()
             self.mem_net = net
@@ -121,7 +121,7 @@ class network:
         
         # Store expected reward for entire trial to create DA release plots
         if self.DA_plot:
-            self.R_est_DA = np.zeros((self.n_trial,self.n_time))
+            self.DA_u = np.zeros((self.n_trial,self.n_time))
         
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
@@ -146,7 +146,7 @@ class network:
             I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
             g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
             R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R[trial]
-            R_est = 0
+            R_est = 0; R_est_prev = 0; R_rec = False
             
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
@@ -173,18 +173,19 @@ class network:
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
                 
-                # Estimate US
-                US_est = np.dot(self.D,r)
-                    
-                # Estimate reward
-                R_est, _ = self.est_R(US_est[None,:])
-                
-                # Save expected reward at any point in trial
-                if self.DA_plot:
-                    self.R_est_DA[j,i] = R_est
+                # Perceptual delay during which network is not read out
+                if (i<n_trans) or (self.n_US_ap<=i<self.n_US_ap+n_trans):
+                    R_est = R_est_prev
+                else:
+                    # Estimate US
+                    US_est = np.dot(self.D,r)
+                        
+                    # Estimate reward
+                    R_est, _ = self.est_R(US_est[None,:])
                 
                 # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,self.dt_ms)
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,
+                                                   R_est_prev,R_rec,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -196,7 +197,18 @@ class network:
                                 self.dale,self.S,self.filter,self.rule,self.norm)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
-                        
+                
+                # Whether the reward was already received
+                if R[i] != 0:
+                    R_rec = True
+                
+                # Update previous estimate
+                R_est_prev = R_est
+                
+                # Save dopamine uptake at any point in trial
+                if self.DA_plot:
+                    self.DA_u[j,i] = DA_u
+                
             # Save network estimates after each trial
             if self.est_every:
                 self.US_est[j,:], self.Phi_est[j,:] = self.est_US()
@@ -447,7 +459,7 @@ class network2:
                 DA_u, DA_r = self.init_net()
             r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, \
                 _, _ = self.init_net()
-            R_est = 0
+            R_est = 0; R_est_prev = 0; R_rec = False
             
             # Store errors after US appears, omitting transduction delays
             err_1 = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
@@ -468,17 +480,22 @@ class network2:
                                 V_d_2,PSP_2,I_PSP_2,g_e_2,g_i_2,self.dt_ms,
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
                 
-                # Estimate US
-                US_est_1 = np.dot(self.D_1,r_1)
-                US_est_2 = np.dot(self.D_2,r_2)
-
-                # Estimate reward
-                R_est_1, _ = self.est_R(US_est_1[None,:])
-                R_est_2, _ = self.est_R(US_est_2[None,:])                    
-                R_est = R_est_1 + R_est_2
+                # Perceptual delay during which network is not read out
+                if (i<n_trans) or (self.n_US_ap<i<self.n_US_ap+n_trans):
+                    R_est = R_est_prev
+                else:
+                    # Estimate US
+                    US_est_1 = np.dot(self.D_1,r_1)
+                    US_est_2 = np.dot(self.D_2,r_2)
+    
+                    # Estimate reward
+                    R_est_1, _ = self.est_R(US_est_1[None,:])
+                    R_est_2, _ = self.est_R(US_est_2[None,:])                    
+                    R_est = R_est_1 + R_est_2
 
                 # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,self.dt_ms)
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
+                                                   R_rec,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -494,6 +511,13 @@ class network2:
                     if i>self.n_US_ap+n_trans:
                         err_1[i-self.n_US_ap-n_trans,:] = error_1
                         err_2[i-self.n_US_ap-n_trans,:] = error_2
+                
+                # Whether the reward was already received
+                if R[i] != 0:
+                    R_rec = True
+                
+                # Update previous estimate
+                R_est_prev = R_est
                         
             # Save network estimates after each trial
             if self.est_every:

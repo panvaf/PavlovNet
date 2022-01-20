@@ -82,13 +82,13 @@ params2 = {
     }
 
 # Load network
-data_path = str(Path(os.getcwd()).parent) + '/trained_networks/'
+data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
     filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DA'
 
-with open(data_path+filename+'.pkl', 'rb') as f:
+with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
     net = pickle.load(f)
 
 # Fontsize appropriate for plots
@@ -223,7 +223,7 @@ if n_CS == 1:
         # Load memory net
         mem_net = main.RNN(params['n_in'],params['n_mem'],params['n_in'],params['n_sigma'],
                        params['tau_s'],params['dt']*1e3)
-        checkpoint = torch.load(data_path + params['mem_net_id'] + '.pth')
+        checkpoint = torch.load(os.path.join(data_path,params['mem_net_id'] + '.pth'))
         mem_net.load_state_dict(checkpoint['state_dict'])
         mem_net.eval()
         

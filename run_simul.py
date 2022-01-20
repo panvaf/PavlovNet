@@ -44,7 +44,7 @@ params = {
     'R': R,              # reward associated with every US
     'S': S,              # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 5,     # store errors this often
+    'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
@@ -87,11 +87,11 @@ params2 = {
     }
 
 # Save directory
-data_path = str(Path(os.getcwd()).parent) + '/trained_networks/'
+data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DA' + ('reprod' if reprod else '')
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline' + ('reprod' if reprod else '')
 elif n_CS == 2:
-    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DA'
+    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 
 # Run simulation
 if n_CS == 1:    
@@ -102,5 +102,5 @@ elif n_CS == 2:
 net.simulate()
 
 # Save results
-with open(data_path + filename + '.pkl','wb') as f:
+with open(os.path.join(data_path,filename + '.pkl'),'wb') as f:
     pickle.dump(net, f)
