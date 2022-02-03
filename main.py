@@ -31,6 +31,7 @@ class network:
         self.n_in = int(params['n_in'])
         self.H_d = params['H_d']
         self.eta = params['eta']
+        self.a = params['a'] if params['a']>.5 else np.random.normal(1,params['a'],self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
@@ -52,6 +53,7 @@ class network:
         self.DA_plot = params['DA_plot']
         self.GiveR = params['GiveR']
         self.flip = params['flip']
+        self.extinct = params['extinct']
         self.exact = params['exact']
         self.low = params['low']
         self.filter = params['filter']
@@ -144,8 +146,10 @@ class network:
                     self.R = self.R[::-1]
             
             # Inputs to the network
-            I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US[trial,:]
-            g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
+            I_ff = np.zeros((self.n_time,self.n_in)); g_inh = np.zeros(self.n_time)
+            if not self.extinct or j < int(self.n_trial/5):
+                I_ff[self.n_US_ap:,:] = self.US[trial,:]
+                g_inh[self.n_US_ap:] = self.g_inh
             R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
             if self.GiveR:
                 R[self.n_US_ap+n_trans] = self.R[trial]
@@ -173,7 +177,8 @@ class network:
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i  = assoc_net.dynamics(r,
                                 I_ff[i,:],I_fb[i,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,g_inh[i],self.I_inh,self.fun,
+                                self.a,self.tau_s)
                 
                 # Perceptual delay during which network is not read out
                 if (i<n_trans) or (self.n_US_ap<=i<self.n_US_ap+n_trans):
@@ -300,7 +305,7 @@ class network:
                 r, V, I_d, V_d, error, PSP, I_PSP, g_e, g_i = assoc_net.dynamics(r,
                                 I_ff,I_fb[j,:],self.W_rec,self.W_ff,
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
-                                self.n_sigma,0,self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,0,self.I_inh,self.fun,self.a,self.tau_s)
             
             # Decode US from firing rates of associative net
             Phi_est[i,:] = r
@@ -353,6 +358,7 @@ class network2:
         self.tau_s = params['tau_s']
         self.n_in = int(params['n_in'])
         self.eta = params['eta']
+        self.a = params['a'] if params['a']>.5 else np.random.normal(1,params['a'],self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
@@ -474,13 +480,15 @@ class network2:
                                 assoc_net.dynamics(r_1,I_ff[i,:],I_fb_1[i,:],
                                 self.W_rec_1,self.W_ff_1,self.W_fb_1,V_1,I_d_1,
                                 V_d_1,PSP_1,I_PSP_1,g_e_1,g_i_1,self.dt_ms,
-                                self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,g_inh[i],self.I_inh,self.fun,
+                                self.a,self.tau_s)
                                 
                 r_2, V_2, I_d_2, V_d_2, error_2, PSP_2, I_PSP_2, g_e_2, g_i_2 = \
                                 assoc_net.dynamics(r_2,I_ff[i,:],I_fb_2[i,:],
                                 self.W_rec_2,self.W_ff_2,self.W_fb_2,V_2,I_d_2,
                                 V_d_2,PSP_2,I_PSP_2,g_e_2,g_i_2,self.dt_ms,
-                                self.n_sigma,g_inh[i],self.I_inh,self.fun,self.tau_s)
+                                self.n_sigma,g_inh[i],self.I_inh,self.fun,
+                                self.a,self.tau_s)
                 
                 # Perceptual delay during which network is not read out
                 if (i<n_trans) or (self.n_US_ap<i<self.n_US_ap+n_trans):
@@ -599,13 +607,13 @@ class network2:
                             assoc_net.dynamics(r_1,I_ff,I_fb_1[i,:],self.W_rec_1,
                             self.W_ff_1,self.W_fb_1,V_1,I_d_1,V_d_1,PSP_1,I_PSP_1,
                             g_e_1,g_i_1,self.dt_ms,self.n_sigma,0,self.I_inh,
-                            self.fun,self.tau_s)
+                            self.fun,self.a,self.tau_s)
                             
             r_2, V_2, I_d_2, V_d_2, error_2, PSP_2, I_PSP_2, g_e_2, g_i_2 = \
                             assoc_net.dynamics(r_2,I_ff,I_fb_2[i,:],self.W_rec_2,
                             self.W_ff_2,self.W_fb_2,V_2,I_d_2,V_d_2,PSP_2,I_PSP_2,
                             g_e_2,g_i_2,self.dt_ms,self.n_sigma,0,self.I_inh,
-                            self.fun,self.tau_s)
+                            self.fun,self.a,self.tau_s)
         
         # Decode US from firing rates of associative nets
         Phi_1_est = r_1

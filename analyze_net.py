@@ -23,14 +23,15 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 1,         # number of US/CS pattern associations to be learned
+    'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 1e-3,         # learning rate
-    'n_trial': 20,      # number of trials
-    't_dur': 4,          # duration of trial
-    'CS_disap': 4,       # time in trial that CS disappears
-    'US_ap': 3,          # time in trial that US appears
+    'eta': 5e-3,         # learning rate
+    'a': 1,           # deviation from self-consistency
+    'n_trial': 1e3,      # number of trials
+    't_dur': 2,          # duration of trial
+    'CS_disap': 2,       # time in trial that CS disappears
+    'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
     'W_ff': None,        # feedforward weights to associative neurons
@@ -40,15 +41,16 @@ params = {
     'R': None,           # reward associated with every US
     'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 5,     # store errors this often
+    'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': True,  # whether to estimate US and reward after every trial
-    'DA_plot': True,    # whether to keep track of expected reward within trial
-    'GiveR': False,       # whether to provide reward upon US presentation
+    'est_every': False,  # whether to estimate US and reward after every trial
+    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
+    'extinct': False,    # whether to undergo extinction of learned associations
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
@@ -64,6 +66,7 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
+    'a': 0.97,           # deviation from self-consistency
     'n_trial': 5e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
@@ -86,7 +89,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnlinereprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 
@@ -210,7 +213,7 @@ if n_CS == 1:
         ax.xaxis.set_minor_locator(MultipleLocator(25))
         ax.yaxis.set_major_locator(MultipleLocator(50))
         ax.yaxis.set_minor_locator(MultipleLocator(25))
-        fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.3, .8),
+        fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.6, 1),
                    markerscale=3,title_fontsize=SMALL_SIZE)
     
     #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
@@ -334,5 +337,5 @@ if net.est_every:
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
         
-    #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
-    #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+    plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
+    plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)

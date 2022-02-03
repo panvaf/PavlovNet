@@ -92,10 +92,12 @@ def filename(params):
         (('n' + str(params['n_sigma']).replace(".","")) if params['n_sigma'] != 0 else '') + \
         (('N' + str(params['n_assoc'])) if params['n_assoc'] != 128 else '') + \
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
+        (('a' + str(params['a'])) if params['a'] != 1 else '') + \
         ('Dale' if params['dale'] else '') + ('NoR' if not params['GiveR'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('DAplot' if params['DA_plot'] else '') + ('Flip' if params['flip'] else '') + \
+        ('Extinct' if params['extinct'] else '') + \
         ('Exact' if params['exact'] else '') + ('NoFilt' if not params['filter'] else '') + \
         ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '')
         
@@ -114,6 +116,7 @@ def filename2(params):
         (('n' + str(params['n_sigma']).replace(".","")) if params['n_sigma'] != 0 else '') + \
         (('N' + str(params['n_assoc'])) if params['n_assoc'] != 64 else '') + \
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
+        (('a' + str(params['a'])) if params['a'] != 1 else '') + \
         ('Dale' if params['dale'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('Overexp' if params['overexp'] else '') + \
         (('sal' + str(params['salience'])) if params['salience'] != 1 else '') + \

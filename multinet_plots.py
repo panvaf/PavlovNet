@@ -22,6 +22,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
+    'a': 1,              # deviation from self-consistency
     'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
@@ -44,6 +45,7 @@ params = {
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
+    'extinct': False,    # whether to undergo extinction of learned associations
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': .5,           # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics

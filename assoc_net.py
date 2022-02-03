@@ -8,7 +8,7 @@ import util
 # Define dynamics of associative network
 
 def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
-             n_sigma,g_sh,I_inh,fun,tau_s,tau_l=20,gD=.2,gL=.1,E_e=14/3,E_i=-1/3):
+             n_sigma,g_sh,I_inh,fun,a,tau_s,tau_l=20,gD=.2,gL=.1,E_e=14/3,E_i=-1/3):
     
     # units in ms or ms^-1
     n_neu = np.size(r); c = gD/gL
@@ -37,7 +37,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
     r = util.act_fun(V,fun)
     
     # Dendritic prediction of somatic voltage
-    V_ss = V_d*gD/(gD+gL)
+    V_ss = a*V_d*gD/(gD+gL)
     
     # Discrepancy between dendritic prediction and actual firing rate
     error = r - util.act_fun(V_ss,fun)
