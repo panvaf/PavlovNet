@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import torch
 import torch.nn as nn
-from random import sample
+from random import sample, randint
 
 # File directory
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
@@ -31,7 +31,7 @@ class network:
         self.n_in = int(params['n_in'])
         self.H_d = params['H_d']
         self.eta = params['eta']
-        self.a = params['a'] if params['a']>.5 else np.random.normal(1,params['a'],self.n_assoc) 
+        self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],params['a'],self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
@@ -49,6 +49,7 @@ class network:
         self.out = params['out']
         self.CS_disap = params['CS_disap']; self.n_CS_disap = int(self.CS_disap/self.dt)
         self.US_ap = params['US_ap']; self.n_US_ap = int(self.US_ap/self.dt)
+        self.US_jit = params['US_jit']; self.n_US_jit = int(self.US_jit/self.dt)
         self.est_every = params['est_every']
         self.DA_plot = params['DA_plot']
         self.GiveR = params['GiveR']
@@ -144,15 +145,21 @@ class network:
                     self.US = self.US[::-1]
                     self.Phi = self.Phi[::-1]
                     self.R = self.R[::-1]
+                    
+            # Jitter US appearance time
+            if self.US_jit != 0:
+                n_jit = randint(-self.n_US_jit,self.n_US_jit)
+            else:
+                n_jit = 0
             
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); g_inh = np.zeros(self.n_time)
             if not self.extinct or j < int(self.n_trial/5):
-                I_ff[self.n_US_ap:,:] = self.US[trial,:]
-                g_inh[self.n_US_ap:] = self.g_inh
+                I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
+                g_inh[self.n_US_ap+n_jit:] = self.g_inh
             R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
             if self.GiveR:
-                R[self.n_US_ap+n_trans] = self.R[trial]
+                R[self.n_US_ap+n_jit+n_trans] = self.R[trial]
             
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
@@ -181,7 +188,7 @@ class network:
                                 self.a,self.tau_s)
                 
                 # Perceptual delay during which network is not read out
-                if (i<n_trans) or (self.n_US_ap<=i<self.n_US_ap+n_trans):
+                if (i<n_trans) or (self.n_US_ap+n_jit<=i<self.n_US_ap+n_jit+n_trans):
                     R_est = R_est_prev
                 else:
                     # Estimate US

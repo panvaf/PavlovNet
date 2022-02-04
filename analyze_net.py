@@ -27,11 +27,12 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': 1,           # deviation from self-consistency
+    'a': .01,           # deviation from self-consistency
     'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
+    'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
     'W_ff': None,        # feedforward weights to associative neurons
@@ -337,5 +338,5 @@ if net.est_every:
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
         
-    plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
-    plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)

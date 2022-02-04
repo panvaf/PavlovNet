@@ -85,6 +85,7 @@ def filename(params):
         (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
         (('CSdis' + str(params['CS_disap'])) if params['CS_disap'] != params['t_dur'] else '') + \
         (('USap' + str(params['US_ap'])) if params['US_ap'] != 0 else '') + \
+        (('Jit' + str(params['US_jit'])) if params['US_jit'] != 0 else '') + \
         (('insz' + str(params['n_in'])) if params['n_in'] != 20 else '') + \
         (('Hd' + str(params['H_d'])) if params['H_d'] != 8 else '') + \
         (('taus' + str(params['tau_s'])) if params['tau_s'] != 10 else '') + \
@@ -99,7 +100,8 @@ def filename(params):
         ('DAplot' if params['DA_plot'] else '') + ('Flip' if params['flip'] else '') + \
         ('Extinct' if params['extinct'] else '') + \
         ('Exact' if params['exact'] else '') + ('NoFilt' if not params['filter'] else '') + \
-        ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '')
+        ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '') + \
+        (('run' + str(params['run'])) if params['run'] != 0 else '')
         
     return filename
 
