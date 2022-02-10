@@ -46,7 +46,8 @@ params = {
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': False,    # whether to undergo extinction of learned associations
+    'extinct': False,    # whether to undergo extinction of learned association
+    'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': .5,           # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics

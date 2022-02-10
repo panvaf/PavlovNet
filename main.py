@@ -55,6 +55,7 @@ class network:
         self.GiveR = params['GiveR']
         self.flip = params['flip']
         self.extinct = params['extinct']
+        self.reacquire = params['reacquire']
         self.exact = params['exact']
         self.low = params['low']
         self.filter = params['filter']
@@ -154,7 +155,14 @@ class network:
             
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); g_inh = np.zeros(self.n_time)
-            if not self.extinct or j < int(self.n_trial/5):
+            # Determine whether in extinction phase
+            if self.extinct and j > int(self.n_trial/2):
+                show_US = False
+            elif self.reacquire and int(self.n_trial/3) < j < int(2*self.n_trial/3):
+                show_US = False
+            else:
+                show_US = True
+            if show_US:
                 I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
                 g_inh[self.n_US_ap+n_jit:] = self.g_inh
             R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False

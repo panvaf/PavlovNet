@@ -98,7 +98,7 @@ def filename(params):
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('DAplot' if params['DA_plot'] else '') + ('Flip' if params['flip'] else '') + \
-        ('Extinct' if params['extinct'] else '') + \
+        ('Extinct' if params['extinct'] else '') + ('Reacquire' if params['reacquire'] else '') + \
         ('Exact' if params['exact'] else '') + ('NoFilt' if not params['filter'] else '') + \
         ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '') + \
         (('run' + str(params['run'])) if params['run'] != 0 else '')
