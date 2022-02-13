@@ -23,15 +23,15 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 1,         # number of US/CS pattern associations to be learned
+    'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': .01,           # deviation from self-consistency
-    'n_trial': 1e2,      # number of trials
-    't_dur': 4,          # duration of trial
-    'CS_disap': 4,       # time in trial that CS disappears
-    'US_ap': 3,          # time in trial that US appears
+    'a': .01,            # deviation from self-consistency
+    'n_trial': 1e3,      # number of trials
+    't_dur': 2,          # duration of trial
+    'CS_disap': 2,       # time in trial that CS disappears
+    'US_ap': 1,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
@@ -47,12 +47,12 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': True,  # whether to estimate US and reward after every trial
-    'DA_plot': True,    # whether to keep track of expected reward within trial
-    'GiveR': False,       # whether to provide reward upon US presentation
+    'est_every': False,  # whether to estimate US and reward after every trial
+    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
-    'reacquire': True,  # whether to undergo extinction and reacquisition of learned association
+    'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
@@ -91,7 +91,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnlinereprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 
@@ -177,16 +177,29 @@ if n_CS == 1:
         y = np.arange(net.n_trial)+1
         X, Y = np.meshgrid(x,y)
         
+        x1 = 0.5*np.ones(y.shape); x1[0] = 0; x1[-1] = 0
+        
         # Plot a 3D surface
-        fig = plt.figure(figsize=(2,2))
+        fig = plt.figure(figsize=(2.5,2.5))
         ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(X,Y,Z, cmap = plt.get_cmap('jet'), linewidth = 0)
+        ax.plot(y, x1, zs=0, zdir='x', color='black', linewidth=2)
+        ax.plot(y, x1, zs=3, zdir='x', color='black', linewidth=2)
+        ax.plot_surface(X,Y,Z,rstride=1, cmap = plt.get_cmap('jet'), linewidth = 0, antialiased=False)
         ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Trial #')
+        ax.set_ylabel('Trials')
         ax.set_zlabel('Dopamine Uptake')
         ax.set_xticks(np.linspace(0,net.t_dur,5))
         ax.set_yticks(np.linspace(0,len(y),5))
         ax.set_zticks([0,.5,1,1.5])
+        # make the panes transparent
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        # make the grid lines transparent
+        ax.xaxis._axinfo["grid"]['color'] =  (1,1,1,0)
+        ax.yaxis._axinfo["grid"]['color'] =  (1,1,1,0)
+        ax.zaxis._axinfo["grid"]['color'] =  (1,1,1,0)   
+        ax.view_init(25, -105)
         plt.show()
 
 
@@ -194,7 +207,7 @@ if n_CS == 1:
     
     if net.Phi_est.ndim==3:
         
-        snaps = np.array([0,2,9,59])
+        snaps = np.array([0,2,9,49])
         trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
         cols = ['dodgerblue','darkslateblue','darkorange','green']
         
@@ -218,15 +231,34 @@ if n_CS == 1:
         fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.6, 1),
                    markerscale=3,title_fontsize=SMALL_SIZE)
     
-    #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
-    #plt.savefig('Sub_his.eps',bbox_inches='tight',format='eps',dpi=300)
+        #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
+        #plt.savefig('Sub_his.eps',bbox_inches='tight',format='eps',dpi=300)
+        
+        trials = net.n_trial*np.linspace(0,1,100)
+        fig, ax = plt.subplots(figsize=(2,1.5))
+        ax.plot(trials,net.R_est,linewidth=1)
+        ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_position(('data', -.05*net.n_trial))
+        ax.spines['bottom'].set_position(('data', -.05))
+        ax.xaxis.set_major_locator(MultipleLocator(.5*net.n_trial))
+        ax.xaxis.set_minor_locator(MultipleLocator(.25*net.n_trial))
+        ax.yaxis.set_major_locator(MultipleLocator(.5))
+        ax.yaxis.set_minor_locator(MultipleLocator(.25))
+        ax.set_xlim([0,net.n_trial])
+        ax.set_ylabel('Reward')
+        ax.set_xlabel('Trials')
+        
+        #plt.savefig('Cond_his.png',bbox_inches='tight',format='png',dpi=300)
+        #plt.savefig('Cond_his.eps',bbox_inches='tight',format='eps',dpi=300)
     
     # Scatterplot of actual and decoded US digits
     
     fig, ax = plt.subplots(figsize=(1.5,1.5))
     ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0)
     ax.scatter(US.flatten()+np.random.normal(scale=.02,size=np.size(US)),
-               US_est.flatten(),s=.25,color='green',alpha=.5,zorder=1)
+               US_est_hist[tr,:].flatten(),s=.25,color='green',alpha=.5,zorder=1)
     ax.set_xlim([-.2,1.2])
     ax.set_ylim([-.2,1.2])
     ax.set_xlabel('$\mathbf{r}^{US}$ element')
@@ -297,16 +329,17 @@ if net.est_every:
         fig, ax = plt.subplots(figsize=(1.5,1.5))
         ax.plot(R_est,label='$\hat{R}$',c='green',linewidth=2)
         ax.axhline(y=R,c='black',linestyle='--',linewidth=2,label='$R$')
+        #ax.axvline(x=20,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction onset',zorder=0)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Reward')
-        ax.set_xlim([0,n_trial])
+        ax.set_xlim([-.02*n_trial,n_trial])
         ax.set_ylim([-.02*R,1.02*R])
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', -.05*n_trial))
         ax.spines['bottom'].set_position(('data', -.05*R))
         ax.xaxis.set_major_locator(MultipleLocator(int(n_trial/2)))
-        ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
+        ax.xaxis.set_minor_locator(MultipleLocator(n_trial/4))
         ax.yaxis.set_major_locator(MultipleLocator(R/2))
         ax.yaxis.set_minor_locator(MultipleLocator(R/4))
         fig.legend(frameon=False,loc='right')
@@ -339,5 +372,5 @@ if net.est_every:
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
         
-    #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
-    #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+    plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
+    plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)

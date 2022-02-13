@@ -32,7 +32,7 @@ params = {
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': .01,              # deviation from self-consistency
-    'n_trial': 1e2,      # number of trials
+    'n_trial': 50,      # number of trials
     't_dur': 4,          # duration of trial
     'CS_disap': 4,       # time in trial that CS disappears
     'US_ap': 3,          # time in trial that US appears
@@ -46,23 +46,23 @@ params = {
     'R': R,              # reward associated with every US
     'S': S,              # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1,     # store errors this often
+    'every_perc': 2,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': True,    # whether to keep track of expected reward within trial
-    'GiveR': False,       # whether to provide reward upon US presentation
+    'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': False,    # whether to undergo extinction of learned associations
-    'reacquire': True,  # whether to undergo extinction and reacquisition of learned association
+    'extinct': True,    # whether to undergo extinction of learned associations
+    'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
-    'run': 0             # number of run for many runs of same simulation
+    'run': 1             # number of run for many runs of same simulation
     }
 
 params2 = {

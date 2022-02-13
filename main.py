@@ -156,9 +156,9 @@ class network:
             # Inputs to the network
             I_ff = np.zeros((self.n_time,self.n_in)); g_inh = np.zeros(self.n_time)
             # Determine whether in extinction phase
-            if self.extinct and j > int(self.n_trial/2):
+            if self.extinct and j > int(self.n_trial/5):
                 show_US = False
-            elif self.reacquire and int(self.n_trial/3) < j < int(2*self.n_trial/3):
+            elif self.reacquire and int(self.n_trial/5) < j < int(4*self.n_trial/5):
                 show_US = False
             else:
                 show_US = True
@@ -166,7 +166,7 @@ class network:
                 I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
                 g_inh[self.n_US_ap+n_jit:] = self.g_inh
             R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
-            if self.GiveR:
+            if self.GiveR and show_US:
                 R[self.n_US_ap+n_jit+n_trans] = self.R[trial]
             
             if self.mem_net_id is None:
