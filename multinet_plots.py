@@ -53,7 +53,8 @@ params = {
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
-    'run': 0             # number of run for many runs of same simulation
+    'run': 0,            # number of run for many runs of same simulation
+    'm': 6               # order of gaussian for radial basis function
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
@@ -134,7 +135,7 @@ for i, reward in enumerate(rewards):
     
     norm_R = net.R_est/net.R
     n_trial = net.n_trial
-
+    
     ax.plot(norm_R,label='$R=$'+'${}$'.format(reward),c=colors[i],linewidth=2)
     
 ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
@@ -188,9 +189,10 @@ for i, pat in enumerate(n_pat):
             k = i // 2
             l = i % 2
             
-            axs[k,l].plot(R_est,linewidth=1)
-            axs[k,l].axhline(y=1,c='black',linestyle='--',linewidth=2)
-            axs[k,l].axvline(x=loc,c='red',ls='--')
+            axs[k,l].plot(R_est,linewidth=.5,alpha=.5)
+            axs[k,l].plot(np.average(R_est,axis=1),c='green',linewidth=1)
+            axs[k,l].axhline(y=1,c='black',linestyle='--',linewidth=1.5)
+            axs[k,l].axvline(x=loc,c='red',ls='--',linewidth=1)
             axs[k,l].set_title('$N^{as}=$'+'${}$'.format(pat))
             axs[k,l].set_xlim([0,n_trial[i]])
             axs[k,l].spines['top'].set_visible(False)
@@ -215,6 +217,7 @@ for i, pat in enumerate(n_pat):
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
     
 plt.tight_layout()
+plt.savefig('1a.png',bbox_inches='tight',format='png',dpi=300)
 
 coeff = np.polyfit(n_pat,np.log(t_learned_mean),1)
 x = np.linspace(n_pat[0],n_pat[-1],1000)
@@ -274,9 +277,10 @@ for i, h_d in enumerate(H_d):
             k = i // 2
             l = i % 2
             
-            axs[k,l].plot(R_est,linewidth=1)
-            axs[k,l].axhline(y=1,c='black',linestyle='--',linewidth=2)
-            axs[k,l].axvline(x=loc,c='red',ls='--')
+            axs[k,l].plot(R_est,linewidth=.5,alpha=.5)
+            axs[k,l].axhline(y=1,c='black',linestyle='--',linewidth=1.5)
+            axs[k,l].plot(np.average(R_est,axis=1),c='green',linewidth=1)
+            axs[k,l].axvline(x=loc,c='red',ls='--',linewidth=1)
             axs[k,l].set_title('$H^{d}=$'+'${}$'.format(h_d))
             axs[k,l].set_xlim([0,n_trial[i]])
             axs[k,l].spines['top'].set_visible(False)
@@ -301,6 +305,7 @@ for i, h_d in enumerate(H_d):
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
     
 plt.tight_layout()
+plt.savefig('1b.png',bbox_inches='tight',format='png',dpi=300)
 
 coeff_inv,_,_,_ = np.linalg.lstsq(1/np.array(H_d)[:,np.newaxis],t_learned_mean)
 x = np.linspace(H_d[0],H_d[-1],1000)

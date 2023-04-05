@@ -31,7 +31,7 @@ class network:
         self.n_in = int(params['n_in'])
         self.H_d = params['H_d']
         self.eta = params['eta']
-        self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],params['a'],self.n_assoc) 
+        self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],.01,self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
@@ -61,6 +61,7 @@ class network:
         self.filter = params['filter']
         self.rule = params['rule']
         self.norm = params['norm']
+        self.m = params['m']
         
         # Constant inhibition, to motivate lower firing rates
         self.g_inh = 3*np.sqrt(1/self.n_assoc)
@@ -335,9 +336,9 @@ class network:
             US_est = US_est[None,:]
         
         # Find adjecency to RBF kernels
-        k = (8/self.H_d)**2
+        k = (8/self.H_d)**self.m
         d = np.sqrt(np.sum((US_est[:,None,:] - self.US[None,:])**2,2))
-        R_est = np.dot(self.R,np.exp(-k*d**2).T)
+        R_est = np.dot(self.R,np.exp(-k*d**self.m).T)
         
         return R_est, d
         
@@ -391,6 +392,7 @@ class network2:
         self.filter = params['filter']
         self.rule = params['rule']
         self.norm = params['norm']
+        self.m = params['m']
         
         # Constant inhibition, to motivate lower firing rates
         self.g_inh = 3*np.sqrt(1/self.n_assoc)
@@ -645,7 +647,7 @@ class network2:
         # Find adjecency to RBF kernel
         k = 1
         d = np.sqrt(np.sum((US_est - self.US)**2,1))
-        R_est = np.dot(self.R,np.exp(-k*d**2))
+        R_est = np.dot(self.R,np.exp(-k*d**self.m))
         
         return R_est, d
         

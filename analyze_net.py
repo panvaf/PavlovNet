@@ -23,12 +23,12 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 16,         # number of US/CS pattern associations to be learned
+    'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
-    'a': .01,            # deviation from self-consistency
-    'n_trial': 1e3,      # number of trials
+    'eta': 2e-4,         # learning rate
+    'a': .01,              # deviation from self-consistency
+    'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -47,7 +47,7 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
+    'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
@@ -58,7 +58,8 @@ params = {
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
-    'run': 0             # number of run for many runs of same simulation
+    'run': 0,            # number of run for many runs of same simulation
+    'm': 6               # order of gaussian for radial basis function
     }
 
 params2 = {
@@ -85,13 +86,14 @@ params2 = {
     'cond_dep': False,   # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
-    'norm': None         # normalization strenght for learning rule
+    'norm': None,        # normalization strenght for learning rule
+    'm': 6               # order of gaussian for radial basis function
     }
 
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnlinereprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlinereprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 
@@ -169,7 +171,7 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(25))
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
-    
+
     # Dopamine uptake plot
     if net.DA_plot:
         Z = net.DA_u
@@ -201,8 +203,7 @@ if n_CS == 1:
         ax.zaxis._axinfo["grid"]['color'] =  (1,1,1,0)   
         ax.view_init(25, -105)
         plt.show()
-
-
+    
     # Scatterplot of shaping history of CS-induced responses
     
     if net.Phi_est.ndim==3:
@@ -230,14 +231,14 @@ if n_CS == 1:
         ax.yaxis.set_minor_locator(MultipleLocator(25))
         fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.6, 1),
                    markerscale=3,title_fontsize=SMALL_SIZE)
-    
-        #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
-        #plt.savefig('Sub_his.eps',bbox_inches='tight',format='eps',dpi=300)
         
-        trials = net.n_trial*np.linspace(0,1,100)
+        #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
+        
+        trials = net.n_trial*np.linspace(0,1,100/params['every_perc'])
         fig, ax = plt.subplots(figsize=(2,1.5))
-        ax.plot(trials,net.R_est,linewidth=1)
-        ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
+        ax.plot(trials,net.R_est,linewidth=.5,alpha=.5)
+        ax.plot(trials,np.average(net.R_est,axis=1),c='green',linewidth=1)
+        ax.axhline(y=1,c='black',linestyle='--',linewidth=1.5)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', -.05*net.n_trial))
@@ -250,8 +251,20 @@ if n_CS == 1:
         ax.set_ylabel('Reward')
         ax.set_xlabel('Trials')
         
+        color = 'red'
+        ax1 = ax.twinx()
+        #ax1.plot(trials,np.var(US_est_hist-US,axis=2),color=color,linewidth=.5,alpha=.5)
+        ax1.plot(trials,np.var(US_est_hist-US,axis=(1,2)),color=color,linewidth=1)
+        ax1.set_ylabel('Var($\mathbf{r}^{US}$,$\hat{\mathbf{r}}^{US}\|_{CS}$)', color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['left'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        ax1.spines['right'].set_position(('data', 1.05*net.n_trial))
+        ax1.yaxis.set_major_locator(MultipleLocator(.1))
+        ax1.set_ylim([0,.25])
+        
         #plt.savefig('Cond_his.png',bbox_inches='tight',format='png',dpi=300)
-        #plt.savefig('Cond_his.eps',bbox_inches='tight',format='eps',dpi=300)
     
     # Scatterplot of actual and decoded US digits
     
@@ -262,7 +275,7 @@ if n_CS == 1:
     ax.set_xlim([-.2,1.2])
     ax.set_ylim([-.2,1.2])
     ax.set_xlabel('$\mathbf{r}^{US}$ element')
-    ax.set_ylabel('$\hat{\mathbf{r}}^{US}_{opt}$ element')
+    ax.set_ylabel('$\hat{\mathbf{r}}^{US}\|_{CS}$ element')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_position(('data', -.25))
@@ -271,8 +284,8 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(.25))
     ax.yaxis.set_major_locator(MultipleLocator(.5))
     ax.yaxis.set_minor_locator(MultipleLocator(.25))
+    
     #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
-    #plt.savefig('USdec.eps',bbox_inches='tight',format='eps',dpi=300)
 
 
     # Short-term memory leak plot
@@ -301,7 +314,7 @@ if n_CS == 1:
         t_skip = .2; n_skip = int(t_skip/params['dt'])
         fig, ax = plt.subplots(figsize=(1.5,1.5))
         ax.plot(t[n_skip:],CS_est[n_skip:,:],linewidth=1,zorder=1)
-        ax.axvline(x=.5,color='black',linestyle='dotted',linewidth=1.5,label='$CS$ removed',zorder=0)
+        ax.axvspan(0,.5,facecolor='red',alpha=.2,label='$CS$ present',zorder=0)
         ax.set_xlim([t_skip,t_trial])
         ax.set_ylim([-.2,1.5])
         ax.set_xlabel('Time (s)')
@@ -315,6 +328,9 @@ if n_CS == 1:
         ax.yaxis.set_major_locator(MultipleLocator(.5))
         ax.yaxis.set_minor_locator(MultipleLocator(.25))
         fig.legend(frameon=False)
+        
+        #plt.savefig('mem_leak.png',bbox_inches='tight',format='png',dpi=300)
+        #plt.savefig('mem_leak.eps',bbox_inches='tight',format='eps',dpi=300)
 
 
 # Reward conditioning plot
@@ -329,7 +345,7 @@ if net.est_every:
         fig, ax = plt.subplots(figsize=(1.5,1.5))
         ax.plot(R_est,label='$\hat{R}$',c='green',linewidth=2)
         ax.axhline(y=R,c='black',linestyle='--',linewidth=2,label='$R$')
-        #ax.axvline(x=20,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction onset',zorder=0)
+        #ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction onset',zorder=0)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Reward')
         ax.set_xlim([-.02*n_trial,n_trial])
@@ -372,5 +388,5 @@ if net.est_every:
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
         
-    plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
-    plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
