@@ -23,12 +23,12 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 16,         # number of US/CS pattern associations to be learned
+    'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': .01,              # deviation from self-consistency
-    'n_trial': 1e3,      # number of trials
+    'n_trial': 50,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -42,16 +42,16 @@ params = {
     'R': None,           # reward associated with every US
     'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1,     # store errors this often
+    'every_perc': 2,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
+    'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': False,    # whether to undergo extinction of learned associations
+    'extinct': True,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
@@ -93,7 +93,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlinereprodEstAlways'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlineEstAlwaysreprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 

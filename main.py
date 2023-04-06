@@ -163,10 +163,12 @@ class network:
                 show_US = False
             else:
                 show_US = True
+                
             if show_US:
                 I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
                 g_inh[self.n_US_ap+n_jit:] = self.g_inh
-            R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
+           
+            R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0
             if self.GiveR and show_US:
                 R[self.n_US_ap+n_jit+n_trans] = self.R[trial]
             
@@ -203,8 +205,8 @@ class network:
                 R_est, _ = self.est_R(US_est[None,:])
                 
                 # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,
-                                                   R_est_prev,R_rec,self.dt_ms)
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
+                                                   self.DA_plot,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -216,10 +218,6 @@ class network:
                                 self.dale,self.S,self.filter,self.rule,self.norm)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
-                
-                # Whether the reward was already received
-                if R[i] != 0:
-                    R_rec = True
                 
                 # Update previous estimate
                 R_est_prev = R_est
@@ -480,7 +478,7 @@ class network2:
                 DA_u, DA_r = self.init_net()
             r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, \
                 _, _ = self.init_net()
-            R_est = 0; R_est_prev = 0; R_rec = False
+            R_est = 0; R_est_prev = 0
             
             # Store errors after US appears, omitting transduction delays
             err_1 = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
@@ -503,22 +501,18 @@ class network2:
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,
                                 self.a,self.tau_s)
                 
-                # Perceptual delay during which network is not read out
-                if (i<n_trans) or (self.n_US_ap<i<self.n_US_ap+n_trans):
-                    R_est = R_est_prev
-                else:
-                    # Estimate US
-                    US_est_1 = np.dot(self.D_1,r_1)
-                    US_est_2 = np.dot(self.D_2,r_2)
-    
-                    # Estimate reward
-                    R_est_1, _ = self.est_R(US_est_1[None,:])
-                    R_est_2, _ = self.est_R(US_est_2[None,:])                    
-                    R_est = R_est_1 + R_est_2
+                # Estimate US
+                US_est_1 = np.dot(self.D_1,r_1)
+                US_est_2 = np.dot(self.D_2,r_2)
+                
+                # Estimate reward
+                R_est_1, _ = self.est_R(US_est_1[None,:])
+                R_est_2, _ = self.est_R(US_est_2[None,:])                    
+                R_est = R_est_1 + R_est_2
 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
-                                                   R_rec,self.dt_ms)
+                                                   False,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -534,10 +528,6 @@ class network2:
                     if i>self.n_US_ap+n_trans:
                         err_1[i-self.n_US_ap-n_trans,:] = error_1
                         err_2[i-self.n_US_ap-n_trans,:] = error_2
-                
-                # Whether the reward was already received
-                if R[i] != 0:
-                    R_rec = True
                 
                 # Update previous estimate
                 R_est_prev = R_est
