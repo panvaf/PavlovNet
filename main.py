@@ -196,15 +196,11 @@ class network:
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,
                                 self.a,self.tau_s)
                 
-                # Perceptual delay during which network is not read out
-                if (i<n_trans) or (self.n_US_ap+n_jit<=i<self.n_US_ap+n_jit+n_trans):
-                    R_est = R_est_prev
-                else:
-                    # Estimate US
-                    US_est = np.dot(self.D,r)
+                # Estimate US
+                US_est = np.dot(self.D,r)
                         
-                    # Estimate reward
-                    R_est, _ = self.est_R(US_est[None,:])
+                # Estimate reward
+                R_est, _ = self.est_R(US_est[None,:])
                 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,

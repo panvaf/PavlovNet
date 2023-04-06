@@ -11,7 +11,7 @@ import numpy as np
 
 # Which network and how many CS-US associations to run
 n_CS = 1
-n_pat = 1
+n_pat = 16
 
 # Whether to use the same network initialization and CS-US sets
 reprod = True
@@ -30,9 +30,9 @@ params = {
     'n_pat': n_pat,      # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 2e-4,         # learning rate
+    'eta': 5e-3,         # learning rate
     'a': .01,              # deviation from self-consistency
-    'n_trial': 1e2,      # number of trials
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -51,7 +51,7 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': True,  # whether to estimate US and reward after every trial
+    'est_every': False,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
@@ -97,7 +97,7 @@ params2 = {
 # Save directory
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline' + ('reprod' if reprod else '')
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline' + ('reprod' if reprod else '') + 'EstAlways'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 
