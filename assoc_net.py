@@ -52,7 +52,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 # Dopamine uptake and release dynamics
 
-def DA_dynamics(DA_u,DA_r,R,R_est,R_est_prev,DA_plot,dt,tau_r=200,tau_u=300):
+def DA_dynamics(DA_u,DA_r,R,R_est,R_est_prev,R_rec,dt,tau_r=200,tau_u=300):
     
     # Check whether reward was administered
     if R != 0:
@@ -60,18 +60,15 @@ def DA_dynamics(DA_u,DA_r,R,R_est,R_est_prev,DA_plot,dt,tau_r=200,tau_u=300):
     else:
         R_new = R_est
     
-    # Neurotransmitter released only when reward is administrated
-    DA_r += (R_new-R_est_prev) * 1e3/tau_r
+    # Neurotransmitter released when there is reward prediction error
+    if not R_rec:
+        DA_r += (R_new-R_est_prev) * 1e3/tau_r
     
     # Amount of available dopamine decays with time
     DA_r += -DA_r * dt/tau_r
     
     # Amount of dopamine uptake lags behind available concentration of dopamine
-    if DA_plot:
-        # If strictly plotting dopamine it should be a positive quantity
-        DA_u += (-DA_u + max(DA_r,0)) * dt/tau_u
-    else:
-        DA_u += (-DA_u + DA_r) * dt/tau_u
+    DA_u += (-DA_u + DA_r) * dt/tau_u
     
     return DA_u, DA_r
 

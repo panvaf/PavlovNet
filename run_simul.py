@@ -10,7 +10,7 @@ import util
 import numpy as np
 
 # Which network and how many CS-US associations to run
-n_CS = 1
+n_CS = 2
 n_pat = 1
 
 # Whether to use the same network initialization and CS-US sets
@@ -30,12 +30,12 @@ params = {
     'n_pat': n_pat,      # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
-    'a': .01,              # deviation from self-consistency
-    'n_trial': 50,      # number of trials
-    't_dur': 2,          # duration of trial
-    'CS_disap': 2,       # time in trial that CS disappears
-    'US_ap': 1,          # time in trial that US appears
+    'eta': 1e-3,         # learning rate
+    'a': 1,              # deviation from self-consistency
+    'n_trial': 20,      # number of trials
+    't_dur': 4,          # duration of trial
+    'CS_disap': 4,       # time in trial that CS disappears
+    'US_ap': 3,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': W_rec,      # recurrent weights of associative network
@@ -46,16 +46,16 @@ params = {
     'R': R,              # reward associated with every US
     'S': S,              # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 2,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
-    'GiveR': True,       # whether to provide reward upon US presentation
+    'DA_plot': True,    # whether to keep track of expected reward within trial
+    'GiveR': False,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': True,    # whether to undergo extinction of learned associations
+    'extinct': False,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
@@ -73,7 +73,7 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'a': 0.97,           # deviation from self-consistency
+    'a': 1,           # deviation from self-consistency
     'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
@@ -87,17 +87,17 @@ params2 = {
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs
     'cont': [1,1],       # contingencies of CSs
-    'cond_dep': False,   # whether one CS is conditionally dependent on the other
+    'cond_dep': False, # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,         # normalization strenght for learning rule
-    'm': 6               # order of gaussian for radial basis function
+    'm': 2               # order of gaussian for radial basis function
     }
 
 # Save directory
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnlineEstAlways' + ('reprod' if reprod else '')
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline' + ('reprod' if reprod else '')
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 

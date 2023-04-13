@@ -14,7 +14,7 @@ import torch
 from mpl_toolkits.mplot3d import axes3d
 
 # Which network type to load
-n_CS = 1
+n_CS = 2
 
 # Determine parameters to load the appropriate network
 params = {
@@ -26,12 +26,12 @@ params = {
     'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
-    'a': .01,              # deviation from self-consistency
-    'n_trial': 50,      # number of trials
-    't_dur': 2,          # duration of trial
-    'CS_disap': 2,       # time in trial that CS disappears
-    'US_ap': 1,          # time in trial that US appears
+    'eta': 1e-3,         # learning rate
+    'a': 1,              # deviation from self-consistency
+    'n_trial': 20,      # number of trials
+    't_dur': 4,          # duration of trial
+    'CS_disap': 4,       # time in trial that CS disappears
+    'US_ap': 3,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
@@ -42,16 +42,16 @@ params = {
     'R': None,           # reward associated with every US
     'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 2,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
-    'GiveR': True,       # whether to provide reward upon US presentation
+    'DA_plot': True,    # whether to keep track of expected reward within trial
+    'GiveR': False,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': True,    # whether to undergo extinction of learned associations
+    'extinct': False,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
@@ -69,8 +69,8 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'a': 0.97,           # deviation from self-consistency
-    'n_trial': 5e2,      # number of trials
+    'a': 1,           # deviation from self-consistency
+    'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
@@ -82,20 +82,20 @@ params2 = {
     'est_every': True,   # whether to estimate US and reward after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative saliance of CSs
-    'cont': [.8,.4],       # contingencies of CSs
+    'cont': [1,1],       # contingencies of CSs
     'cond_dep': False,   # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
-    'm': 6               # order of gaussian for radial basis function
+    'm': 2               # order of gaussian for radial basis function
     }
 
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlineEstAlwaysreprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonline'
 elif n_CS == 2:
-    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
+    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAonline'
 
 with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
     net = pickle.load(f)
@@ -237,7 +237,7 @@ if n_CS == 1:
         trials = net.n_trial*np.linspace(0,1,100/params['every_perc'])
         fig, ax = plt.subplots(figsize=(2,1.5))
         ax.plot(trials,net.R_est,linewidth=.5,alpha=.5)
-        ax.plot(trials,np.average(net.R_est,axis=1),c='green',linewidth=1)
+        ax.plot(trials,np.average(net.R_est,axis=1),c='green',linewidth=1.5)
         ax.axhline(y=1,c='black',linestyle='--',linewidth=1.5)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -254,7 +254,7 @@ if n_CS == 1:
         color = 'red'
         ax1 = ax.twinx()
         #ax1.plot(trials,np.var(US_est_hist-US,axis=2),color=color,linewidth=.5,alpha=.5)
-        ax1.plot(trials,np.var(US_est_hist-US,axis=(1,2)),color=color,linewidth=1)
+        ax1.plot(trials,np.var(US_est_hist-US,axis=(1,2)),color=color,linewidth=1.5)
         ax1.set_ylabel('Var($\mathbf{r}^{US}$,$\hat{\mathbf{r}}^{US}\|_{CS}$)', color=color)
         ax1.tick_params(axis='y', labelcolor=color)
         ax1.spines['top'].set_visible(False)
@@ -390,3 +390,20 @@ if net.est_every:
         
     #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
     #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+''' 
+# Similarity curves
+d = np.linspace(-3,3,100)
+n2 = np.exp(-d**2); n4 = np.exp(-d**4); n6 = np.exp(-d**6)
+
+fig, ax = plt.subplots(figsize=(2,1.5))
+ax.plot(d,n2,label='Gaussian (order=2)')
+ax.plot(d,n4,label='Hyper-gaussian (order=4)')
+ax.plot(d,n6,label='Hyper-gaussian (order=6)')
+ax.set_xlabel('Distance from $r^{US}$')
+ax.set_ylabel('Surprise')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+fig.legend(frameon=False,loc='right',bbox_to_anchor=(1.1, 1.3))
+
+#plt.savefig('rbf_kernels.png',bbox_inches='tight',format='png',dpi=300)
+'''
