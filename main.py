@@ -209,7 +209,7 @@ class network:
                 
                 # Diffuse dopamine signal dynamics
                 DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
-                                                   R_rec,self.dt_ms)
+                                                       R_rec,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -376,7 +376,7 @@ class network2:
         self.tau_s = params['tau_s']
         self.n_in = int(params['n_in'])
         self.eta = params['eta']
-        self.a = params['a'] if params['a']>.5 else np.random.normal(1,params['a'],self.n_assoc) 
+        self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],.01,self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
@@ -521,10 +521,11 @@ class network2:
                     R_est_1, _ = self.est_R(US_est_1[None,:])
                     R_est_2, _ = self.est_R(US_est_2[None,:])                    
                     R_est = R_est_1 + R_est_2
-
+                    
                 # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
-                                                   R_rec,self.dt_ms)
+                if i>self.n_US_ap:
+                    DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
+                                                       R_rec,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)

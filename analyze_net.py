@@ -14,7 +14,7 @@ import torch
 from mpl_toolkits.mplot3d import axes3d
 
 # Which network type to load
-n_CS = 2
+n_CS = 1
 
 # Determine parameters to load the appropriate network
 params = {
@@ -26,12 +26,12 @@ params = {
     'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 1e-3,         # learning rate
-    'a': 1,              # deviation from self-consistency
-    'n_trial': 20,      # number of trials
-    't_dur': 4,          # duration of trial
-    'CS_disap': 4,       # time in trial that CS disappears
-    'US_ap': 3,          # time in trial that US appears
+    'eta': 5e-3,         # learning rate
+    'a': .97,              # deviation from self-consistency
+    'n_trial': 40,      # number of trials
+    't_dur': 2,          # duration of trial
+    'CS_disap': 2,       # time in trial that CS disappears
+    'US_ap': 1,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
@@ -42,15 +42,15 @@ params = {
     'R': None,           # reward associated with every US
     'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 5,     # store errors this often
+    'every_perc': 2,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
-    'DA_plot': True,    # whether to keep track of expected reward within trial
-    'GiveR': False,       # whether to provide reward upon US presentation
-    'flip': False,       # whether to flip the US-CS associations mid-learning
+    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'GiveR': True,       # whether to provide reward upon US presentation
+    'flip': True,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
@@ -59,7 +59,7 @@ params = {
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'run': 0,            # number of run for many runs of same simulation
-    'm': 6               # order of gaussian for radial basis function
+    'm': 2               # order of gaussian for radial basis function
     }
 
 params2 = {
@@ -69,8 +69,8 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'a': 1,           # deviation from self-consistency
-    'n_trial': 1e2,      # number of trials
+    'a': .97,           # deviation from self-consistency
+    'n_trial': 5e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
@@ -82,8 +82,8 @@ params2 = {
     'est_every': True,   # whether to estimate US and reward after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative saliance of CSs
-    'cont': [1,1],       # contingencies of CSs
-    'cond_dep': False,   # whether one CS is conditionally dependent on the other
+    'cont': [.8,.4],       # contingencies of CSs
+    'cond_dep': True,   # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
@@ -93,7 +93,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonline'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlinereprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAonline'
 
@@ -372,7 +372,7 @@ if net.est_every:
         #ax.plot([],[],linestyle='',label='\n')
         #ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented',zorder=0)
         #ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented',zorder=0)
-        #ax.plot(R_est,c='green',linewidth=2,zorder=1)
+        ax.plot(R_est,c='green',linewidth=2,zorder=1)
         ax.axhline(y=R,c='black',linestyle='--',linewidth=2)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Reward')
