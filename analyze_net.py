@@ -27,8 +27,8 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': .97,              # deviation from self-consistency
-    'n_trial': 40,      # number of trials
+    'a': .01,              # deviation from self-consistency
+    'n_trial': 50,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -48,10 +48,10 @@ params = {
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'DA_plot': True,    # whether to keep track of expected reward within trial
     'GiveR': True,       # whether to provide reward upon US presentation
-    'flip': True,       # whether to flip the US-CS associations mid-learning
-    'extinct': False,    # whether to undergo extinction of learned associations
+    'flip': False,       # whether to flip the US-CS associations mid-learning
+    'extinct': True,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
@@ -93,7 +93,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlinereprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlinereprodnullUS'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAonline'
 

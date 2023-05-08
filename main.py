@@ -101,6 +101,8 @@ class network:
         # Compute decoder matrix
         self.est_decoder()
         
+        self.null_US = np.random.choice([0,1],self.n_in)
+        
     
     def simulate(self):
         # Simulation method
@@ -167,10 +169,15 @@ class network:
             if show_US:
                 I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
                 g_inh[self.n_US_ap+n_jit:] = self.g_inh
+            else:
+                I_ff[self.n_US_ap+n_jit:,:] = self.null_US
+                g_inh[self.n_US_ap+n_jit:] = self.g_inh
             
             R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
             if self.GiveR and show_US:
                 R[self.n_US_ap+n_jit+n_trans] = self.R[trial]
+            else:
+                R[self.n_US_ap+n_jit+n_trans] = -1
             
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
