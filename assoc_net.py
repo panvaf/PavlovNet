@@ -111,7 +111,7 @@ def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
     if dale:
         W_rec[np.dot(W_rec,S)<0] = 0
     
-    return W_rec, W_fb
+    return W_rec, W_fb, dW_rec, dW_fb
 
 
 # Find instructed steady-state firing rate for given feedforward input

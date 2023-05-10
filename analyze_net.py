@@ -19,7 +19,7 @@ n_CS = 1
 # Determine parameters to load the appropriate network
 params = {
     'dt': 1e-3,          # euler integration step size
-    'n_assoc': 64,       # number of associative neurons
+    'n_assoc': 32,       # number of associative neurons
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
@@ -27,7 +27,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': .01,              # deviation from self-consistency
+    'a': .97,              # deviation from self-consistency
     'n_trial': 50,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
@@ -49,6 +49,7 @@ params = {
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': True,    # whether to keep track of expected reward within trial
+    'trial_dyn': True,  # whether to store trial dynamics
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': True,    # whether to undergo extinction of learned associations
@@ -93,7 +94,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonlinereprodnullUS'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonline'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAonline'
 
@@ -387,9 +388,51 @@ if net.est_every:
         ax.yaxis.set_major_locator(MultipleLocator(R_max/2))
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
-        
+    
     #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
     #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+    
+if net.trial_dyn:
+    
+    trials = [2,20,40]
+    t = np.linspace(0,net.t_dur,int(net.t_dur/net.dt))
+    
+    dW_rec = net.dW_rec.reshape(*net.dW_rec.shape[:1], -1, *net.dW_rec.shape[-1:])
+    dW_fb = net.dW_fb.reshape(*net.dW_fb.shape[:1], -1, *net.dW_fb.shape[-1:])
+    
+    fig, axs = plt.subplots(5, 3, figsize=(10,10), sharex = True, sharey = 'row')
+    
+    for j, trial in enumerate(trials):
+        
+        # Expectation
+        axs[0,j].plot(t,net.R_est_tr[trial,:])
+        axs[0,j].set_title('Trial {}'.format(trial))
+        axs[0,j].set_ylabel('$E$')
+        
+        # Neuromodulator concentration
+        axs[1,j].plot(t,net.DA_u[trial,:])
+        axs[1,j].set_ylabel('Neuromodulator')
+        
+        # Firing rate error
+        axs[2,j].plot(t,net.error[trial,:].T*1000)
+        axs[2,j].set_ylabel('Firing rate error (spikes/s)')
+        
+        # PSPs
+        axs[3,j].plot(t,net.PSP[trial,:].T)
+        axs[3,j].set_ylabel('PSPs')
+        
+        # Weight change
+        axs[4,j].plot(t,dW_rec[trial,:].T)
+        axs[4,j].plot(t,dW_fb[trial,:].T)
+        axs[4,j].set_ylabel('$\delta W$')
+       
+    for ax in axs.flat:
+        ax.set_xlabel('Time (s)')
+        ax.label_outer()
+        
+    fig.tight_layout()
+
+
 ''' 
 # Similarity curves
 d = np.linspace(-3,3,100)

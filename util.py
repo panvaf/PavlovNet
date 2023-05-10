@@ -82,6 +82,7 @@ def filename(params):
     
     filename =  format(params['n_trial'],'.0e').replace('+0','') + \
         'trials' + str(params['n_pat']) + 'pat' + \
+        (('dt' + str(params['dt'])) if params['dt'] != 1e-3 else '') + \
         (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
         (('CSdis' + str(params['CS_disap'])) if params['CS_disap'] != params['t_dur'] else '') + \
         (('USap' + str(params['US_ap'])) if params['US_ap'] != 0 else '') + \
@@ -98,7 +99,8 @@ def filename(params):
         ('Dale' if params['dale'] else '') + ('NoR' if not params['GiveR'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
-        ('DAplot' if params['DA_plot'] else '') + ('Flip' if params['flip'] else '') + \
+        ('DAplot' if params['DA_plot'] else '') + ('TrialDyn' if params['trial_dyn'] else '') + \
+        ('Flip' if params['flip'] else '') + \
         ('Extinct' if params['extinct'] else '') + ('Reacquire' if params['reacquire'] else '') + \
         ('Exact' if params['exact'] else '') + ('NoFilt' if not params['filter'] else '') + \
         ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '') + \

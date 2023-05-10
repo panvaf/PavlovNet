@@ -52,6 +52,7 @@ class network:
         self.US_jit = params['US_jit']; self.n_US_jit = int(self.US_jit/self.dt)
         self.est_every = params['est_every']
         self.DA_plot = params['DA_plot']
+        self.trial_dyn = params['trial_dyn']
         self.GiveR = params['GiveR']
         self.flip = params['flip']
         self.extinct = params['extinct']
@@ -130,6 +131,15 @@ class network:
         # Store expected reward for entire trial to create DA release plots
         if self.DA_plot:
             self.DA_u = np.zeros((self.n_trial,self.n_time))
+            
+        # Store other within trial dynamics    
+        if self.trial_dyn:
+            self.error = np.zeros((self.n_trial,self.n_assoc,self.n_time))
+            self.PSP = np.zeros((self.n_trial,self.n_assoc+self.n_fb,self.n_time))
+            self.dW_rec = np.zeros((self.n_trial,self.n_assoc,self.n_assoc,self.n_time))
+            self.dW_fb = np.zeros((self.n_trial,self.n_assoc,self.n_fb,self.n_time))
+            self.R_est_tr = np.zeros((self.n_trial,self.n_time))
+            #self.US_est_tr = np.zeros((self.n_trial,self.n_in,self.n_time))
         
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
@@ -168,9 +178,6 @@ class network:
                 
             if show_US:
                 I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
-                g_inh[self.n_US_ap+n_jit:] = self.g_inh
-            else:
-                I_ff[self.n_US_ap+n_jit:,:] = self.null_US
                 g_inh[self.n_US_ap+n_jit:] = self.g_inh
             
             R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
@@ -223,7 +230,7 @@ class network:
                 
                 # Weight modification
                 if self.train:
-                    self.W_rec, self.W_fb = assoc_net.learn_rule(self.W_rec,
+                    self.W_rec, self.W_fb, dW_rec, dW_fb = assoc_net.learn_rule(self.W_rec,
                                 self.W_fb,r,error,Delta,PSP,eta,self.dt_ms,
                                 self.dale,self.S,self.filter,self.rule,self.norm)
                     if i>self.n_US_ap+n_trans:
@@ -240,6 +247,15 @@ class network:
                 # Save dopamine uptake at any point in trial
                 if self.DA_plot:
                     self.DA_u[j,i] = DA_u
+                
+                # Same trial dynamics
+                if self.trial_dyn:
+                    self.error[j,:,i] = error
+                    self.PSP[j,:,i] = PSP
+                    self.dW_rec[j,:,:,i] = dW_rec
+                    self.dW_fb[j,:,:,i] = dW_fb
+                    self.R_est_tr[j,i] = R_est
+                    #self.US_est_tr[j,:,i] = US_est
                 
             # Save network estimates after each trial
             if self.est_every:
@@ -539,10 +555,10 @@ class network2:
                 
                 # Weight modification
                 if self.train:
-                    self.W_rec_1, self.W_fb_1 = assoc_net.learn_rule(self.W_rec_1,
+                    self.W_rec_1, self.W_fb_1, dW_rec_1, dW_fb_1 = assoc_net.learn_rule(self.W_rec_1,
                                 self.W_fb_1,r_1,error_1,Delta_1,PSP_1,eta,self.dt_ms,
                                 self.dale,self.S,self.filter,self.rule,self.norm)
-                    self.W_rec_2, self.W_fb_2 = assoc_net.learn_rule(self.W_rec_2,
+                    self.W_rec_2, self.W_fb_2, dW_rec_2, dW_fb_2 = assoc_net.learn_rule(self.W_rec_2,
                                 self.W_fb_2,r_2,error_2,Delta_2,PSP_2,eta,self.dt_ms,
                                 self.dale,self.S,self.filter,self.rule,self.norm)
                     if i>self.n_US_ap+n_trans:

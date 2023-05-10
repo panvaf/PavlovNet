@@ -23,7 +23,7 @@ else:
 
 params = {
     'dt': 1e-3,          # euler integration step size
-    'n_assoc': 64,       # number of associative neurons
+    'n_assoc': 32,       # number of associative neurons
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
@@ -31,7 +31,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': .01,              # deviation from self-consistency
+    'a': .97,              # deviation from self-consistency
     'n_trial': 50,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
@@ -53,6 +53,7 @@ params = {
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': True,    # whether to keep track of expected reward within trial
+    'trial_dyn': True,  # whether to store trial dynamics
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': True,    # whether to undergo extinction of learned associations
@@ -97,7 +98,7 @@ params2 = {
 # Save directory
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline' + ('reprod' if reprod else '') + 'nullUS'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline' + ('reprod' if reprod else '')
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
 
