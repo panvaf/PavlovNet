@@ -14,7 +14,7 @@ n_CS = 1
 n_pat = 1
 
 # Whether to use the same network initialization and CS-US sets
-reprod = True
+reprod = False
 if reprod:
     d = np.load('reproduce1.npz'); W_rec = d['W_rec']; W_ff = d['W_ff']; S = np.diag(np.ones(W_rec.shape[0]))
     W_fb = d['W_fb']; US = d['US'][0:n_pat]; CS = d['CS'][0:n_pat]; R = np.ones(W_rec.shape[0])[0:n_pat]
@@ -61,7 +61,7 @@ params = {
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
-    'rule': 'Pred',      # learning rule used in associative network
+    'rule': 'BCM',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
@@ -73,9 +73,9 @@ params2 = {
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
-    'eta': 5e-4,         # learning rate
+    'eta': 5e-3,         # learning rate
     'a': 1,           # deviation from self-consistency
-    'n_trial': 5e2,      # number of trials
+    'n_trial': 50,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears

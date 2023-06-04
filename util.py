@@ -99,6 +99,7 @@ def filename(params):
         ('Dale' if params['dale'] else '') + ('NoR' if not params['GiveR'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
+        (params['rule'] if params['rule'] != 'Pred' else '') + \
         ('DAplot' if params['DA_plot'] else '') + ('TrialDyn' if params['trial_dyn'] else '') + \
         ('Flip' if params['flip'] else '') + \
         ('Extinct' if params['extinct'] else '') + ('Reacquire' if params['reacquire'] else '') + \

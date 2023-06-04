@@ -333,7 +333,6 @@ if n_CS == 1:
         #plt.savefig('mem_leak.png',bbox_inches='tight',format='png',dpi=300)
         #plt.savefig('mem_leak.eps',bbox_inches='tight',format='eps',dpi=300)
 
-
 # Reward conditioning plot
 
 if net.est_every:
@@ -394,7 +393,7 @@ if net.est_every:
     
 if net.trial_dyn:
     
-    trials = [2,20,40]
+    trials = [1,15,40]
     t = np.linspace(0,net.t_dur,int(net.t_dur/net.dt))
     
     dW_rec = net.dW_rec.reshape(*net.dW_rec.shape[:1], -1, *net.dW_rec.shape[-1:])
@@ -432,6 +431,8 @@ if net.trial_dyn:
         
     fig.tight_layout()
 
+    plt.savefig('trial_dyn.png',bbox_inches='tight',format='png',dpi=300)
+    plt.savefig('trial_dyn.eps',bbox_inches='tight',format='eps',dpi=300)
 
 ''' 
 # Similarity curves
