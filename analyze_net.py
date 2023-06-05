@@ -94,9 +94,9 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAonline'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
 elif n_CS == 2:
-    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAonline'
+    filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
 with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
     net = pickle.load(f)

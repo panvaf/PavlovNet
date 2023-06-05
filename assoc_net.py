@@ -54,15 +54,9 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 def DA_dynamics(DA_u,DA_r,R,R_est,R_est_prev,R_rec,dt,tau_r=200,tau_u=300):
     
-    # Check whether reward was administered
+    # Neurotransmitter released with external reward only
     if R != 0:
-        R_new = R
-    else:
-        R_new = R_est
-    
-    # Neurotransmitter released when there is reward prediction error
-    if not R_rec:
-        DA_r += (R_new-R_est_prev) * 1e3/tau_r
+        DA_r += (R-R_est_prev) * 1e3/tau_r
     
     # Amount of available dopamine decays with time
     DA_r += -DA_r * dt/tau_r

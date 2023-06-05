@@ -61,7 +61,7 @@ params = {
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
-    'rule': 'BCM',      # learning rule used in associative network
+    'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
@@ -98,9 +98,9 @@ params2 = {
 # Save directory
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline' + ('reprod' if reprod else '')
+    filename = util.filename(params) + 'gsh3gD2gL1taul20' + ('reprod' if reprod else '')
 elif n_CS == 2:
-    filename = util.filename2(params2) + 'gsh3gD2gL1taul20DAOnline'
+    filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
 # Run simulation
 if n_CS == 1:    
