@@ -393,7 +393,7 @@ if net.est_every:
     
 if net.trial_dyn:
     
-    trials = [1,15,40]
+    trials = [1,14,39]
     t = np.linspace(0,net.t_dur,int(net.t_dur/net.dt))
     
     dW_rec = net.dW_rec.reshape(*net.dW_rec.shape[:1], -1, *net.dW_rec.shape[-1:])
@@ -405,7 +405,7 @@ if net.trial_dyn:
         
         # Expectation
         axs[0,j].plot(t,net.R_est_tr[trial,:])
-        axs[0,j].set_title('Trial {}'.format(trial))
+        axs[0,j].set_title('Trial {}'.format(trial+1))
         axs[0,j].set_ylabel('$E$')
         
         # Neuromodulator concentration

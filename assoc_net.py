@@ -52,11 +52,15 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 # Dopamine uptake and release dynamics
 
-def DA_dynamics(DA_u,DA_r,R,R_est,R_est_prev,R_rec,dt,tau_r=200,tau_u=300):
+def DA_dynamics(DA_u,DA_r,R,R_est,R_est_prev,R_rec,dt,tau_r=200,tau_u=300,thres=0.01):
     
     # Neurotransmitter released with external reward only
     if R != 0:
-        DA_r += (R-R_est_prev) * 1e3/tau_r
+        # If no expectation, no surprise
+        if R<0 and R_est_prev<thres:
+            pass
+        else:
+            DA_r += (R-R_est_prev) * 1e3/tau_r
     
     # Amount of available dopamine decays with time
     DA_r += -DA_r * dt/tau_r
