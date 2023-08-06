@@ -80,7 +80,7 @@ def learn_rate(DA_u,eta):
 # Define learning rule dynamics
 
 def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
-               rule='Pred',norm=10,tau_d=100,r_m=.02):
+               rule='Pred',norm=10,r_m=.02,tau_d=100):
     
     n_neu = W_rec.shape[0]
     

@@ -32,7 +32,7 @@ params = {
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': .97,              # deviation from self-consistency
-    'n_trial': 50,      # number of trials
+    'n_trial': 20,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -46,7 +46,7 @@ params = {
     'R': R,              # reward associated with every US
     'S': S,              # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 2,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
@@ -56,7 +56,7 @@ params = {
     'trial_dyn': True,  # whether to store trial dynamics
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': True,    # whether to undergo extinction of learned associations
+    'extinct': False,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward

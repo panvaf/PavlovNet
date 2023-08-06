@@ -26,7 +26,7 @@ params = {
     'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-3,         # learning rate
+    'eta': 5e-2,         # learning rate
     'a': .97,              # deviation from self-consistency
     'n_trial': 50,      # number of trials
     't_dur': 2,          # duration of trial
@@ -49,15 +49,15 @@ params = {
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': True,    # whether to keep track of expected reward within trial
-    'trial_dyn': True,  # whether to store trial dynamics
+    'trial_dyn': False,  # whether to store trial dynamics
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': True,    # whether to undergo extinction of learned associations
+    'extinct': False,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
-    'rule': 'Pred',      # learning rule used in associative network
+    'rule': 'BCM',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
@@ -94,7 +94,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
@@ -161,9 +161,9 @@ if n_CS == 1:
     ax.scatter(Phi.flatten()*1000,Phi_est.flatten()*1000,s=.25,
                color='green',alpha=.5,zorder=1)
     ax.set_xlim([0,100])
-    ax.set_ylim([0,100])
-    ax.set_xlabel('$f(\mathbf{V}) \|_{US}$ (spikes/s)')
-    ax.set_ylabel('$f(\mathbf{V}) \|_{CS}$ (spikes/s)')
+    ax.set_ylim([0,102])
+    ax.set_xlabel('$f(\mathbf{V})\mid_{US}$ (spikes/s)')
+    ax.set_ylabel('$f(\mathbf{V})\mid_{CS}$ (spikes/s)')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_position(('data', -5))
@@ -390,10 +390,10 @@ if net.est_every:
     
     #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
     #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
-    
+
 if net.trial_dyn:
     
-    trials = [1,14,39]
+    trials = [0,2,14]
     t = np.linspace(0,net.t_dur,int(net.t_dur/net.dt))
     
     dW_rec = net.dW_rec.reshape(*net.dW_rec.shape[:1], -1, *net.dW_rec.shape[-1:])
@@ -424,7 +424,7 @@ if net.trial_dyn:
         axs[4,j].plot(t,dW_rec[trial,:].T)
         axs[4,j].plot(t,dW_fb[trial,:].T)
         axs[4,j].set_ylabel('$\delta W$')
-       
+        
     for ax in axs.flat:
         ax.set_xlabel('Time (s)')
         ax.label_outer()

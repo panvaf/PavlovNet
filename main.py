@@ -67,6 +67,10 @@ class network:
         # Constant inhibition, to motivate lower firing rates
         self.g_inh = 3*np.sqrt(1/self.n_assoc)
         
+        # Averaging window for BCM rule
+        self.T = 1
+        self.alpha = self.dt/self.T
+        
         # Load memory network, implemented by pretrained RNN
         if self.mem_net_id is not None:
             net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms)
@@ -198,7 +202,7 @@ class network:
                     I_fb = fr[0,:].detach().numpy()
             
             # Initialize network
-            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r = self.init_net()
+            r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r = self.init_net()
             
             # Store errors after US appears, omitting transduction delays
             err = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
@@ -211,6 +215,9 @@ class network:
                                 self.W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,self.dt_ms,
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,
                                 self.a,self.tau_s)
+                
+                # Update time-averaged firing rate (exponential average)
+                r_m = (1-self.alpha) * r_m + self.alpha * r
                 
                 if (i<n_trans) or (self.n_US_ap<=i<self.n_US_ap+n_trans):
                     R_est = R_est_prev
@@ -232,7 +239,7 @@ class network:
                 if self.train:
                     self.W_rec, self.W_fb, dW_rec, dW_fb = assoc_net.learn_rule(self.W_rec,
                                 self.W_fb,r,error,Delta,PSP,eta,self.dt_ms,
-                                self.dale,self.S,self.filter,self.rule,self.norm)
+                                self.dale,self.S,self.filter,self.rule,self.norm,self.r_m)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
                 
@@ -307,9 +314,10 @@ class network:
         I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_fb))
         PSP = np.zeros(self.n_assoc+self.n_fb); I_PSP = np.zeros(self.n_assoc+self.n_fb)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
-        r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0 
+        r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0
+        r_m = np.random.uniform(0,.15,self.n_assoc)
         
-        return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
+        return r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
     
     
     def est_US(self,t_mult=5):
@@ -367,7 +375,7 @@ class network:
         
         return R_est, d
         
-            
+    
     def get_Phi(self):
         # Finds and stores steady-state firing rates for all USs
         
