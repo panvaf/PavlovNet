@@ -68,7 +68,7 @@ class network:
         self.g_inh = 3*np.sqrt(1/self.n_assoc)
         
         # Averaging window for BCM rule
-        self.T = 1
+        self.T = params['T']
         self.alpha = self.dt/self.T
         
         # Load memory network, implemented by pretrained RNN
@@ -239,7 +239,7 @@ class network:
                 if self.train:
                     self.W_rec, self.W_fb, dW_rec, dW_fb = assoc_net.learn_rule(self.W_rec,
                                 self.W_fb,r,error,Delta,PSP,eta,self.dt_ms,
-                                self.dale,self.S,self.filter,self.rule,self.norm,self.r_m)
+                                self.dale,self.S,self.filter,self.rule,self.norm,r_m)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
                 
@@ -315,7 +315,7 @@ class network:
         PSP = np.zeros(self.n_assoc+self.n_fb); I_PSP = np.zeros(self.n_assoc+self.n_fb)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
         r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0
-        r_m = np.random.uniform(0,.15,self.n_assoc)
+        r_m = np.zeros(self.n_assoc)
         
         return r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
     
@@ -346,7 +346,7 @@ class network:
                     I_fb = fr[0,:].detach().numpy()
             
             # initialize network
-            r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, _, _ = self.init_net()
+            r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, _, _ = self.init_net()
             
             for j in range(1,n_settle):
                 
@@ -387,10 +387,10 @@ class network:
             I_ff = US
             
             # Find the steady-state firing rate
-            r_m = assoc_net.ss_fr(I_ff,self.W_ff,self.g_inh,self.fun)
+            r_ss = assoc_net.ss_fr(I_ff,self.W_ff,self.g_inh,self.fun)
             
             # Store steady-state firing rate
-            self.Phi[i,:] = r_m
+            self.Phi[i,:] = r_ss
             
 
 # Two associative networks class
@@ -693,12 +693,12 @@ class network2:
         I_ff = self.US
         
         # Find the steady-state firing rate
-        r_m_1 = assoc_net.ss_fr(I_ff,self.W_ff_1,self.g_inh,self.fun)
-        r_m_2 = assoc_net.ss_fr(I_ff,self.W_ff_2,self.g_inh,self.fun)
+        r_ss_1 = assoc_net.ss_fr(I_ff,self.W_ff_1,self.g_inh,self.fun)
+        r_ss_2 = assoc_net.ss_fr(I_ff,self.W_ff_2,self.g_inh,self.fun)
         
         # Store steady-state firing rate
-        self.Phi_1 = r_m_1
-        self.Phi_2 = r_m_2
+        self.Phi_1 = r_ss_1
+        self.Phi_2 = r_ss_2
 
 
 # RNN class

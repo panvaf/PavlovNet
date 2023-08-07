@@ -19,16 +19,16 @@ n_CS = 1
 # Determine parameters to load the appropriate network
 params = {
     'dt': 1e-3,          # euler integration step size
-    'n_assoc': 32,       # number of associative neurons
+    'n_assoc': 64,       # number of associative neurons
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 1,         # number of US/CS pattern associations to be learned
+    'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-2,         # learning rate
-    'a': .97,              # deviation from self-consistency
-    'n_trial': 50,      # number of trials
+    'a': 1,              # deviation from self-consistency
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -42,13 +42,13 @@ params = {
     'R': None,           # reward associated with every US
     'S': None,           # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 2,     # store errors this often
+    'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': True,  # whether to estimate US and reward after every trial
-    'DA_plot': True,    # whether to keep track of expected reward within trial
+    'est_every': False,  # whether to estimate US and reward after every trial
+    'DA_plot': False,    # whether to keep track of expected reward within trial
     'trial_dyn': False,  # whether to store trial dynamics
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
@@ -59,6 +59,7 @@ params = {
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'BCM',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
+    'T': .75,              # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
     }
@@ -94,7 +95,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAOnline'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
@@ -209,7 +210,7 @@ if n_CS == 1:
     
     if net.Phi_est.ndim==3:
         
-        snaps = np.array([0,2,9,49])
+        snaps = np.array([0,2,9,19])
         trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
         cols = ['dodgerblue','darkslateblue','darkorange','green']
         
@@ -235,7 +236,7 @@ if n_CS == 1:
         
         #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
         
-        trials = net.n_trial*np.linspace(0,1,100/params['every_perc'])
+        trials = net.n_trial*np.linspace(0,1,int(100/params['every_perc']))
         fig, ax = plt.subplots(figsize=(2,1.5))
         ax.plot(trials,net.R_est,linewidth=.5,alpha=.5)
         ax.plot(trials,np.average(net.R_est,axis=1),c='green',linewidth=1.5)
@@ -431,8 +432,8 @@ if net.trial_dyn:
         
     fig.tight_layout()
 
-    plt.savefig('trial_dyn.png',bbox_inches='tight',format='png',dpi=300)
-    plt.savefig('trial_dyn.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('trial_dyn.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('trial_dyn.eps',bbox_inches='tight',format='eps',dpi=300)
 
 ''' 
 # Similarity curves

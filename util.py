@@ -104,9 +104,11 @@ def filename(params):
         ('Flip' if params['flip'] else '') + \
         ('Extinct' if params['extinct'] else '') + ('Reacquire' if params['reacquire'] else '') + \
         ('Exact' if params['exact'] else '') + ('NoFilt' if not params['filter'] else '') + \
-        ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '') + \
+        (params['rule'] if params['rule'] != 'Pred' else '') + \
+        (str(params['norm']) if params['rule'] == 'Hebb' else '') + \
+        (str(params['T']) if params['rule'] == 'BCM' else '') + \
         (('run' + str(params['run'])) if params['run'] != 0 else '')
-        
+         
     return filename
 
 

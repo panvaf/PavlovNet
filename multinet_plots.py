@@ -53,6 +53,7 @@ params = {
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
+    'T': 1,              # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 6               # order of gaussian for radial basis function
     }
