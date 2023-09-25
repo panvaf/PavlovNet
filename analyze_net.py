@@ -26,12 +26,12 @@ params = {
     'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-2,         # learning rate
+    'eta': 0.3,         # learning rate
     'a': 1,              # deviation from self-consistency
     'n_trial': 1e3,      # number of trials
-    't_dur': 2,          # duration of trial
-    'CS_disap': 2,       # time in trial that CS disappears
-    'US_ap': 1,          # time in trial that US appears
+    't_dur': 1.5,          # duration of trial
+    'CS_disap': 1.5,       # time in trial that CS disappears
+    'US_ap': .5,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
@@ -58,8 +58,8 @@ params = {
     'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'BCM',      # learning rule used in associative network
-    'norm': None,        # normalization strenght for learning rule
-    'T': .75,              # temporal window for averaging firing rates for BCM rule
+    'norm': .1,        # normalization strenght for learning rule
+    'T': .3,              # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
     }
@@ -72,9 +72,9 @@ params2 = {
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
     'a': .97,           # deviation from self-consistency
-    'n_trial': 5e2,      # number of trials
+    'n_trial': 3e2,      # number of trials
     't_dur': 2,          # duration of trial
-    'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
+    'CS_2_ap_tr': 1e2,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'fun': 'logistic',   # activation function of associative network
@@ -82,10 +82,10 @@ params2 = {
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'est_every': True,   # whether to estimate US and reward after every trial
-    'overexp': False,    # whether to test for overexpectation effects
+    'overexp': True,    # whether to test for overexpectation effects
     'salience': 1,       # relative saliance of CSs
-    'cont': [.8,.4],       # contingencies of CSs
-    'cond_dep': True,   # whether one CS is conditionally dependent on the other
+    'cont': [1,1],       # contingencies of CSs
+    'cond_dep': False,   # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
@@ -173,6 +173,8 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(25))
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
+    
+    #plt.savefig('Stim_sub.png',bbox_inches='tight',format='png',dpi=300)
 
     # Dopamine uptake plot
     if net.DA_plot:
@@ -210,7 +212,7 @@ if n_CS == 1:
     
     if net.Phi_est.ndim==3:
         
-        snaps = np.array([0,2,9,19])
+        snaps = np.array([0,2,9,49])
         trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
         cols = ['dodgerblue','darkslateblue','darkorange','green']
         
@@ -231,7 +233,7 @@ if n_CS == 1:
         ax.xaxis.set_minor_locator(MultipleLocator(25))
         ax.yaxis.set_major_locator(MultipleLocator(50))
         ax.yaxis.set_minor_locator(MultipleLocator(25))
-        fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.6, 1),
+        fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.3, 1),
                    markerscale=3,title_fontsize=SMALL_SIZE)
         
         #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
@@ -250,14 +252,14 @@ if n_CS == 1:
         ax.yaxis.set_major_locator(MultipleLocator(.5))
         ax.yaxis.set_minor_locator(MultipleLocator(.25))
         ax.set_xlim([0,net.n_trial])
-        ax.set_ylabel('Reward')
+        ax.set_ylabel('Expectation')
         ax.set_xlabel('Trials')
         
         color = 'red'
         ax1 = ax.twinx()
         #ax1.plot(trials,np.var(US_est_hist-US,axis=2),color=color,linewidth=.5,alpha=.5)
         ax1.plot(trials,np.var(US_est_hist-US,axis=(1,2)),color=color,linewidth=1.5)
-        ax1.set_ylabel('Var($\mathbf{r}^{US}$,$\hat{\mathbf{r}}^{US}\|_{CS}$)', color=color)
+        ax1.set_ylabel('Var[$\mathbf{r}^{US}$,$\hat{\mathbf{r}}^{US}\|_{CS}$]', color=color)
         ax1.tick_params(axis='y', labelcolor=color)
         ax1.spines['top'].set_visible(False)
         ax1.spines['left'].set_visible(False)
@@ -344,11 +346,11 @@ if net.est_every:
         R_est = net.R_est
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
-        ax.plot(R_est,label='$\hat{R}$',c='green',linewidth=2)
-        ax.axhline(y=R,c='black',linestyle='--',linewidth=2,label='$R$')
-        #ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction onset',zorder=0)
+        ax.plot(R_est,label='$E$',c='green',linewidth=2)
+        ax.axhline(y=R,c='black',linestyle='--',linewidth=2)
+        #ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction',zorder=0)
         ax.set_xlabel('Trials')
-        ax.set_ylabel('Reward')
+        ax.set_ylabel('Expectation')
         ax.set_xlim([-.02*n_trial,n_trial])
         ax.set_ylim([-.02*R,1.02*R])
         ax.spines['top'].set_visible(False)
@@ -359,7 +361,7 @@ if net.est_every:
         ax.xaxis.set_minor_locator(MultipleLocator(n_trial/4))
         ax.yaxis.set_major_locator(MultipleLocator(R/2))
         ax.yaxis.set_minor_locator(MultipleLocator(R/4))
-        fig.legend(frameon=False,loc='right')
+        #fig.legend(frameon=False,loc='right')
         
     elif n_CS == 2:
         R_est_1 = net.R_est_1
@@ -368,26 +370,26 @@ if net.est_every:
         R_est_max = np.max(R_est); R_max = np.ceil(10*np.max([R_est_max,R]))/10; R_max = R
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
-        ax.plot(R_est_1,c='dodgerblue',linewidth=2,label='$\hat{R}_1$',zorder=1)
-        ax.plot(R_est_2,c='darkorange',linewidth=2,label='$\hat{R}_2$',zorder=1)
+        ax.plot(R_est_1,c='dodgerblue',linewidth=2,zorder=1)
+        ax.plot(R_est_2,c='darkorange',linewidth=2,zorder=1)
         #ax.plot([],[],linestyle='',label='\n')
-        #ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented',zorder=0)
-        #ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented',zorder=0)
+        ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented, $CS_1$ removed',zorder=0)
+        ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented',zorder=0)
         ax.plot(R_est,c='green',linewidth=2,zorder=1)
         ax.axhline(y=R,c='black',linestyle='--',linewidth=2)
         ax.set_xlabel('Trials')
-        ax.set_ylabel('Reward')
+        ax.set_ylabel('Expectation')
         ax.set_xlim([0,n_trial])
-        ax.set_ylim([-.02*R_max,1.02*R_max])
+        ax.set_ylim([-.02*R_max,2.02*R_max])
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', -.05*n_trial))
         ax.spines['bottom'].set_position(('data', -.05*R_max))
         ax.xaxis.set_major_locator(MultipleLocator(int(n_trial/2)))
         ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
-        ax.yaxis.set_major_locator(MultipleLocator(R_max/2))
-        ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
-        fig.legend(frameon=False,loc='upper',ncol=2,bbox_to_anchor=(1.2, 1.35))
+        ax.yaxis.set_major_locator(MultipleLocator(R_max))
+        ax.yaxis.set_minor_locator(MultipleLocator(R_max/2))
+        fig.legend(frameon=False,ncol=1,bbox_to_anchor=(.85, 1.15))
     
     #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
     #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)

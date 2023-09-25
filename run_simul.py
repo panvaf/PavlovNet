@@ -17,7 +17,7 @@ n_pat = 16
 reprod = True
 if reprod:
     d = np.load('reproduce1.npz'); W_rec = d['W_rec']; W_ff = d['W_ff']; S = np.diag(np.ones(W_rec.shape[0]))
-    W_fb = d['W_fb']; US = d['US'][0:n_pat]; CS = d['CS'][0:n_pat]; R = np.ones(W_rec.shape[0])[0:n_pat]
+    W_fb = d['W_fb']; US = d['US'][:n_pat]; CS = d['CS'][:n_pat]; R = np.ones(W_rec.shape[0])[:n_pat]
 else:
     W_rec = None; W_ff = None; W_fb = None; US = None; CS = None; R = None; S = None
 
@@ -30,12 +30,12 @@ params = {
     'n_pat': n_pat,      # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 5e-2,         # learning rate
+    'eta': 0.3,         # learning rate
     'a': 1,              # deviation from self-consistency
     'n_trial': 1e3,      # number of trials
-    't_dur': 2,          # duration of trial
-    'CS_disap': 2,       # time in trial that CS disappears
-    'US_ap': 1,          # time in trial that US appears
+    't_dur': 1.5,          # duration of trial
+    'CS_disap': 1.5,       # time in trial that CS disappears
+    'US_ap': .5,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': W_rec,      # recurrent weights of associative network
@@ -63,7 +63,7 @@ params = {
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'BCM',      # learning rule used in associative network
     'norm': None,        # normalization strenght for Oja's learning rule
-    'T': .75,              # temporal window for averaging firing rates for BCM rule
+    'T': .3,              # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
     }
@@ -74,11 +74,11 @@ params2 = {
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
-    'eta': 5e-3,         # learning rate
-    'a': 1,           # deviation from self-consistency
-    'n_trial': 50,      # number of trials
+    'eta': 5e-4,         # learning rate
+    'a': .97,           # deviation from self-consistency
+    'n_trial': 3e2,      # number of trials
     't_dur': 2,          # duration of trial
-    'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
+    'CS_2_ap_tr': 1e2,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'fun': 'logistic',   # activation function of associative network
@@ -86,10 +86,10 @@ params2 = {
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'est_every': True,   # whether to estimate US and reward after every trial
-    'overexp': False,    # whether to test for overexpectation effects
+    'overexp': True,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs
-    'cont': [.8,.4],       # contingencies of CSs
-    'cond_dep': True, # whether one CS is conditionally dependent on the other
+    'cont': [1,1],       # contingencies of CSs
+    'cond_dep': False, # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,         # normalization strenght for learning rule

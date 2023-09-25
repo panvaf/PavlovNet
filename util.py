@@ -99,7 +99,6 @@ def filename(params):
         ('Dale' if params['dale'] else '') + ('NoR' if not params['GiveR'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
-        (params['rule'] if params['rule'] != 'Pred' else '') + \
         ('DAplot' if params['DA_plot'] else '') + ('TrialDyn' if params['trial_dyn'] else '') + \
         ('Flip' if params['flip'] else '') + \
         ('Extinct' if params['extinct'] else '') + ('Reacquire' if params['reacquire'] else '') + \
@@ -107,6 +106,7 @@ def filename(params):
         (params['rule'] if params['rule'] != 'Pred' else '') + \
         (str(params['norm']) if params['rule'] == 'Hebb' else '') + \
         (str(params['T']) if params['rule'] == 'BCM' else '') + \
+        (str(params['norm']) if params['rule'] == 'W_decay' else '') + \
         (('run' + str(params['run'])) if params['run'] != 0 else '')
          
     return filename
@@ -129,7 +129,7 @@ def filename2(params):
         ('Dale' if params['dale'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('Overexp' if params['overexp'] else '') + \
         (('sal' + str(params['salience'])) if params['salience'] != 1 else '') + \
-        (('con' + ''.join(str(x) for x in params['cont'])) if np.any(params['cont'] != 1) else '') + \
+        (('con' + ''.join(str(x) for x in params['cont'])) if np.any([element != 1 for element in params['cont']]) else '') + \
         ('CondDep' if params['cond_dep'] else '') + ('NoFilt' if not params['filter'] else '') + \
         ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '')
         

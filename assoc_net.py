@@ -92,6 +92,9 @@ def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
         PI = np.outer(r,PSP) - norm*np.multiply(r[:,np.newaxis]**2,W)
     elif rule == 'BCM':
         PI = np.outer(r*(r-r_m),PSP)
+    elif rule == 'W_decay':
+        W = np.concatenate((W_rec,W_fb),axis=1)
+        PI = np.outer(r,PSP) - norm*W
     
     # Low-pass filter weight updates
     if filt:

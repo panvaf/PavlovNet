@@ -217,7 +217,7 @@ class network:
                                 self.a,self.tau_s)
                 
                 # Update time-averaged firing rate (exponential average)
-                r_m = (1-self.alpha) * r_m + self.alpha * r
+                r_m = (1-self.alpha) * r_m + self.alpha * self.a * r
                 
                 if (i<n_trans) or (self.n_US_ap<=i<self.n_US_ap+n_trans):
                     R_est = R_est_prev
@@ -315,7 +315,7 @@ class network:
         PSP = np.zeros(self.n_assoc+self.n_fb); I_PSP = np.zeros(self.n_assoc+self.n_fb)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
         r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0
-        r_m = np.zeros(self.n_assoc)
+        r_m = np.random.uniform(0,.15,self.n_assoc)
         
         return r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
     
