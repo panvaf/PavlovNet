@@ -44,18 +44,19 @@ params = {
     'out': True,         # whether to feed output of RNN to associative net
     'est_every': False,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
+    'trial_dyn': False,  # whether to store trial dynamics
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned association
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
-    'low': .5,           # lowest possible reward
+    'low': 1,           # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'T': 1,              # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
-    'm': 6               # order of gaussian for radial basis function
+    'm': 2               # order of gaussian for radial basis function
     }
 
 data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
@@ -93,7 +94,7 @@ for i, t_d in enumerate(delays):
         net = pickle.load(f)
     
     # Find mean and 95 % intervals of conditioned response across CSs
-    perc_CR[i] = 100*np.divide(net.R_est,net.R)
+    perc_CR[i] = np.divide(net.R_est,net.R)
     perc_CR_mean[i] = np.mean(perc_CR[i])
     (perc_CR_025[i], perc_CR_975[i]) = st.t.interval(alpha=0.95,
             df=len(perc_CR[i])-1, loc=np.mean(perc_CR[i]), scale=st.sem(perc_CR[i]))
@@ -103,18 +104,21 @@ params['CS_disap'] = 2; params['US_ap'] = 1; params['t_dur'] = 2
 fig, ax = plt.subplots(figsize=(2,1.5))
 plt.scatter(delays,perc_CR_mean,color = 'green',s=10)
 plt.errorbar(delays,perc_CR_mean,[perc_CR_mean-perc_CR_025,perc_CR_975-perc_CR_mean],color = 'green',linestyle='')
-plt.ylabel('Conditioned Response %')
+plt.ylabel('Expectation')
 plt.xlabel('$t_d$ (s)')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.spines['left'].set_position(('data', -1.5))
-ax.spines['bottom'].set_position(('data', -5))
+ax.spines['bottom'].set_position(('data', -.05))
 plt.xlim([delays[0]-.3,delays[-1]+.3])
-plt.ylim([0,100])
-ax.yaxis.set_major_locator(MultipleLocator(50))
-ax.yaxis.set_minor_locator(MultipleLocator(25))
+plt.ylim([0,1])
+ax.yaxis.set_major_locator(MultipleLocator(.5))
+ax.yaxis.set_minor_locator(MultipleLocator(.25))
 ax.xaxis.set_major_locator(MultipleLocator(2))
 ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+#plt.savefig('trace_cond.png',bbox_inches='tight',format='png',dpi=300)
+#plt.savefig('trace_cond.eps',bbox_inches='tight',format='eps',dpi=300)
 
 # Rate of acquisition as a function of reward size plot
 
@@ -218,7 +222,7 @@ for i, pat in enumerate(n_pat):
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
     
 plt.tight_layout()
-plt.savefig('1a.png',bbox_inches='tight',format='png',dpi=300)
+#plt.savefig('1a.png',bbox_inches='tight',format='png',dpi=300)
 
 coeff = np.polyfit(n_pat,np.log(t_learned_mean),1)
 x = np.linspace(n_pat[0],n_pat[-1],1000)
@@ -230,7 +234,7 @@ fit = np.exp(m*x+t)
 
 fig, ax = plt.subplots(figsize=(2,1.5))
 plt.loglog(x,fit_ln,color='black',linewidth=1,label='Exponential Fit')
-ax.set_xscale("log", basex=2)
+ax.set_xscale("log", base=2)
 plt.scatter(n_pat,t_learned_mean,color = 'green',s=10,label='Data')
 plt.errorbar(n_pat,t_learned_mean,[t_learned_mean-t_learned_025,t_learned_975-t_learned_mean],color = 'green',linestyle='')
 plt.ylabel('# trials to learn')
@@ -306,7 +310,7 @@ for i, h_d in enumerate(H_d):
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
     
 plt.tight_layout()
-plt.savefig('1b.png',bbox_inches='tight',format='png',dpi=300)
+#plt.savefig('1b.png',bbox_inches='tight',format='png',dpi=300)
 
 coeff_inv,_,_,_ = np.linalg.lstsq(1/np.array(H_d)[:,np.newaxis],t_learned_mean)
 x = np.linspace(H_d[0],H_d[-1],1000)
@@ -325,3 +329,56 @@ ax.spines['right'].set_visible(False)
 plt.legend(loc='upper center',markerscale=1,frameon=False)
 
 #plt.savefig('4c.eps',bbox_inches='tight',format='eps',dpi=300)
+
+params['n_pat'] = 16; params['H_d'] = 8; params['n_trial'] = 1e3
+params['dale'] = True; params['out'] = True; params['exact'] = False
+params['est_every'] = False; params['filter'] = False
+params['mem_net_id'] = 'MemNet64tdur3iter1e5Noise0.1'
+
+
+# BCM for different averaging windows and trial configurations
+
+params['eta'] = 0.3
+params['rule'] = 'BCM'
+Ts = [0.1,0.2,0.3,0.4]
+tUSs = [0.5, 0.75, 1]
+colors = ['purple','red','green']
+
+exp_mean = np.zeros((len(Ts),len(tUSs)))
+exp_025 = np.zeros((len(Ts),len(tUSs)))
+exp_975 = np.zeros((len(Ts),len(tUSs)))
+
+for j, tUS in enumerate(tUSs):
+    
+    params['US_ap'] = tUS
+    params['CS_disap'] = tUS + 1
+    params['t_dur'] = tUS + 1
+    
+    for i, T in enumerate(Ts):
+        
+        params['T'] = T
+        
+        filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
+        with open(data_path+filename+'.pkl', 'rb') as f:
+            net = pickle.load(f)
+            
+        exp = net.R_est[-1]
+        exp_mean[i,j] = np.mean(exp)
+        (exp_025[i,j], exp_975[i,j]) = st.t.interval(alpha=0.95,
+                df=len(exp)-1, loc=np.mean(exp), scale=st.sem(exp))
+
+fig, ax = plt.subplots(figsize=(2,1.5))
+for j in range(len(tUSs)):
+    plt.scatter(Ts,exp_mean[:,j],color = colors[j],s=10,label='{}'.format(tUSs[j]))
+    plt.errorbar(Ts,exp_mean[:,j],[exp_mean[:,j]-exp_025[:,j],exp_975[:,j]-exp_mean[:,j]],color=colors[j],linestyle='')
+plt.ylabel('Expectation')
+fig.gca().set_xlabel(r'$\tau_\theta$ (s)')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', 0.07))
+ax.spines['bottom'].set_position(('data', -.05))
+#plt.xlim([Ts[0],Ts[-1]])
+plt.ylim([0,1])
+ax.yaxis.set_major_locator(MultipleLocator(.5))
+ax.yaxis.set_minor_locator(MultipleLocator(.25))   
+fig.legend(frameon=False,loc='right',bbox_to_anchor=(.45,.8), title="$t_{US}$ (s)")
