@@ -37,8 +37,7 @@ class network:
         self.train = params['train']
         self.US = params['US']
         self.CS = params['CS']
-        self.R = params['R']
-        self.S = params['S']
+        self.sign = params['sign']
         self.fun = params['fun']
         self.every_perc = params['every_perc']
         self.dale = params['dale']
@@ -58,7 +57,6 @@ class network:
         self.extinct = params['extinct']
         self.reacquire = params['reacquire']
         self.exact = params['exact']
-        self.low = params['low']
         self.filter = params['filter']
         self.rule = params['rule']
         self.norm = params['norm']
@@ -85,7 +83,6 @@ class network:
         # Generate US and CS patterns if not available
         if self.US is None:
             self.gen_US_CS()
-            self.R = np.random.uniform(low=self.low,high=1,size=self.n_pat)
         
         # Weights
         if params['W_rec'] is None:
@@ -94,14 +91,14 @@ class network:
             self.W_fb = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_fb))
             if self.dale:
                 # All recurrent connections should be excitatory
-                S = np.ones(self.n_assoc); self.S = np.diag(S)                
+                sign = np.ones(self.n_assoc); self.sign = np.diag(sign)                
                 self.W_rec = np.abs(self.W_rec)
             
         else:
             self.W_rec = params['W_rec']
             self.W_ff = params['W_ff']
             self.W_fb = params['W_fb']
-            self.S = params['S']
+            self.sign = params['sign']
         
         # Compute decoder matrix
         self.est_decoder()
@@ -130,7 +127,7 @@ class network:
             
         self.US_est = np.zeros(tuple([store_size])+self.CS.shape)
         self.Phi_est = np.zeros(tuple([store_size])+self.Phi.shape)
-        self.R_est = np.zeros(tuple([store_size])+self.R.shape)
+        self.E = np.zeros(tuple([store_size])+(self.n_pat,))
         
         # Store expected reward for entire trial to create DA release plots
         if self.DA_plot:
@@ -142,7 +139,7 @@ class network:
             self.PSP = np.zeros((self.n_trial,self.n_assoc+self.n_fb,self.n_time))
             self.dW_rec = np.zeros((self.n_trial,self.n_assoc,self.n_assoc,self.n_time))
             self.dW_fb = np.zeros((self.n_trial,self.n_assoc,self.n_fb,self.n_time))
-            self.R_est_tr = np.zeros((self.n_trial,self.n_time))
+            self.E_tr = np.zeros((self.n_trial,self.n_time))
             #self.US_est_tr = np.zeros((self.n_trial,self.n_in,self.n_time))
         
         # Transduction delays for perception of reward
@@ -157,12 +154,12 @@ class network:
                     flip = np.zeros(self.n_in,dtype=bool)
                     flip[sample(range(self.n_in),self.H_d)] = True
                     self.US = np.concatenate((np.invert(self.US.astype(bool),where=flip).astype(float),self.US))
-                    self.R = np.concatenate((self.R,self.R))
+                    #self.R = np.concatenate((self.R,self.R))
                     self.est_decoder()
                 else:
                     self.US = self.US[::-1]
                     self.Phi = self.Phi[::-1]
-                    self.R = self.R[::-1]
+                    #self.R = self.R[::-1]
                     
             # Jitter US appearance time
             if self.US_jit != 0:
@@ -184,9 +181,9 @@ class network:
                 I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
                 g_inh[self.n_US_ap+n_jit:] = self.g_inh
             
-            R = np.zeros(self.n_time); R_est = 0; R_est_prev = 0; R_rec = False
+            R = np.zeros(self.n_time); E = 0
             if self.GiveR and show_US:
-                R[self.n_US_ap+n_jit+n_trans] = self.R[trial]
+                R[self.n_US_ap+n_jit+n_trans] = 1
             else:
                 R[self.n_US_ap+n_jit+n_trans] = -1
             
@@ -219,18 +216,17 @@ class network:
                 # Update time-averaged firing rate (exponential average)
                 r_m = (1-self.alpha) * r_m + self.alpha * self.a * r
                 
-                if (i<n_trans) or (self.n_US_ap<=i<self.n_US_ap+n_trans):
-                    R_est = R_est_prev
+                if (i<n_trans) or (self.n_US_ap<=i<=self.n_US_ap+n_trans):
+                    pass
                 else:
                     # Estimate US
                     US_est = np.dot(self.D,r)
-                            
-                    # Estimate reward
-                    R_est, _ = self.est_R(US_est[None,:])
+                                
+                    # Form expectation
+                    E, _ = self.est_R(US_est[None,:])
                 
                 # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
-                                                       R_rec,self.dt_ms)
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],E,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -239,17 +235,9 @@ class network:
                 if self.train:
                     self.W_rec, self.W_fb, dW_rec, dW_fb = assoc_net.learn_rule(self.W_rec,
                                 self.W_fb,r,error,Delta,PSP,eta,self.dt_ms,
-                                self.dale,self.S,self.filter,self.rule,self.norm,r_m)
+                                self.dale,self.sign,self.filter,self.rule,self.norm,r_m)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
-                
-                # Whether the reward was already received
-                if R[i] != 0:
-                    R_rec = True
-                    #R_est = R[i]
-                
-                # Update previous estimate
-                R_est_prev = R_est
                 
                 # Save dopamine uptake at any point in trial
                 if self.DA_plot:
@@ -261,13 +249,13 @@ class network:
                     self.PSP[j,:,i] = PSP
                     self.dW_rec[j,:,:,i] = dW_rec
                     self.dW_fb[j,:,:,i] = dW_fb
-                    self.R_est_tr[j,i] = R_est
+                    self.E_tr[j,i] = E
                     #self.US_est_tr[j,:,i] = US_est
                 
             # Save network estimates after each trial
             if self.est_every:
                 self.US_est[j,:], self.Phi_est[j,:] = self.est_US()
-                self.R_est[j,:], _ = self.est_R(self.US_est[j,:])
+                self.E[j,:], _ = self.est_R(self.US_est[j,:])
             
             # Obtain average error at the end of every batch of trials
             if (j % batch_size == 0):
@@ -279,7 +267,7 @@ class network:
                 # Save estimates at the end of every batch
                 if not self.est_every:
                     self.US_est[batch_num,:], self.Phi_est[batch_num,:] = self.est_US()
-                    self.R_est[batch_num,:], _ = self.est_R(self.US_est[batch_num,:])
+                    self.E[batch_num,:], _ = self.est_R(self.US_est[batch_num,:])
                     
                 batch_num += 1
         
@@ -371,9 +359,9 @@ class network:
         # Find adjecency to RBF kernels
         k = (8/self.H_d)**self.m
         d = np.sqrt(np.sum((US_est[:,None,:] - self.US[None,:])**2,2))
-        R_est = np.dot(self.R,np.exp(-k*d**self.m).T)
+        E = np.max(np.exp(-k*d**self.m))
         
-        return R_est, d
+        return E, d
         
     
     def get_Phi(self):
@@ -434,7 +422,6 @@ class network2:
         self.US = np.random.choice([0,1],self.n_in)
         self.CS_1 = self.salience * np.random.choice([0,1],self.n_in)
         self.CS_2 = np.random.choice([0,1],self.n_in)
-        self.R = 1
         
         # Weights
         self.W_rec_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
@@ -445,11 +432,11 @@ class network2:
         self.W_fb_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
         if self.dale:
             # All recurrent connections should be excitatory
-            S = np.ones(self.n_assoc); self.S = np.diag(S)                
+            sign = np.ones(self.n_assoc); self.sign = np.diag(sign)                
             self.W_rec_1 = np.abs(self.W_rec_1)
             self.W_rec_2 = np.abs(self.W_rec_2)
         else:
-            self.S = None
+            self.sign = None
         
         # Compute decoder matrices
         self.est_decoders()
@@ -476,8 +463,8 @@ class network2:
         self.US_est_2 = np.zeros((store_size,self.n_in))
         self.Phi_1_est = np.zeros((store_size,self.n_assoc))
         self.Phi_2_est = np.zeros((store_size,self.n_assoc))
-        self.R_est_1 = np.zeros(store_size)
-        self.R_est_2 = np.zeros(store_size)
+        self.E_1 = np.zeros(store_size)
+        self.E_2 = np.zeros(store_size)
             
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
@@ -502,7 +489,7 @@ class network2:
         # Inputs to network
         I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
         g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
-        R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = self.R
+        R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = 1; E = 0
         I_fb_1 = np.zeros((self.n_time,self.n_in))
         I_fb_2 = np.zeros((self.n_time,self.n_in))
         
@@ -517,7 +504,6 @@ class network2:
                 DA_u, DA_r = self.init_net()
             r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, \
                 _, _ = self.init_net()
-            R_est = 0; R_est_prev = 0; R_rec = 0
             
             # Store errors after US appears, omitting transduction delays
             err_1 = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
@@ -541,22 +527,20 @@ class network2:
                                 self.a,self.tau_s)
                 
                 # Perceptual delay during which network is not read out
-                if (i<n_trans) or (self.n_US_ap<=i<self.n_US_ap+n_trans):
-                    R_est = R_est_prev
+                if (i<n_trans) or (self.n_US_ap<=i<=self.n_US_ap+n_trans):
+                    pass
                 else:
                     # Estimate US
                     US_est_1 = np.dot(self.D_1,r_1)
                     US_est_2 = np.dot(self.D_2,r_2)
                     
-                    # Estimate reward
-                    R_est_1, _ = self.est_R(US_est_1[None,:])
-                    R_est_2, _ = self.est_R(US_est_2[None,:])                    
-                    R_est = R_est_1 + R_est_2
+                    # Form expectation
+                    E_1, _ = self.est_R(US_est_1[None,:])
+                    E_2, _ = self.est_R(US_est_2[None,:])                    
+                    E = E_1 + E_2
                     
                 # Diffuse dopamine signal dynamics
-                if i>self.n_US_ap:
-                    DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],R_est,R_est_prev,
-                                                       R_rec,self.dt_ms)
+                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],E,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(DA_u,self.eta)
@@ -565,27 +549,20 @@ class network2:
                 if self.train:
                     self.W_rec_1, self.W_fb_1, dW_rec_1, dW_fb_1 = assoc_net.learn_rule(self.W_rec_1,
                                 self.W_fb_1,r_1,error_1,Delta_1,PSP_1,eta,self.dt_ms,
-                                self.dale,self.S,self.filter,self.rule,self.norm)
+                                self.dale,self.sign,self.filter,self.rule,self.norm)
                     self.W_rec_2, self.W_fb_2, dW_rec_2, dW_fb_2 = assoc_net.learn_rule(self.W_rec_2,
                                 self.W_fb_2,r_2,error_2,Delta_2,PSP_2,eta,self.dt_ms,
-                                self.dale,self.S,self.filter,self.rule,self.norm)
+                                self.dale,self.sign,self.filter,self.rule,self.norm)
                     if i>self.n_US_ap+n_trans:
                         err_1[i-self.n_US_ap-n_trans,:] = error_1
                         err_2[i-self.n_US_ap-n_trans,:] = error_2
-                
-                # Whether the reward was already received
-                if R[i] != 0:
-                    R_rec = True
-                
-                # Update previous estimate
-                R_est_prev = R_est
                         
             # Save network estimates after each trial
             if self.est_every:
                 [self.US_est_1[j,:], self.US_est_2[j,:]], [self.Phi_1_est[j,:], 
                                          self.Phi_2_est[j,:]] = self.est_US()
-                self.R_est_1[j], _ = self.est_R(self.US_est_1[j,:][None,:])
-                self.R_est_2[j], _ = self.est_R(self.US_est_2[j,:][None,:])
+                self.E_1[j], _ = self.est_R(self.US_est_1[j,:][None,:])
+                self.E_2[j], _ = self.est_R(self.US_est_2[j,:][None,:])
             
             
             # Obtain average error at the end of every batch of trials
@@ -603,8 +580,8 @@ class network2:
                     [self.US_est_1[batch_num,:], self.US_est_2[batch_num,:]], \
                                 [self.Phi_1_est[batch_num,:],
                                  self.Phi_2_est[batch_num,:]] = self.est_US()
-                    self.R_est_1[batch_num,:], _ = self.est_R(self.US_est_1[batch_num,:][None,:])
-                    self.R_est_2[batch_num,:], _ = self.est_R(self.US_est_2[batch_num,:][None,:])
+                    self.E_1[batch_num,:], _ = self.est_R(self.US_est_1[batch_num,:][None,:])
+                    self.E_2[batch_num,:], _ = self.est_R(self.US_est_2[batch_num,:][None,:])
                 
                 batch_num += 1
         
@@ -681,9 +658,9 @@ class network2:
         # Find adjecency to RBF kernel
         k = 1
         d = np.sqrt(np.sum((US_est - self.US)**2,1))
-        R_est = np.dot(self.R,np.exp(-k*d**self.m))
+        E = np.max(np.exp(-k*d**self.m))
         
-        return R_est, d
+        return E, d
         
     
     def get_Phis(self):

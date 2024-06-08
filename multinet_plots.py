@@ -382,3 +382,6 @@ plt.ylim([0,1])
 ax.yaxis.set_major_locator(MultipleLocator(.5))
 ax.yaxis.set_minor_locator(MultipleLocator(.25))   
 fig.legend(frameon=False,loc='right',bbox_to_anchor=(.45,.8), title="$t_{US}$ (s)")
+
+#plt.savefig('BCM_sweep.png',bbox_inches='tight',format='png',dpi=300)
+#plt.savefig('BCM_sweep.eps',bbox_inches='tight',format='eps',dpi=300)

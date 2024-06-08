@@ -23,15 +23,15 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 16,         # number of US/CS pattern associations to be learned
+    'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
-    'eta': 0.3,         # learning rate
-    'a': 1,              # deviation from self-consistency
-    'n_trial': 1e3,      # number of trials
-    't_dur': 1.5,          # duration of trial
-    'CS_disap': 1.5,       # time in trial that CS disappears
-    'US_ap': .5,          # time in trial that US appears
+    'eta': 5e-3,         # learning rate
+    'a': 0.97,              # deviation from self-consistency
+    'n_trial': 20,      # number of trials
+    't_dur': 2,          # duration of trial
+    'CS_disap': 2,       # time in trial that CS disappears
+    'US_ap': 1,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
     'train': True,       # whether to train network or not
     'W_rec': None,       # recurrent weights of associative network
@@ -39,28 +39,26 @@ params = {
     'W_fb': None,        # feedback weights to associative neurons
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
-    'R': None,           # reward associated with every US
-    'S': None,           # sign of neurons
+    'sign': None,        # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
+    'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
-    'trial_dyn': False,  # whether to store trial dynamics
+    'trial_dyn': True,  # whether to store trial dynamics
     'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
-    'low': 1,            # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
-    'rule': 'BCM',      # learning rule used in associative network
+    'rule': 'Pred',      # learning rule used in associative network
     'norm': .1,        # normalization strenght for learning rule
-    'T': .3,              # temporal window for averaging firing rates for BCM rule
-    'run': 0,            # number of run for many runs of same simulation
+    'T': 1,              # temporal window for averaging firing rates for BCM rule
+    'run': 10,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
     }
 
@@ -95,7 +93,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
@@ -240,8 +238,8 @@ if n_CS == 1:
         
         trials = net.n_trial*np.linspace(0,1,int(100/params['every_perc']))
         fig, ax = plt.subplots(figsize=(2,1.5))
-        ax.plot(trials,net.R_est,linewidth=.5,alpha=.5)
-        ax.plot(trials,np.average(net.R_est,axis=1),c='green',linewidth=1.5)
+        ax.plot(trials,net.E,linewidth=.5,alpha=.5)
+        ax.plot(trials,np.average(net.E,axis=1),c='green',linewidth=1.5)
         ax.axhline(y=1,c='black',linestyle='--',linewidth=1.5)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -339,44 +337,43 @@ if n_CS == 1:
 # Reward conditioning plot
 
 if net.est_every:
-    R = net.R
     n_trial = net.n_trial
     
     if n_CS == 1:
-        R_est = net.R_est
+        E = net.E
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
-        ax.plot(R_est,label='$E$',c='green',linewidth=2)
-        ax.axhline(y=R,c='black',linestyle='--',linewidth=2)
+        ax.plot(E,label='$E$',c='green',linewidth=2)
+        ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
         #ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction',zorder=0)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Expectation')
         ax.set_xlim([-.02*n_trial,n_trial])
-        ax.set_ylim([-.02*R,1.02*R])
+        ax.set_ylim([-.02,1.02])
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', -.05*n_trial))
-        ax.spines['bottom'].set_position(('data', -.05*R))
+        ax.spines['bottom'].set_position(('data', -.05))
         ax.xaxis.set_major_locator(MultipleLocator(int(n_trial/2)))
         ax.xaxis.set_minor_locator(MultipleLocator(n_trial/4))
-        ax.yaxis.set_major_locator(MultipleLocator(R/2))
-        ax.yaxis.set_minor_locator(MultipleLocator(R/4))
+        ax.yaxis.set_major_locator(MultipleLocator(1/2))
+        ax.yaxis.set_minor_locator(MultipleLocator(1/4))
         #fig.legend(frameon=False,loc='right')
         
     elif n_CS == 2:
-        R_est_1 = net.R_est_1
-        R_est_2 = net.R_est_2
-        R_est = R_est_1 + R_est_2
-        R_est_max = np.max(R_est); R_max = np.ceil(10*np.max([R_est_max,R]))/10; R_max = R
+        E_1 = net.E_1
+        E_2 = net.E_2
+        E = E_1 + E_2
+        E_max = np.max(E); R_max = np.ceil(10*np.max([E_max,1]))/10
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
-        ax.plot(R_est_1,c='dodgerblue',linewidth=2,zorder=1)
-        ax.plot(R_est_2,c='darkorange',linewidth=2,zorder=1)
+        ax.plot(E_1,c='dodgerblue',linewidth=2,zorder=1)
+        ax.plot(E_2,c='darkorange',linewidth=2,zorder=1)
         #ax.plot([],[],linestyle='',label='\n')
         ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented, $CS_1$ removed',zorder=0)
         ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented',zorder=0)
-        ax.plot(R_est,c='green',linewidth=2,zorder=1)
-        ax.axhline(y=R,c='black',linestyle='--',linewidth=2)
+        ax.plot(E,c='green',linewidth=2,zorder=1)
+        ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Expectation')
         ax.set_xlim([0,n_trial])
@@ -394,7 +391,7 @@ if net.est_every:
     #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
     #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
 
-if net.trial_dyn:
+if n_CS == 1 and net.trial_dyn:
     
     trials = [0,2,14]
     t = np.linspace(0,net.t_dur,int(net.t_dur/net.dt))
@@ -407,7 +404,7 @@ if net.trial_dyn:
     for j, trial in enumerate(trials):
         
         # Expectation
-        axs[0,j].plot(t,net.R_est_tr[trial,:])
+        axs[0,j].plot(t,net.E_tr[trial,:])
         axs[0,j].set_title('Trial {}'.format(trial+1))
         axs[0,j].set_ylabel('$E$')
         

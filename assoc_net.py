@@ -52,15 +52,15 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 # Dopamine uptake and release dynamics
 
-def DA_dynamics(DA_u,DA_r,R,R_est,R_est_prev,R_rec,dt,tau_r=200,tau_u=300,thres=0.01):
+def DA_dynamics(DA_u,DA_r,R,E,dt,tau_r=200,tau_u=300,thres=0.01):
     
     # Neurotransmitter released with external reward only
     if R != 0:
         # If no expectation, no surprise
-        if R<0 and R_est_prev<thres:
+        if R<0 and E<thres:
             pass
         else:
-            DA_r += (R-R_est_prev) * 1e3/tau_r
+            DA_r += (R-E) * 1e3/tau_r
     
     # Amount of available dopamine decays with time
     DA_r += -DA_r * dt/tau_r
@@ -79,7 +79,7 @@ def learn_rate(DA_u,eta):
 
 # Define learning rule dynamics
 
-def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
+def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,sign,filt=False,
                rule='Pred',norm=10,r_m=.02,tau_d=100):
     
     n_neu = W_rec.shape[0]
@@ -112,7 +112,7 @@ def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,S,filt=False,
     
     # Set every weight that violates Dale's law to zero
     if dale:
-        W_rec[np.dot(W_rec,S)<0] = 0
+        W_rec[np.dot(W_rec,sign)<0] = 0
     
     return W_rec, W_fb, dW_rec, dW_fb
 
