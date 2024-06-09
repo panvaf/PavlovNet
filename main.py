@@ -185,8 +185,8 @@ class network:
             
             E = np.zeros(self.n_pat)
             # Store history of E to retrieve values delayed by the same delay as the US detection
-            E_hist = deque(maxlen=n_trans)
-            E_hist.append(E)
+            E_hist = deque(maxlen=n_trans+1)
+            E_hist.append(E); E_hist.append(E)
             
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
@@ -514,7 +514,7 @@ class network2:
         I_fb_2 = np.zeros((self.n_time,self.n_in))
         
         # Expectation history
-        E = 0; E_hist = deque(maxlen=n_trans); E_hist.append(E)
+        E = 0; E_hist = deque(maxlen=n_trans+1); E_hist.append(E); E_hist.append(E)
         
         for j in range(self.n_trial):
             
