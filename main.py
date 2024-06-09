@@ -11,6 +11,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from random import sample, randint
+from collections import deque
 
 # File directory
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
@@ -52,7 +53,6 @@ class network:
         self.est_every = params['est_every']
         self.DA_plot = params['DA_plot']
         self.trial_dyn = params['trial_dyn']
-        self.GiveR = params['GiveR']
         self.flip = params['flip']
         self.extinct = params['extinct']
         self.n_wait = int(params['t_wait']/self.dt)
@@ -184,6 +184,9 @@ class network:
                 n_trigger = self.n_US_ap + n_trans + self.n_wait
             
             E = np.zeros(self.n_pat)
+            # Store history of E to retrieve values delayed by the same delay as the US detection
+            E_hist = deque(maxlen=n_trans)
+            E_hist.append(E)
             
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
@@ -215,18 +218,18 @@ class network:
                 # Update time-averaged firing rate (exponential average)
                 r_m = (1-self.alpha) * r_m + self.alpha * self.a * r
                 
-                if (i<n_trans) or (self.n_US_ap<=i<=self.n_US_ap+n_trans):
-                    pass
-                else:
-                    # Estimate US
-                    US_est = np.dot(self.D,r)
+                # Estimate US
+                US_est = np.dot(self.D,r)
                                 
-                    # Form expectation
-                    E = self.expectation(US_est[None,:])[0][0]
+                # Form expectation
+                E = self.expectation(US_est[None,:])[0][0]
+                
+                # Append to history and obtain delayed value
+                E_del = util.update_history(E,E_hist)
                     
                 # Surprise signal activates at t_trigger
                 if i==n_trigger:                
-                    S = self.surprise(trial,show_US,E)
+                    S = self.surprise(trial,show_US,E_del)
                 else:
                     S = 0
                 
@@ -506,9 +509,12 @@ class network2:
         
         # Inputs to network
         I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
-        g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh; E = 0
+        g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
         I_fb_1 = np.zeros((self.n_time,self.n_in))
         I_fb_2 = np.zeros((self.n_time,self.n_in))
+        
+        # Expectation history
+        E = 0; E_hist = deque(maxlen=n_trans); E_hist.append(E)
         
         for j in range(self.n_trial):
             
@@ -543,22 +549,21 @@ class network2:
                                 self.n_sigma,g_inh[i],self.I_inh,self.fun,
                                 self.a,self.tau_s)
                 
-                # Perceptual delay during which network is not read out
-                if (i<n_trans) or (self.n_US_ap<=i<=self.n_US_ap+n_trans):
-                    pass
-                else:
-                    # Estimate US
-                    US_est_1 = np.dot(self.D_1,r_1)
-                    US_est_2 = np.dot(self.D_2,r_2)
-                    
-                    # Form expectation
-                    E_1, _ = self.expectation(US_est_1[None,:])
-                    E_2, _ = self.expectation(US_est_2[None,:])                    
-                    E = E_1 + E_2
+                # Estimate US
+                US_est_1 = np.dot(self.D_1,r_1)
+                US_est_2 = np.dot(self.D_2,r_2)
+                
+                # Form expectation
+                E_1, _ = self.expectation(US_est_1[None,:])
+                E_2, _ = self.expectation(US_est_2[None,:])                    
+                E = E_1 + E_2
+                
+                # Append to history and obtain delayed value
+                E_del = util.update_history(E,E_hist)
                     
                 # Surprise signal activates at t_trigger
                 if i==n_trigger:                
-                    S = self.surprise(E)
+                    S = self.surprise(E_del)
                 else:
                     S = 0
                 

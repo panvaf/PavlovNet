@@ -49,7 +49,6 @@ params = {
     'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'trial_dyn': True,  # whether to store trial dynamics
-    'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     't_wait': 0,         # time after US_ap that its considered an extinction trial

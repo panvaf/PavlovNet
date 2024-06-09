@@ -34,8 +34,7 @@ params = {
     'W_fb': None,        # feedback weights to associative neurons
     'US': None,          # set of US inputs
     'CS': None,          # set of CS inputs
-    'R': None,           # reward associated with every US
-    'S': None,           # sign of neurons
+    'sign': None,        # sign of neurons
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
@@ -45,9 +44,9 @@ params = {
     'est_every': False,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'trial_dyn': False,  # whether to store trial dynamics
-    'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned association
+    't_wait': 0,         # time after US_ap that its considered an extinction trial
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'low': 1,           # lowest possible reward

@@ -31,7 +31,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': 0.97,           # deviation from self-consistency
+    'a': 0.95,           # deviation from self-consistency
     'n_trial': 20,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
@@ -53,7 +53,6 @@ params = {
     'est_every': True,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
     'trial_dyn': True,  # whether to store trial dynamics
-    'GiveR': True,       # whether to provide reward upon US presentation
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     't_wait': 0,         # time after US_ap that its considered an extinction trial
@@ -74,7 +73,7 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'a': .97,           # deviation from self-consistency
+    'a': .95,           # deviation from self-consistency
     'n_trial': 5e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears

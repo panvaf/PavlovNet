@@ -8,7 +8,6 @@ import torch
 import matplotlib.colors as mc
 import colorsys
 
-
 # Choose activation function
 
 def act_fun(x,fun):
@@ -76,6 +75,19 @@ def gen_US_CS(n_pat,n_in,H_d,exact=False):
     return US, CS
 
 
+# Deque to update history of a variable
+
+def update_history(new_value, history):
+    # If we reach max history length, return oldest value
+    if len(history) == history.maxlen:
+        oldest_value = history.popleft()
+        history.append(new_value)
+        return oldest_value
+    # Otherwise append and return None
+    else:
+        history.append(new_value)
+        return None
+
 # Returns filename from network parameters
 
 def filename(params):
@@ -96,7 +108,7 @@ def filename(params):
         (('N' + str(params['n_assoc'])) if params['n_assoc'] != 128 else '') + \
         (('eta' + str(params['eta'])) if params['eta'] != 1e-2 else '') + \
         (('a' + str(params['a'])) if params['a'] != 1 else '') + \
-        ('Dale' if params['dale'] else '') + ('NoR' if not params['GiveR'] else '') + \
+        ('Dale' if params['dale'] else '') + \
         ('MemNet' if params['mem_net_id'] is not None else '') + \
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('DAplot' if params['DA_plot'] else '') + ('TrialDyn' if params['trial_dyn'] else '') + \
