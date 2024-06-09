@@ -258,7 +258,8 @@ class network:
                     self.PSP[j,:,i] = PSP
                     self.dW_rec[j,:,:,i] = dW_rec
                     self.dW_fb[j,:,:,i] = dW_fb
-                    self.E_tr[j,i] = E[trial]
+                    if E_del is not None:
+                        self.E_tr[j,i] = E_del[trial]
                     #self.US_est_tr[j,:,i] = US_est
                 
             # Save network estimates after each trial

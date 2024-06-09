@@ -23,12 +23,12 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 1,         # number of US/CS pattern associations to be learned
+    'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': 0.97,              # deviation from self-consistency
-    'n_trial': 20,      # number of trials
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -41,14 +41,14 @@ params = {
     'CS': None,          # set of CS inputs
     'sign': None,        # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 5,     # store errors this often
+    'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': True,  # whether to estimate US and reward after every trial
+    'est_every': False,  # whether to estimate US and reward after every trial
     'DA_plot': False,    # whether to keep track of expected reward within trial
-    'trial_dyn': True,  # whether to store trial dynamics
+    'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     't_wait': 0,         # time after US_ap that its considered an extinction trial
@@ -56,9 +56,9 @@ params = {
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
-    'norm': .1,        # normalization strenght for learning rule
-    'T': 1,              # temporal window for averaging firing rates for BCM rule
-    'run': 10,            # number of run for many runs of same simulation
+    'norm': None,        # normalization strenght for learning rule
+    'T': 0.4,            # temporal window for averaging firing rates for BCM rule
+    'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
     }
 
