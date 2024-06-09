@@ -55,6 +55,7 @@ class network:
         self.GiveR = params['GiveR']
         self.flip = params['flip']
         self.extinct = params['extinct']
+        self.n_wait = int(params['t_wait']/self.dt)
         self.reacquire = params['reacquire']
         self.exact = params['exact']
         self.filter = params['filter']
@@ -154,12 +155,10 @@ class network:
                     flip = np.zeros(self.n_in,dtype=bool)
                     flip[sample(range(self.n_in),self.H_d)] = True
                     self.US = np.concatenate((np.invert(self.US.astype(bool),where=flip).astype(float),self.US))
-                    #self.R = np.concatenate((self.R,self.R))
                     self.est_decoder()
                 else:
                     self.US = self.US[::-1]
                     self.Phi = self.Phi[::-1]
-                    #self.R = self.R[::-1]
                     
             # Jitter US appearance time
             if self.US_jit != 0:
@@ -180,12 +179,11 @@ class network:
             if show_US:
                 I_ff[self.n_US_ap+n_jit:,:] = self.US[trial,:]
                 g_inh[self.n_US_ap+n_jit:] = self.g_inh
-            
-            R = np.zeros(self.n_time); E = 0
-            if self.GiveR and show_US:
-                R[self.n_US_ap+n_jit+n_trans] = 1
+                n_trigger = self.n_US_ap + n_trans + n_jit
             else:
-                R[self.n_US_ap+n_jit+n_trans] = -1
+                n_trigger = self.n_US_ap + n_trans + self.n_wait
+            
+            E = np.zeros(self.n_pat)
             
             if self.mem_net_id is None:
                 I_fb = np.zeros((self.n_time,self.n_fb)); I_fb[0:self.n_CS_disap,:] = self.CS[trial,:]
@@ -224,11 +222,17 @@ class network:
                     US_est = np.dot(self.D,r)
                                 
                     # Form expectation
-                    E, _ = self.est_R(US_est[None,:])
+                    E = self.expectation(US_est[None,:])[0][0]
+                    
+                # Surprise signal activates at t_trigger
+                if i==n_trigger:                
+                    S = self.surprise(trial,show_US,E)
+                else:
+                    S = 0
                 
                 # Neuromodulator concentration dynamics
                 C_p_u, C_p_r, C_n_u, C_n_r = assoc_net.neuromodulator_dynamics(C_p_u,C_p_r,
-                                                    C_n_u,C_n_r,R[i],E,self.dt_ms)
+                                                    C_n_u,C_n_r,S,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta)
@@ -251,13 +255,13 @@ class network:
                     self.PSP[j,:,i] = PSP
                     self.dW_rec[j,:,:,i] = dW_rec
                     self.dW_fb[j,:,:,i] = dW_fb
-                    self.E_tr[j,i] = E
+                    self.E_tr[j,i] = E[trial]
                     #self.US_est_tr[j,:,i] = US_est
                 
             # Save network estimates after each trial
             if self.est_every:
                 self.US_est[j,:], self.Phi_est[j,:] = self.est_US()
-                self.E[j,:], _ = self.est_R(self.US_est[j,:])
+                self.E[j,:] = np.diag(self.expectation(self.US_est[j,:])[0])
             
             # Obtain average error at the end of every batch of trials
             if (j % batch_size == 0):
@@ -269,7 +273,7 @@ class network:
                 # Save estimates at the end of every batch
                 if not self.est_every:
                     self.US_est[batch_num,:], self.Phi_est[batch_num,:] = self.est_US()
-                    self.E[batch_num,:], _ = self.est_R(self.US_est[batch_num,:])
+                    self.E[batch_num,:] = np.diag(self.expectation(self.US_est[batch_num,:])[0])
                     
                 batch_num += 1
         
@@ -353,17 +357,26 @@ class network:
         return US_est, Phi_est
     
     
-    def est_R(self,US_est):
-        # Estimate predicted reward
+    def expectation(self,US_est):
+        # Form an expectation of a US
         if len(US_est.shape) == 1:
             US_est = US_est[None,:]
         
         # Find adjecency to RBF kernels
         k = (8/self.H_d)**self.m
         d = np.sqrt(np.sum((US_est[:,None,:] - self.US[None,:])**2,2))
-        E = np.max(np.exp(-k*d**self.m))
+        E = np.exp(-k*d**self.m)
         
         return E, d
+    
+    def surprise(self,trial,show_US,E):
+        
+        if show_US:
+            S = 1 - E[trial]
+        else:
+            S = - E[trial]
+        
+        return S
         
     
     def get_Phi(self):
@@ -471,6 +484,9 @@ class network2:
         # Transduction delays for perception of reward
         n_trans = int(2*self.tau_s/self.dt_ms)
         
+        # Time of US perception
+        n_trigger = self.n_US_ap + n_trans
+        
         # Determine in which trials each CS is present
         if self.overexp:
             CS_1_pr = np.concatenate((np.arange(self.CS_2_ap_tr),np.arange(2*self.CS_2_ap_tr,self.n_trial)))
@@ -490,8 +506,7 @@ class network2:
         
         # Inputs to network
         I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
-        g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
-        R = np.zeros(self.n_time); R[self.n_US_ap+n_trans] = 1; E = 0
+        g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh; E = 0
         I_fb_1 = np.zeros((self.n_time,self.n_in))
         I_fb_2 = np.zeros((self.n_time,self.n_in))
         
@@ -537,13 +552,19 @@ class network2:
                     US_est_2 = np.dot(self.D_2,r_2)
                     
                     # Form expectation
-                    E_1, _ = self.est_R(US_est_1[None,:])
-                    E_2, _ = self.est_R(US_est_2[None,:])                    
+                    E_1, _ = self.expectation(US_est_1[None,:])
+                    E_2, _ = self.expectation(US_est_2[None,:])                    
                     E = E_1 + E_2
+                    
+                # Surprise signal activates at t_trigger
+                if i==n_trigger:                
+                    S = self.surprise(E)
+                else:
+                    S = 0
                 
                 # Neuromodulator concentration dynamics
                 C_p_u, C_p_r, C_n_u, C_n_r = assoc_net.neuromodulator_dynamics(C_p_u,C_p_r,
-                                                    C_n_u,C_n_r,R[i],E,self.dt_ms)
+                                                    C_n_u,C_n_r,S,self.dt_ms)
                 
                 # Learning rate
                 eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta)
@@ -564,8 +585,8 @@ class network2:
             if self.est_every:
                 [self.US_est_1[j,:], self.US_est_2[j,:]], [self.Phi_1_est[j,:], 
                                          self.Phi_2_est[j,:]] = self.est_US()
-                self.E_1[j], _ = self.est_R(self.US_est_1[j,:][None,:])
-                self.E_2[j], _ = self.est_R(self.US_est_2[j,:][None,:])
+                self.E_1[j], _ = self.expectation(self.US_est_1[j,:][None,:])
+                self.E_2[j], _ = self.expectation(self.US_est_2[j,:][None,:])
             
             
             # Obtain average error at the end of every batch of trials
@@ -583,8 +604,8 @@ class network2:
                     [self.US_est_1[batch_num,:], self.US_est_2[batch_num,:]], \
                                 [self.Phi_1_est[batch_num,:],
                                  self.Phi_2_est[batch_num,:]] = self.est_US()
-                    self.E_1[batch_num,:], _ = self.est_R(self.US_est_1[batch_num,:][None,:])
-                    self.E_2[batch_num,:], _ = self.est_R(self.US_est_2[batch_num,:][None,:])
+                    self.E_1[batch_num,:], _ = self.expectation(self.US_est_1[batch_num,:][None,:])
+                    self.E_2[batch_num,:], _ = self.expectation(self.US_est_2[batch_num,:][None,:])
                 
                 batch_num += 1
         
@@ -655,15 +676,20 @@ class network2:
         return [US_est_1, US_est_2], [Phi_1_est, Phi_2_est]
     
     
-    def est_R(self,US_est):
-        # Estimate predicted reward
+    def expectation(self,US_est):
+        # Form an expectation of a US
         
         # Find adjecency to RBF kernel
         k = 1
         d = np.sqrt(np.sum((US_est - self.US)**2,1))
-        E = np.max(np.exp(-k*d**self.m))
+        E = np.exp(-k*d**self.m)
         
         return E, d
+    
+    
+    def surprise(self,E):
+        
+        return 1 - E
         
     
     def get_Phis(self):

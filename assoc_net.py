@@ -52,16 +52,12 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 # Dopamine uptake and release dynamics
 
-def neuromodulator_dynamics(C_p_u,C_p_r,C_n_u,C_n_r,R,E,dt,tau_r=200,tau_u=300,thres=0.01):
+def neuromodulator_dynamics(C_p_u,C_p_r,C_n_u,C_n_r,S,dt,tau_r=200,tau_u=300,thres=0.01):
     
-    # Neurotransmitter released with external reward only
-    if R != 0:
-        # If no expectation, no surprise
-        if R<0 and E<thres:
-            pass
-        else:
-            C_p_r += max(R-E,0) * 1e3/tau_r
-            C_n_r += max(E-R,0) * 1e3/tau_r
+    # Neurotransmitter released with surprise only
+    if S != 0:
+        C_p_r += max(S,0) * 1e3/tau_r
+        C_n_r += max(-S,0) * 1e3/tau_r
     
     # Amount of available neuromodulator decays with time
     C_p_r += -C_p_r * dt/tau_r

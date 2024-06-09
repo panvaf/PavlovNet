@@ -101,7 +101,9 @@ def filename(params):
         ('Out' if params['out'] else '') + ('EstEv' if params['est_every'] else '') + \
         ('DAplot' if params['DA_plot'] else '') + ('TrialDyn' if params['trial_dyn'] else '') + \
         ('Flip' if params['flip'] else '') + \
-        ('Extinct' if params['extinct'] else '') + ('Reacquire' if params['reacquire'] else '') + \
+        ('Extinct' if params['extinct'] else '') + \
+        (('wait' + str(params['t_wait'])) if params['t_wait'] != 0 else '') + \
+        ('Reacquire' if params['reacquire'] else '') + \
         ('Exact' if params['exact'] else '') + ('NoFilt' if not params['filter'] else '') + \
         (params['rule'] if params['rule'] != 'Pred' else '') + \
         (str(params['norm']) if params['rule'] == 'Hebb' else '') + \
