@@ -52,7 +52,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 # Dopamine uptake and release dynamics
 
-def DA_dynamics(DA_u,DA_r,R,E,dt,tau_r=200,tau_u=300,thres=0.01):
+def neuromodulator_dynamics(C_p_u,C_p_r,C_n_u,C_n_r,R,E,dt,tau_r=200,tau_u=300,thres=0.01):
     
     # Neurotransmitter released with external reward only
     if R != 0:
@@ -60,21 +60,24 @@ def DA_dynamics(DA_u,DA_r,R,E,dt,tau_r=200,tau_u=300,thres=0.01):
         if R<0 and E<thres:
             pass
         else:
-            DA_r += (R-E) * 1e3/tau_r
+            C_p_r += max(R-E,0) * 1e3/tau_r
+            C_n_r += max(E-R,0) * 1e3/tau_r
     
-    # Amount of available dopamine decays with time
-    DA_r += -DA_r * dt/tau_r
+    # Amount of available neuromodulator decays with time
+    C_p_r += -C_p_r * dt/tau_r
+    C_n_r += -C_n_r * dt/tau_r
     
-    # Amount of dopamine uptake lags behind available concentration of dopamine
-    DA_u += (-DA_u + DA_r) * dt/tau_u
+    # Amount of neuromodulator uptake lags behind available concentration
+    C_p_u += (-C_p_u + C_p_r) * dt/tau_u
+    C_n_u += (-C_n_u + C_n_r) * dt/tau_u
     
-    return DA_u, DA_r
+    return C_p_u, C_p_r, C_n_u, C_n_r
 
 
-# Learning rate as a function of dopamine uptake
+# Learning rate as a function of neuromodulator uptake
     
-def learn_rate(DA_u,eta):
-    return eta*DA_u
+def learn_rate(C_p_u,C_n_u,eta):
+    return eta * (C_p_u - C_n_u)
 
 
 # Define learning rule dynamics

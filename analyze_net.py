@@ -70,9 +70,9 @@ params2 = {
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
     'a': .97,           # deviation from self-consistency
-    'n_trial': 3e2,      # number of trials
+    'n_trial': 5e2,      # number of trials
     't_dur': 2,          # duration of trial
-    'CS_2_ap_tr': 1e2,     # trial number in which CS 2 appears
+    'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'fun': 'logistic',   # activation function of associative network
@@ -80,10 +80,10 @@ params2 = {
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'est_every': True,   # whether to estimate US and reward after every trial
-    'overexp': True,    # whether to test for overexpectation effects
+    'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative saliance of CSs
-    'cont': [1,1],       # contingencies of CSs
-    'cond_dep': False,   # whether one CS is conditionally dependent on the other
+    'cont': [.8,.4],       # contingencies of CSs
+    'cond_dep': True,   # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule

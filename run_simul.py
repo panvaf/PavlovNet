@@ -10,7 +10,7 @@ import util
 import numpy as np
 
 # Which network and how many CS-US associations to run
-n_CS = 2
+n_CS = 1
 n_pat = 1
 
 # Whether to use the same network initialization and CS-US sets

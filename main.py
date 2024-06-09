@@ -199,7 +199,8 @@ class network:
                     I_fb = fr[0,:].detach().numpy()
             
             # Initialize network
-            r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r = self.init_net()
+            r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, C_p_u ,C_p_r, \
+                                C_n_u, C_n_r = self.init_net()
             
             # Store errors after US appears, omitting transduction delays
             err = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
@@ -225,11 +226,12 @@ class network:
                     # Form expectation
                     E, _ = self.est_R(US_est[None,:])
                 
-                # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],E,self.dt_ms)
+                # Neuromodulator concentration dynamics
+                C_p_u, C_p_r, C_n_u, C_n_r = assoc_net.neuromodulator_dynamics(C_p_u,C_p_r,
+                                                    C_n_u,C_n_r,R[i],E,self.dt_ms)
                 
                 # Learning rate
-                eta = assoc_net.learn_rate(DA_u,self.eta)
+                eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta)
                 
                 # Weight modification
                 if self.train:
@@ -241,7 +243,7 @@ class network:
                 
                 # Save dopamine uptake at any point in trial
                 if self.DA_plot:
-                    self.DA_u[j,i] = DA_u
+                    self.DA_u[j,i] = C_p_u
                 
                 # Same trial dynamics
                 if self.trial_dyn:
@@ -302,10 +304,10 @@ class network:
         I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_fb))
         PSP = np.zeros(self.n_assoc+self.n_fb); I_PSP = np.zeros(self.n_assoc+self.n_fb)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
-        r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0
+        r = np.random.uniform(0,.15,self.n_assoc); C_p_u = 0; C_p_r = 0; C_n_u = 0; C_n_r = 0;
         r_m = np.random.uniform(0,.15,self.n_assoc)
         
-        return r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
+        return r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, C_p_u, C_p_r, C_n_u, C_n_r
     
     
     def est_US(self,t_mult=5):
@@ -334,7 +336,7 @@ class network:
                     I_fb = fr[0,:].detach().numpy()
             
             # initialize network
-            r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, _, _ = self.init_net()
+            r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, _, _, _, _ = self.init_net()
             
             for j in range(1,n_settle):
                 
@@ -501,9 +503,9 @@ class network2:
             
             # Initialize networks
             r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, \
-                DA_u, DA_r = self.init_net()
+                C_p_u, C_p_r, C_n_u, C_n_r = self.init_net()
             r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, \
-                _, _ = self.init_net()
+                _, _, _, _ = self.init_net()
             
             # Store errors after US appears, omitting transduction delays
             err_1 = np.zeros((self.n_time-self.n_US_ap-n_trans,self.n_assoc))
@@ -538,12 +540,13 @@ class network2:
                     E_1, _ = self.est_R(US_est_1[None,:])
                     E_2, _ = self.est_R(US_est_2[None,:])                    
                     E = E_1 + E_2
-                    
-                # Diffuse dopamine signal dynamics
-                DA_u, DA_r = assoc_net.DA_dynamics(DA_u,DA_r,R[i],E,self.dt_ms)
+                
+                # Neuromodulator concentration dynamics
+                C_p_u, C_p_r, C_n_u, C_n_r = assoc_net.neuromodulator_dynamics(C_p_u,C_p_r,
+                                                    C_n_u,C_n_r,R[i],E,self.dt_ms)
                 
                 # Learning rate
-                eta = assoc_net.learn_rate(DA_u,self.eta)
+                eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta)
                 
                 # Weight modification
                 if self.train:
@@ -608,9 +611,9 @@ class network2:
         I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_in))
         PSP = np.zeros(self.n_assoc+self.n_in); I_PSP = np.zeros(self.n_assoc+self.n_in)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
-        r = np.random.uniform(0,.15,self.n_assoc); DA_u = 0; DA_r = 0 
+        r = np.random.uniform(0,.15,self.n_assoc); C_p_u = 0; C_p_r = 0; C_n_u = 0; C_n_r = 0
         
-        return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, DA_u, DA_r
+        return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, C_p_u, C_p_r, C_n_u, C_n_r
     
     
     def est_US(self,t_mult=5):
@@ -625,8 +628,8 @@ class network2:
         I_ff = np.zeros(self.n_in)
         
         # initialize networks
-        r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, _, _ = self.init_net()
-        r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, _, _ = self.init_net()
+        r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, _, _, _, _ = self.init_net()
+        r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, _, _, _, _ = self.init_net()
         
         for i in range(1,n_settle):
             
