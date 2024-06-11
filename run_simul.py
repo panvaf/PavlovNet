@@ -50,8 +50,8 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'est_every': False,  # whether to estimate US and expectation after every trial
+    'DA_plot': False,    # whether to keep track of expectation within trial
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
@@ -83,7 +83,7 @@ params2 = {
     'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
-    'est_every': True,   # whether to estimate US and reward after every trial
+    'est_every': True,   # whether to estimate US and expectation after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs
     'cont': [.8,.4],       # contingencies of CSs

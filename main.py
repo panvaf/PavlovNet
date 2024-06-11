@@ -130,7 +130,7 @@ class network:
         self.Phi_est = np.zeros(tuple([store_size])+self.Phi.shape)
         self.E = np.zeros(tuple([store_size])+(self.n_pat,))
         
-        # Store expected reward for entire trial to create DA release plots
+        # Store expectation for entire trial to create DA release plots
         if self.DA_plot:
             self.DA_u = np.zeros((self.n_trial,self.n_time))
             
@@ -143,7 +143,7 @@ class network:
             self.E_tr = np.zeros((self.n_trial,self.n_time))
             #self.US_est_tr = np.zeros((self.n_trial,self.n_in,self.n_time))
         
-        # Transduction delays for perception of reward
+        # Transduction delays for perception of US
         n_trans = int(2*self.tau_s/self.dt_ms)
         
         for j, trial in enumerate(trials):
@@ -485,7 +485,7 @@ class network2:
         self.E_1 = np.zeros(store_size)
         self.E_2 = np.zeros(store_size)
             
-        # Transduction delays for perception of reward
+        # Transduction delays for perception of US
         n_trans = int(2*self.tau_s/self.dt_ms)
         
         # Time of US perception

@@ -41,15 +41,14 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'est_every': False,  # whether to estimate US and expectation after every trial
+    'DA_plot': False,    # whether to keep track of expectation within trial
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned association
     't_wait': 0,         # time after US_ap that its considered an extinction trial
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
-    'low': 1,           # lowest possible reward
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
@@ -207,7 +206,7 @@ for i, pat in enumerate(n_pat):
             axs[k,l].xaxis.set_minor_locator(MultipleLocator(int(n_trial[i]/4)))
             
             if i==2:
-                axs[k,l].set_ylabel('Reward')
+                axs[k,l].set_ylabel('Expectation')
                 axs[k,l].set_xlabel('Trials')
                 axs[k,l].set_ylim([-.02,1.02])
                 axs[k,l].yaxis.set_major_locator(MultipleLocator(1/2))
@@ -295,7 +294,7 @@ for i, h_d in enumerate(H_d):
             axs[k,l].xaxis.set_minor_locator(MultipleLocator(int(n_trial[i]/4)))
             
             if i==2:
-                axs[k,l].set_ylabel('Reward')
+                axs[k,l].set_ylabel('Expectation')
                 axs[k,l].set_xlabel('Trials')
                 axs[k,l].set_ylim([-.02,1.02])
                 axs[k,l].yaxis.set_major_locator(MultipleLocator(1/2))

@@ -12,6 +12,7 @@ from matplotlib.ticker import MultipleLocator
 import main
 import torch
 from mpl_toolkits.mplot3d import axes3d
+import matplotlib.lines as mlines
 
 # Which network type to load
 n_CS = 1
@@ -46,8 +47,8 @@ params = {
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and reward after every trial
-    'DA_plot': False,    # whether to keep track of expected reward within trial
+    'est_every': False,  # whether to estimate US and expectation after every trial
+    'DA_plot': False,    # whether to keep track of expectation within trial
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
@@ -79,7 +80,7 @@ params2 = {
     'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
-    'est_every': True,   # whether to estimate US and reward after every trial
+    'est_every': True,   # whether to estimate US and expectation after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative saliance of CSs
     'cont': [.8,.4],       # contingencies of CSs
@@ -93,7 +94,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
@@ -213,16 +214,31 @@ if n_CS == 1:
         snaps = np.array([0,2,9,49])
         trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
         cols = ['dodgerblue','darkslateblue','darkorange','green']
-        
+
         fig, ax = plt.subplots(figsize=(1.5,1.5))
         ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0)
+
+        legend_handles = []
         for i, tr in enumerate(snaps): 
-            ax.scatter(Phi.flatten()*1000,Phi_est_hist[tr,:].flatten()*1000,s=.25,
-                       color=cols[i],alpha=.5,zorder=i+1,label='{}'.format(trials[i]))
+            x = Phi.flatten()*1000
+            y = Phi_est_hist[tr,:].flatten()*1000
+            ax.scatter(x, y, s=.25, color=cols[i], alpha=.3, zorder=i+1)
+
+            # Calculate slope and intercept of regression line
+            slope, intercept = np.polyfit(x, y, 1)
+
+            # Plot regression line
+            x_reg = np.array([x.min(), x.max()])
+            y_reg = slope * x_reg + intercept
+            ax.plot(x_reg, y_reg, color=cols[i], linestyle='-', linewidth=2, zorder=i+1)
+
+            # Create custom legend handles
+            legend_handles.append(mlines.Line2D([], [], marker='o', markersize=1, color=cols[i], label='{}'.format(trials[i]), linestyle='None'))
+
         ax.set_xlim([0,100])
         ax.set_ylim([0,100])
-        ax.set_xlabel('$f(\mathbf{V}) \|_{US}$ (spikes/s)')
-        ax.set_ylabel('$f(\mathbf{V}) \|_{CS}$ (spikes/s)')
+        ax.set_xlabel('$r^{us-only}_{rnn}$ (spikes/s)')
+        ax.set_ylabel('$r^{cs-only}_{rnn}$ (spikes/s)')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', -5))
@@ -231,8 +247,8 @@ if n_CS == 1:
         ax.xaxis.set_minor_locator(MultipleLocator(25))
         ax.yaxis.set_major_locator(MultipleLocator(50))
         ax.yaxis.set_minor_locator(MultipleLocator(25))
-        fig.legend(title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1.3, 1),
-                   markerscale=3,title_fontsize=SMALL_SIZE)
+        ax.legend(handles=legend_handles, title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1, 1),
+                  title_fontsize=SMALL_SIZE)
         
         #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
         
@@ -240,7 +256,7 @@ if n_CS == 1:
         fig, ax = plt.subplots(figsize=(2,1.5))
         ax.plot(trials,net.E,linewidth=.5,alpha=.5)
         ax.plot(trials,np.average(net.E,axis=1),c='green',linewidth=1.5)
-        ax.axhline(y=1,c='black',linestyle='--',linewidth=1.5)
+        ax.axhline(y=1,c='black',linewidth=0.5)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', -.05*net.n_trial))
@@ -257,7 +273,7 @@ if n_CS == 1:
         ax1 = ax.twinx()
         #ax1.plot(trials,np.var(US_est_hist-US,axis=2),color=color,linewidth=.5,alpha=.5)
         ax1.plot(trials,np.var(US_est_hist-US,axis=(1,2)),color=color,linewidth=1.5)
-        ax1.set_ylabel('Var[$\mathbf{r}^{US}$,$\hat{\mathbf{r}}^{US}\|_{CS}$]', color=color)
+        ax1.set_ylabel('Var[$r_{US}$,$\hat{r}_{US}$]', color=color)
         ax1.tick_params(axis='y', labelcolor=color)
         ax1.spines['top'].set_visible(False)
         ax1.spines['left'].set_visible(False)
@@ -271,13 +287,13 @@ if n_CS == 1:
     # Scatterplot of actual and decoded US digits
     
     fig, ax = plt.subplots(figsize=(1.5,1.5))
-    ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0)
+    ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0, linewidth=1)
     ax.scatter(US.flatten()+np.random.normal(scale=.02,size=np.size(US)),
                US_est_hist[tr,:].flatten(),s=.25,color='green',alpha=.5,zorder=1)
     ax.set_xlim([-.2,1.2])
     ax.set_ylim([-.2,1.2])
-    ax.set_xlabel('$\mathbf{r}^{US}$ element')
-    ax.set_ylabel('$\hat{\mathbf{r}}^{US}\|_{CS}$ element')
+    ax.set_xlabel('$r_{US}$ element')
+    ax.set_ylabel('$\hat{r}_{US}$ element')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_position(('data', -.25))
@@ -334,7 +350,7 @@ if n_CS == 1:
         #plt.savefig('mem_leak.png',bbox_inches='tight',format='png',dpi=300)
         #plt.savefig('mem_leak.eps',bbox_inches='tight',format='eps',dpi=300)
 
-# Reward conditioning plot
+# Conditioning plot
 
 if net.est_every:
     n_trial = net.n_trial
