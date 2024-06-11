@@ -24,12 +24,12 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 1,         # number of US/CS pattern associations to be learned
+    'n_pat': 16,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': 0.97,              # deviation from self-consistency
-    'n_trial': 20,      # number of trials
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -42,14 +42,14 @@ params = {
     'CS': None,          # set of CS inputs
     'sign': None,        # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 5,     # store errors this often
+    'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': True,  # whether to estimate US and expectation after every trial
+    'est_every': False,  # whether to estimate US and expectation after every trial
     'DA_plot': False,    # whether to keep track of expectation within trial
-    'trial_dyn': True,  # whether to store trial dynamics
+    'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     't_wait': 0,         # time after US_ap that its considered an extinction trial
@@ -94,7 +94,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
@@ -304,6 +304,45 @@ if n_CS == 1:
         ax.yaxis.set_minor_locator(MultipleLocator(.25))
         
         #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
+        
+        # Plot of CS, US, and jointly induced responses as a function of trial number
+        
+        fr = [net.Phi_est,net.Phi,net.Phi_est]
+        snaps = np.array([0,2,49])
+        trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
+        
+        labels = ['CS only', 'US only', 'CS+US']
+        
+        fig, axes = plt.subplots(3, 3, figsize=(6, 6), sharex=True, sharey=True)
+
+        for i, snap in enumerate(snaps):
+            for j, vector in enumerate(fr):
+                ax = axes[j, i]
+                if j==1:
+                    im = ax.imshow(1000*vector.T, cmap='viridis', aspect='auto')
+                else:
+                    im = ax.imshow(1000*vector[snap].T, cmap='viridis', aspect='auto')
+                if j==0:
+                    ax.set_title('Trial {}'.format(trials[i]))
+                #ax.set_xticks([0, 8, 16])
+                #ax.set_yticks([0, 32, 64])
+                if i == 0:
+                    ax.set_ylabel(labels[j], rotation=90, ha='right', va='center')
+                    ax.yaxis.set_label_coords(-0.25, 0.6)  # Set the coordinates of the label
+                
+        axes[2, 0].set_xlabel('CS-US pair')
+        axes[0, 2].yaxis.set_label_position('right')
+        axes[0, 2].set_ylabel('RNN unit')
+
+        # Add a shared colorbar
+        cbar_ax = fig.add_axes([0.92, 0.05, 0.04, 0.7])  # [left, bottom, width, height]
+        cbar = fig.colorbar(im, cax=cbar_ax)
+        cbar.set_label('Firing rate (spikes/sec)')
+
+        plt.tight_layout()
+        plt.subplots_adjust(right=0.9)
+        
+        #plt.savefig('firing_rates.png',bbox_inches='tight',format='png',dpi=300)        
 
 
     # Short-term memory leak plot
