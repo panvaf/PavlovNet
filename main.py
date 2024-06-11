@@ -31,7 +31,7 @@ class network:
         self.n_pat = int(params['n_pat'])
         self.n_in = int(params['n_in'])
         self.H_d = params['H_d']
-        self.eta = params['eta']
+        self.eta_0 = params['eta']
         self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],.01,self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
@@ -141,7 +141,7 @@ class network:
             self.dW_rec = np.zeros((self.n_trial,self.n_assoc,self.n_assoc,self.n_time))
             self.dW_fb = np.zeros((self.n_trial,self.n_assoc,self.n_fb,self.n_time))
             self.E_tr = np.zeros((self.n_trial,self.n_time))
-            #self.US_est_tr = np.zeros((self.n_trial,self.n_in,self.n_time))
+            self.eta = np.zeros((self.n_trial,self.n_time))
         
         # Transduction delays for perception of US
         n_trans = int(2*self.tau_s/self.dt_ms)
@@ -238,7 +238,7 @@ class network:
                                                     C_n_u,C_n_r,S,self.dt_ms)
                 
                 # Learning rate
-                eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta)
+                eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta_0)
                 
                 # Weight modification
                 if self.train:
@@ -260,6 +260,7 @@ class network:
                     self.dW_fb[j,:,:,i] = dW_fb
                     if E_del is not None:
                         self.E_tr[j,i] = E_del[trial]
+                    self.eta[j,i] = eta
                     #self.US_est_tr[j,:,i] = US_est
                 
             # Save network estimates after each trial
@@ -413,7 +414,7 @@ class network2:
         self.n_assoc = int(params['n_assoc'])
         self.tau_s = params['tau_s']
         self.n_in = int(params['n_in'])
-        self.eta = params['eta']
+        self.eta_0 = params['eta']
         self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],.01,self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
@@ -573,7 +574,7 @@ class network2:
                                                     C_n_u,C_n_r,S,self.dt_ms)
                 
                 # Learning rate
-                eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta)
+                eta = assoc_net.learn_rate(C_p_u,C_n_u,self.eta_0)
                 
                 # Weight modification
                 if self.train:

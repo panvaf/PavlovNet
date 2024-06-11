@@ -24,12 +24,12 @@ params = {
     'n_mem': 64,         # number of memory neurons
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
-    'n_pat': 16,         # number of US/CS pattern associations to be learned
+    'n_pat': 1,         # number of US/CS pattern associations to be learned
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': 0.97,              # deviation from self-consistency
-    'n_trial': 1e3,      # number of trials
+    'n_trial': 20,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -42,14 +42,14 @@ params = {
     'CS': None,          # set of CS inputs
     'sign': None,        # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and expectation after every trial
+    'est_every': True,  # whether to estimate US and expectation after every trial
     'DA_plot': False,    # whether to keep track of expectation within trial
-    'trial_dyn': False,  # whether to store trial dynamics
+    'trial_dyn': True,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     't_wait': 0,         # time after US_ap that its considered an extinction trial
@@ -94,7 +94,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 
@@ -209,7 +209,7 @@ if n_CS == 1:
     
     # Scatterplot of shaping history of CS-induced responses
     
-    if net.Phi_est.ndim==3:
+    if net.Phi_est.ndim==3 and not net.est_every:
         
         snaps = np.array([0,2,9,49])
         trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
@@ -284,26 +284,26 @@ if n_CS == 1:
         
         #plt.savefig('Cond_his.png',bbox_inches='tight',format='png',dpi=300)
     
-    # Scatterplot of actual and decoded US digits
-    
-    fig, ax = plt.subplots(figsize=(1.5,1.5))
-    ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0, linewidth=1)
-    ax.scatter(US.flatten()+np.random.normal(scale=.02,size=np.size(US)),
-               US_est_hist[tr,:].flatten(),s=.25,color='green',alpha=.5,zorder=1)
-    ax.set_xlim([-.2,1.2])
-    ax.set_ylim([-.2,1.2])
-    ax.set_xlabel('$r_{US}$ element')
-    ax.set_ylabel('$\hat{r}_{US}$ element')
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_position(('data', -.25))
-    ax.spines['bottom'].set_position(('data', -.25))
-    ax.xaxis.set_major_locator(MultipleLocator(.5))
-    ax.xaxis.set_minor_locator(MultipleLocator(.25))
-    ax.yaxis.set_major_locator(MultipleLocator(.5))
-    ax.yaxis.set_minor_locator(MultipleLocator(.25))
-    
-    #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
+        # Scatterplot of actual and decoded US digits
+        
+        fig, ax = plt.subplots(figsize=(1.5,1.5))
+        ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0, linewidth=1)
+        ax.scatter(US.flatten()+np.random.normal(scale=.02,size=np.size(US)),
+                   US_est_hist[tr,:].flatten(),s=.25,color='green',alpha=.5,zorder=1)
+        ax.set_xlim([-.2,1.2])
+        ax.set_ylim([-.2,1.2])
+        ax.set_xlabel('$r_{US}$ element')
+        ax.set_ylabel('$\hat{r}_{US}$ element')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_position(('data', -.25))
+        ax.spines['bottom'].set_position(('data', -.25))
+        ax.xaxis.set_major_locator(MultipleLocator(.5))
+        ax.xaxis.set_minor_locator(MultipleLocator(.25))
+        ax.yaxis.set_major_locator(MultipleLocator(.5))
+        ax.yaxis.set_minor_locator(MultipleLocator(.25))
+        
+        #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
 
 
     # Short-term memory leak plot
@@ -415,31 +415,31 @@ if n_CS == 1 and net.trial_dyn:
     dW_rec = net.dW_rec.reshape(*net.dW_rec.shape[:1], -1, *net.dW_rec.shape[-1:])
     dW_fb = net.dW_fb.reshape(*net.dW_fb.shape[:1], -1, *net.dW_fb.shape[-1:])
     
-    fig, axs = plt.subplots(5, 3, figsize=(10,10), sharex = True, sharey = 'row')
+    fig, axs = plt.subplots(5, 3, figsize=(6,6), sharex = True, sharey = 'row')
     
     for j, trial in enumerate(trials):
         
         # Expectation
         axs[0,j].plot(t,net.E_tr[trial,:])
         axs[0,j].set_title('Trial {}'.format(trial+1))
-        axs[0,j].set_ylabel('$E$')
+        axs[0,j].set_ylabel('$E(t-t_{syn})$')
         
         # Neuromodulator concentration
-        axs[1,j].plot(t,net.DA_u[trial,:])
-        axs[1,j].set_ylabel('Neuromodulator')
+        axs[1,j].plot(t,net.eta[trial,:])
+        axs[1,j].set_ylabel('Learning rate $\eta$')
         
         # Firing rate error
         axs[2,j].plot(t,net.error[trial,:].T*1000)
-        axs[2,j].set_ylabel('Firing rate error (spikes/s)')
+        axs[2,j].set_ylabel('Firing rate error \n $f(V^s_i)-f(p^\prime \, V^d_i)$')
         
         # PSPs
         axs[3,j].plot(t,net.PSP[trial,:].T)
-        axs[3,j].set_ylabel('PSPs')
+        axs[3,j].set_ylabel('Post-synaptic \n potential $P_j$')
         
         # Weight change
         axs[4,j].plot(t,dW_rec[trial,:].T)
         axs[4,j].plot(t,dW_fb[trial,:].T)
-        axs[4,j].set_ylabel('$\delta W$')
+        axs[4,j].set_ylabel('$\Delta W$')
         
     for ax in axs.flat:
         ax.set_xlabel('Time (s)')

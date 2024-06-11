@@ -11,7 +11,7 @@ import numpy as np
 
 # Which network and how many CS-US associations to run
 n_CS = 1
-n_pat = 16
+n_pat = 1
 
 # Whether to use the same network initialization and CS-US sets
 reprod = False
@@ -32,7 +32,7 @@ params = {
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': 0.97,           # deviation from self-consistency
-    'n_trial': 1e3,      # number of trials
+    'n_trial': 20,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
@@ -45,14 +45,14 @@ params = {
     'CS': CS,            # set of CS inputs
     'sign': sign,        # sign of neurons
     'fun': 'logistic',   # activation function of associative network
-    'every_perc': 1,     # store errors this often
+    'every_perc': 5,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
     'mem_net_id': 'MemNet64tdur3iter1e5Noise0.1',  # Memory RNN to load
     'out': True,         # whether to feed output of RNN to associative net
-    'est_every': False,  # whether to estimate US and expectation after every trial
+    'est_every': True,  # whether to estimate US and expectation after every trial
     'DA_plot': False,    # whether to keep track of expectation within trial
-    'trial_dyn': False,  # whether to store trial dynamics
+    'trial_dyn': True,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
     't_wait': 0,         # time after US_ap that its considered an extinction trial
