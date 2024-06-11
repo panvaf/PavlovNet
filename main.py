@@ -20,7 +20,17 @@ data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 
 class network:
     
-    def __init__(self,params):
+    def __init__(self,params,seed=None):
+        
+        # Random seed
+        self.seed = seed
+        
+        # Set the random seed for NumPy
+        if seed is not None:
+            np.random.seed(self.seed)
+            
+        # Create the random number generator instance
+        self.rng = np.random.RandomState(self.seed)
         
         # Constants
         self.dt = params['dt']
@@ -32,7 +42,7 @@ class network:
         self.n_in = int(params['n_in'])
         self.H_d = params['H_d']
         self.eta_0 = params['eta']
-        self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],.01,self.n_assoc) 
+        self.a = params['a'] if params['a']>.5 else self.rng.normal(1+params['a'],.01,self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
@@ -72,7 +82,7 @@ class network:
         
         # Load memory network, implemented by pretrained RNN
         if self.mem_net_id is not None:
-            net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms)
+            net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms,self.seed)
             checkpoint = torch.load(os.path.join(data_path,self.mem_net_id + '.pth'))
             net.load_state_dict(checkpoint['state_dict'])
             net.eval()
@@ -87,9 +97,9 @@ class network:
         
         # Weights
         if params['W_rec'] is None:
-            self.W_rec = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
-            self.W_ff = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
-            self.W_fb = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_fb))
+            self.W_rec = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
+            self.W_ff = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+            self.W_fb = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_fb))
             if self.dale:
                 # All recurrent connections should be excitatory
                 sign = np.ones(self.n_assoc); self.sign = np.diag(sign)                
@@ -104,15 +114,13 @@ class network:
         # Compute decoder matrix
         self.est_decoder()
         
-        self.null_US = np.random.choice([0,1],self.n_in)
-        
     
     def simulate(self):
         # Simulation method
         start = time()
         
         # Get random trials
-        trials = np.random.choice(range(self.n_pat),self.n_trial,replace=True)
+        trials = self.rng.choice(range(self.n_pat),self.n_trial,replace=True)
         
         # Save average errors across simulation
         batch_size = int(self.every_perc/100*self.n_trial)
@@ -313,12 +321,12 @@ class network:
         # Initializes network to random state
         
         # initialize voltages, currents and weight updates
-        V_d = np.random.uniform(0,1,self.n_assoc); V = np.random.uniform(0,1,self.n_assoc)
+        V_d = self.rng.uniform(0,1,self.n_assoc); V = self.rng.uniform(0,1,self.n_assoc)
         I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_fb))
         PSP = np.zeros(self.n_assoc+self.n_fb); I_PSP = np.zeros(self.n_assoc+self.n_fb)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
-        r = np.random.uniform(0,.15,self.n_assoc); C_p_u = 0; C_p_r = 0; C_n_u = 0; C_n_r = 0;
-        r_m = np.random.uniform(0,.15,self.n_assoc)
+        r = self.rng.uniform(0,.15,self.n_assoc); C_p_u = 0; C_p_r = 0; C_n_u = 0; C_n_r = 0;
+        r_m = self.rng.uniform(0,.15,self.n_assoc)
         
         return r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, C_p_u, C_p_r, C_n_u, C_n_r
     
@@ -414,7 +422,17 @@ class network:
 
 class network2:
     
-    def __init__(self,params):
+    def __init__(self,params,seed=None):
+        
+        # Random seed
+        self.seed = seed
+        
+        # Set the random seed for NumPy and PyTorch
+        if seed is not None:
+            np.random.seed(self.seed)
+            
+        # Create the random number generator instance
+        self.rng = np.random.RandomState(self.seed)
         
         # Constants
         self.dt = params['dt']
@@ -424,7 +442,7 @@ class network2:
         self.tau_s = params['tau_s']
         self.n_in = int(params['n_in'])
         self.eta_0 = params['eta']
-        self.a = params['a'] if params['a']>.5 else np.random.normal(1+params['a'],.01,self.n_assoc) 
+        self.a = params['a'] if params['a']>.5 else self.rng.normal(1+params['a'],.01,self.n_assoc) 
         self.n_trial = int(params['n_trial'])
         self.t_dur = params['t_dur']; self.n_time = int(self.t_dur/self.dt)
         self.train = params['train']
@@ -448,17 +466,17 @@ class network2:
         self.g_inh = 3*np.sqrt(1/self.n_assoc)
         
         # Generate US and CS patterns
-        self.US = np.random.choice([0,1],self.n_in)
-        self.CS_1 = self.salience * np.random.choice([0,1],self.n_in)
-        self.CS_2 = np.random.choice([0,1],self.n_in)
+        self.US = self.rng.choice([0,1],self.n_in)
+        self.CS_1 = self.salience * self.rng.choice([0,1],self.n_in)
+        self.CS_2 = self.rng.choice([0,1],self.n_in)
         
         # Weights
-        self.W_rec_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
-        self.W_rec_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
-        self.W_ff_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
-        self.W_ff_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
-        self.W_fb_1 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
-        self.W_fb_2 = np.random.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        self.W_rec_1 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
+        self.W_rec_2 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
+        self.W_ff_1 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        self.W_ff_2 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        self.W_fb_1 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
+        self.W_fb_2 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_in))
         if self.dale:
             # All recurrent connections should be excitatory
             sign = np.ones(self.n_assoc); self.sign = np.diag(sign)                
@@ -509,13 +527,13 @@ class network2:
         CS_2_pr = np.arange(self.CS_2_ap_tr,self.n_trial)
         
         # Remove trials where CSs are present to test for contingency effects
-        keep = np.random.permutation(np.arange(CS_1_pr.size))[:int(CS_1_pr.size*self.cont[0])]
+        keep = self.rng.permutation(np.arange(CS_1_pr.size))[:int(CS_1_pr.size*self.cont[0])]
         keep.sort(); CS_1_pr = CS_1_pr[keep]
         if self.cond_dep:
-            keep = np.random.permutation(np.arange(CS_1_pr.size))[:int(CS_2_pr.size*self.cont[1])]
+            keep = self.rng.permutation(np.arange(CS_1_pr.size))[:int(CS_2_pr.size*self.cont[1])]
             keep.sort(); CS_2_pr = CS_1_pr[keep]
         else:
-            keep = np.random.permutation(np.arange(CS_2_pr.size))[:int(CS_2_pr.size*self.cont[1])]
+            keep = self.rng.permutation(np.arange(CS_2_pr.size))[:int(CS_2_pr.size*self.cont[1])]
             keep.sort(); CS_2_pr = CS_2_pr[keep]
         
         # Inputs to network
@@ -644,11 +662,11 @@ class network2:
         # Initializes network to random state
         
         # initialize voltages, currents and weight updates
-        V_d = np.random.uniform(0,1,self.n_assoc); V = np.random.uniform(0,1,self.n_assoc)
+        V_d = self.rng.uniform(0,1,self.n_assoc); V = self.rng.uniform(0,1,self.n_assoc)
         I_d = np.zeros(self.n_assoc); Delta = np.zeros((self.n_assoc,self.n_assoc+self.n_in))
         PSP = np.zeros(self.n_assoc+self.n_in); I_PSP = np.zeros(self.n_assoc+self.n_in)
         g_e = np.zeros(self.n_assoc); g_i = np.zeros(self.n_assoc)
-        r = np.random.uniform(0,.15,self.n_assoc); C_p_u = 0; C_p_r = 0; C_n_u = 0; C_n_r = 0
+        r = self.rng.uniform(0,.15,self.n_assoc); C_p_u = 0; C_p_r = 0; C_n_u = 0; C_n_r = 0
         
         return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, C_p_u, C_p_r, C_n_u, C_n_r
     
@@ -727,8 +745,18 @@ class network2:
 
 class RNN(nn.Module):
     
-    def __init__(self,inp_size,rec_size,out_size,n_sd=.1,tau=100,dt=10):
+    def __init__(self,inp_size,rec_size,out_size,n_sd=.1,tau=100,dt=10,seed=None):
         super().__init__()
+        
+        # Manual seed
+        self.seed = seed
+        
+        # Set seed for PyTorch
+        if seed is not None:
+            torch.manual_seed(self.seed)
+        
+        # Generator
+        self.rng = torch.Generator().manual_seed(self.seed)
         
         # Constants
         self.inp_size = inp_size
@@ -756,7 +784,7 @@ class RNN(nn.Module):
         # Defines dynamics of the network
         
         h = self.inp_to_rec(inp) + self.rec_to_rec(r) + \
-                    self.n_sd*torch.randn(self.rec_size)
+                    self.n_sd*torch.randn(self.rec_size, generator=self.rng)
         r_new = (1 - self.alpha)*r + self.alpha*torch.relu(h)
         
         return r_new

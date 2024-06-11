@@ -335,7 +335,7 @@ if n_CS == 1:
         axes[0, 2].set_ylabel('RNN unit')
 
         # Add a shared colorbar
-        cbar_ax = fig.add_axes([0.92, 0.05, 0.04, 0.7])  # [left, bottom, width, height]
+        cbar_ax = fig.add_axes([0.92, 0.08, 0.03, 0.5])  # [left, bottom, width, height]
         cbar = fig.colorbar(im, cax=cbar_ax)
         cbar.set_label('Firing rate (spikes/sec)')
 

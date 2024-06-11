@@ -13,6 +13,9 @@ import numpy as np
 n_CS = 1
 n_pat = 16
 
+# Seed for reproducibility
+seed = None
+
 # Whether to use the same network initialization and CS-US sets
 reprod = False
 if reprod:
@@ -103,9 +106,9 @@ elif n_CS == 2:
 
 # Run simulation
 if n_CS == 1:    
-    net = main.network(params)
+    net = main.network(params,seed=seed)
 elif n_CS == 2:
-    net = main.network2(params2)
+    net = main.network2(params2,seed=seed)
 
 
 # Start simulation
