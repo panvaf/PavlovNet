@@ -107,7 +107,10 @@ if n_CS == 1:
 elif n_CS == 2:
     net = main.network2(params2)
 
+
+# Start simulation
 net.simulate()
+
 
 # Save results
 with open(os.path.join(data_path,filename + '.pkl'),'wb') as f:

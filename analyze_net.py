@@ -307,7 +307,7 @@ if n_CS == 1:
         
         # Plot of CS, US, and jointly induced responses as a function of trial number
         
-        fr = [net.Phi_est,net.Phi,net.Phi_est]
+        fr = [net.Phi_est,net.Phi,net.Phi_est_US]
         snaps = np.array([0,2,49])
         trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
         
@@ -316,12 +316,12 @@ if n_CS == 1:
         fig, axes = plt.subplots(3, 3, figsize=(6, 6), sharex=True, sharey=True)
 
         for i, snap in enumerate(snaps):
-            for j, vector in enumerate(fr):
+            for j, Phi in enumerate(fr):
                 ax = axes[j, i]
                 if j==1:
-                    im = ax.imshow(1000*vector.T, cmap='viridis', aspect='auto')
+                    im = ax.imshow(1000*Phi.T, cmap='viridis', aspect='auto')
                 else:
-                    im = ax.imshow(1000*vector[snap].T, cmap='viridis', aspect='auto')
+                    im = ax.imshow(1000*Phi[snap].T, cmap='viridis', aspect='auto')
                 if j==0:
                     ax.set_title('Trial {}'.format(trials[i]))
                 #ax.set_xticks([0, 8, 16])

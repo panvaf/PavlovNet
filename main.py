@@ -267,7 +267,7 @@ class network:
             # Save network estimates after each trial
             if self.est_every:
                 self.US_est[j,:], self.Phi_est[j,:] = self.est_US()
-                _, self.Phi_est_US[j,:] = self.est_US(show_US=True)
+                _, self.Phi_est_US[j,:] = self.est_US(show_US=True,t_mult=2)
                 self.E[j,:] = np.diag(self.expectation(self.US_est[j,:])[0])
             
             # Obtain average error at the end of every batch of trials
@@ -280,15 +280,16 @@ class network:
                 # Save estimates at the end of every batch
                 if not self.est_every:
                     self.US_est[batch_num,:], self.Phi_est[batch_num,:] = self.est_US()
-                    _, self.Phi_est_US[batch_num,:] = self.est_US(show_US=True)
+                    _, self.Phi_est_US[batch_num,:] = self.est_US(show_US=True,t_mult=2)
                     self.E[batch_num,:] = np.diag(self.expectation(self.US_est[batch_num,:])[0])
                     
                 batch_num += 1
         
         # Simulation time
         end = time()
-        self.sim_time = round((end-start)/3600,2)
-        print("The simulation ran for {} hours".format(self.sim_time))
+        self.sim_time = end-start
+        print('Execution time: {} minutes {} seconds'.format(int(self.sim_time // 60),
+                                                             int(self.sim_time % 60)))
         
     
     def gen_US_CS(self):
