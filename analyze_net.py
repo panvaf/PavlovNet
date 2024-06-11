@@ -343,7 +343,7 @@ if n_CS == 1:
         plt.subplots_adjust(right=0.9)
         
         #plt.savefig('firing_rates.png',bbox_inches='tight',format='png',dpi=300)        
-
+        
 
     # Short-term memory leak plot
     

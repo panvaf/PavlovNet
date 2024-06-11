@@ -128,6 +128,7 @@ class network:
             
         self.US_est = np.zeros(tuple([store_size])+self.CS.shape)
         self.Phi_est = np.zeros(tuple([store_size])+self.Phi.shape)
+        self.Phi_est_US = np.zeros(tuple([store_size])+self.Phi.shape)
         self.E = np.zeros(tuple([store_size])+(self.n_pat,))
         
         # Store expectation for entire trial to create DA release plots
@@ -266,6 +267,7 @@ class network:
             # Save network estimates after each trial
             if self.est_every:
                 self.US_est[j,:], self.Phi_est[j,:] = self.est_US()
+                _, self.Phi_est_US[j,:] = self.est_US(show_US=True)
                 self.E[j,:] = np.diag(self.expectation(self.US_est[j,:])[0])
             
             # Obtain average error at the end of every batch of trials
@@ -278,6 +280,7 @@ class network:
                 # Save estimates at the end of every batch
                 if not self.est_every:
                     self.US_est[batch_num,:], self.Phi_est[batch_num,:] = self.est_US()
+                    _, self.Phi_est_US[batch_num,:] = self.est_US(show_US=True)
                     self.E[batch_num,:] = np.diag(self.expectation(self.US_est[batch_num,:])[0])
                     
                 batch_num += 1
@@ -319,7 +322,7 @@ class network:
         return r, r_m, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, C_p_u, C_p_r, C_n_u, C_n_r
     
     
-    def est_US(self,t_mult=5):
+    def est_US(self,show_US=False,t_mult=5):
         # Computes estimated USs from CSs after learning
         
         # Time to settle is defined as multiple of synaptic time constant
@@ -328,11 +331,16 @@ class network:
         # Initialize
         US_est = np.zeros(self.CS.shape)
         Phi_est = np.zeros((self.CS.shape[0],self.Phi.shape[1]))
-        I_ff = np.zeros(self.n_in)
+        
         
         for i, CS in enumerate(self.CS):
             
-            # CS is only input to the network
+            if show_US:
+                I_ff = self.US[i]
+            else:
+                # Show just CS
+                I_ff = np.zeros(self.n_in)
+            
             if self.mem_net_id is None:
                 I_fb = np.repeat(CS[None,:],n_settle,axis=0)
             else:

@@ -52,7 +52,7 @@ def dynamics(r,I_ff,I_fb,W_rec,W_ff,W_fb,V,I_d,V_d,PSP,I_PSP,g_e,g_i,dt,
 
 # Dopamine uptake and release dynamics
 
-def neuromodulator_dynamics(C_p_u,C_p_r,C_n_u,C_n_r,S,dt,tau_r=200,tau_u=300,thres=0.01):
+def neuromodulator_dynamics(C_p_u,C_p_r,C_n_u,C_n_r,S,dt,tau_r=200,tau_u=300):
     
     # Neurotransmitter released with surprise only
     if S != 0:
