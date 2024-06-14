@@ -28,7 +28,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': 0.97,              # deviation from self-consistency
+    'a': 0.95,           # deviation from self-consistency
     'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
@@ -59,7 +59,7 @@ params = {
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'T': 0.4,            # temporal window for averaging firing rates for BCM rule
-    'run': 0,            # number of run for many runs of same simulation
+    'run': 5,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
     }
 
@@ -94,7 +94,7 @@ params2 = {
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
 

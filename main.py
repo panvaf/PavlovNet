@@ -82,7 +82,7 @@ class network:
         
         # Load memory network, implemented by pretrained RNN
         if self.mem_net_id is not None:
-            net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms,self.seed)
+            net = RNN(self.n_in,self.n_mem,self.n_in,self.n_sigma,self.tau_s,self.dt_ms,seed=None)
             checkpoint = torch.load(os.path.join(data_path,self.mem_net_id + '.pth'))
             net.load_state_dict(checkpoint['state_dict'])
             net.eval()
@@ -753,10 +753,10 @@ class RNN(nn.Module):
         
         # Set seed for PyTorch
         if seed is not None:
-            torch.manual_seed(self.seed)
+            torch.manual_seed(self.seed)        
+            # Generator
+            self.rng = torch.Generator()
         
-        # Generator
-        self.rng = torch.Generator().manual_seed(self.seed)
         
         # Constants
         self.inp_size = inp_size
@@ -783,8 +783,13 @@ class RNN(nn.Module):
     def dynamics(self,inp,r):
         # Defines dynamics of the network
         
-        h = self.inp_to_rec(inp) + self.rec_to_rec(r) + \
-                    self.n_sd*torch.randn(self.rec_size, generator=self.rng)
+        if self.seed is None:
+            e = torch.randn(self.rec_size)
+        else:
+            e = torch.randn(self.rec_size, generator=self.rng)
+            
+        h = self.inp_to_rec(inp) + self.rec_to_rec(r) + self.n_sd*e
+        
         r_new = (1 - self.alpha)*r + self.alpha*torch.relu(h)
         
         return r_new

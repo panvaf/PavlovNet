@@ -14,7 +14,7 @@ n_CS = 1
 n_pat = 16
 
 # Seed for reproducibility
-seed = None
+seed = 11
 
 # Whether to use the same network initialization and CS-US sets
 reprod = False
@@ -34,7 +34,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': 0.97,           # deviation from self-consistency
+    'a': 0.95,           # deviation from self-consistency
     'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
@@ -103,6 +103,9 @@ if n_CS == 1:
     filename = util.filename(params) + 'gsh3gD2gL1taul20' + ('reprod' if reprod else '')
 elif n_CS == 2:
     filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
+
+# Change seed with run
+seed += params['run']
 
 # Run simulation
 if n_CS == 1:    
