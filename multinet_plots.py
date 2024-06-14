@@ -141,6 +141,7 @@ ax.set_xlabel('Trials')
 
 #plt.savefig('Exp_multiple.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
+
 # Do the same for errors
 
 fig, ax = plt.subplots(figsize=(2, 1.5))
@@ -173,6 +174,8 @@ ax.yaxis.set_minor_locator(MultipleLocator(.05))
 ax.set_xlabel('Trials')
 
 #plt.savefig('var_multiple.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+
+params['run'] = 0
 
 
 # Contingency and speed of learning plot
@@ -215,6 +218,8 @@ fig.legend(frameon=False,ncol=1,bbox_to_anchor=(1, .6),title='$P(CS)$')
 #plt.savefig('cont_speed.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 #plt.savefig('cont_speed.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
 
+params2['cont'] = [1,1]
+
 
 # ISI curve
 
@@ -227,26 +232,28 @@ perc_CR_975 = np.zeros(len(delays))
 
 for i, t_d in enumerate(delays):
     
-    params['US_ap'] = params['CS_disap'] + t_d
-    params['t_dur'] = params['US_ap'] + 1
+    if i>0:   
+        params['US_ap'] = 1 + t_d
+        params['t_dur'] = 2 + t_d
+        params['CS_disap'] = 1
     
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAreprod'
-    with open(data_path+filename+'.pkl', 'rb') as f:
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
         net = pickle.load(f)
     
     # Find mean and 95 % intervals of conditioned response across CSs
-    perc_CR[i] = np.divide(net.R_est,net.R)
+    perc_CR[i] = net.E[-1]
     perc_CR_mean[i] = np.mean(perc_CR[i])
-    (perc_CR_025[i], perc_CR_975[i]) = st.t.interval(alpha=0.95,
-            df=len(perc_CR[i])-1, loc=np.mean(perc_CR[i]), scale=st.sem(perc_CR[i]))
+    (perc_CR_025[i], perc_CR_975[i]) = st.t.interval(confidence=0.95, 
+        df=len(perc_CR[i])-1, loc=np.mean(perc_CR[i]), scale=st.sem(perc_CR[i]))
 
 params['CS_disap'] = 2; params['US_ap'] = 1; params['t_dur'] = 2
 
 fig, ax = plt.subplots(figsize=(2,1.5))
 plt.scatter(delays,perc_CR_mean,color = 'green',s=10)
 plt.errorbar(delays,perc_CR_mean,[perc_CR_mean-perc_CR_025,perc_CR_975-perc_CR_mean],color = 'green',linestyle='')
-plt.ylabel('Expectation')
-plt.xlabel('$t_d$ (s)')
+plt.ylabel('Expectation $E$')
+plt.xlabel('$t_{delay}$ (s)')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.spines['left'].set_position(('data', -1.5))
@@ -258,46 +265,9 @@ ax.yaxis.set_minor_locator(MultipleLocator(.25))
 ax.xaxis.set_major_locator(MultipleLocator(2))
 ax.xaxis.set_minor_locator(MultipleLocator(1))
 
-#plt.savefig('trace_cond.png',bbox_inches='tight',format='png',dpi=300)
-#plt.savefig('trace_cond.eps',bbox_inches='tight',format='eps',dpi=300)
+#plt.savefig('trace_cond.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+#plt.savefig('trace_cond.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
 
-# Rate of acquisition as a function of reward size plot
-
-params['n_trial'] = 1e2; params['n_pat'] = 1
-params['eta'] = 5e-4; params['est_every'] = True
-
-rewards = [1,.7,.4]
-base_color = 'red'
-colors = [util.saturation_mult(base_color,1.2),util.saturation_mult(base_color,.6),util.saturation_mult(base_color,.3)]
-# alternative : 1.5, 0.7, 0.2
-
-fig, ax = plt.subplots(figsize=(1.5,1.5))
-
-for i, reward in enumerate(rewards):
-    
-    filename = util.filename(params) + 'gsh3gD2gL1taul20DAreprodR' + str(reward).replace('.','')
-    with open(data_path+filename+'.pkl', 'rb') as f:
-        net = pickle.load(f)
-    
-    norm_R = net.R_est/net.R
-    n_trial = net.n_trial
-    
-    ax.plot(norm_R,label='$R=$'+'${}$'.format(reward),c=colors[i],linewidth=2)
-    
-ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
-ax.set_xlabel('Trials')
-ax.set_ylabel('Normalised Reward')
-ax.set_xlim([0,n_trial])
-ax.set_ylim([-.02,1.02])
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['left'].set_position(('data', -.05*n_trial))
-ax.spines['bottom'].set_position(('data', -.05))
-ax.xaxis.set_major_locator(MultipleLocator(int(n_trial/2)))
-ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
-ax.yaxis.set_major_locator(MultipleLocator(1/2))
-ax.yaxis.set_minor_locator(MultipleLocator(1/4))
-fig.legend(frameon=False,loc='right',bbox_to_anchor=(1.75,.75))
 
 # Rate of acquisition as a function of number of entrained patterns
 

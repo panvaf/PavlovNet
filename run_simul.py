@@ -11,7 +11,7 @@ import numpy as np
 
 # Which network and how many CS-US associations to run
 n_CS = 1
-n_pat = 2
+n_pat = 16
 
 # Seed for reproducibility
 seed = 11
