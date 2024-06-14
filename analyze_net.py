@@ -59,7 +59,7 @@ params = {
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'T': 0.4,            # temporal window for averaging firing rates for BCM rule
-    'run': 5,            # number of run for many runs of same simulation
+    'run': 0,            # number of run for many runs of same simulation
     'm': 2               # order of gaussian for radial basis function
     }
 
@@ -173,7 +173,7 @@ if n_CS == 1:
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
     
-    #plt.savefig('Stim_sub.png',bbox_inches='tight',format='png',dpi=300)
+    #plt.savefig('Stim_sub.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
     # Dopamine uptake plot
     if net.DA_plot:
@@ -230,7 +230,7 @@ if n_CS == 1:
             # Plot regression line
             x_reg = np.array([x.min(), x.max()])
             y_reg = slope * x_reg + intercept
-            ax.plot(x_reg, y_reg, color=cols[i], linestyle='-', linewidth=2, zorder=i+1)
+            ax.plot(x_reg, y_reg, color=cols[i], linestyle='-', linewidth=1.5, zorder=i+1)
 
             # Create custom legend handles
             legend_handles.append(mlines.Line2D([], [], marker='o', markersize=1, color=cols[i], label='{}'.format(trials[i]), linestyle='None'))
@@ -250,7 +250,7 @@ if n_CS == 1:
         ax.legend(handles=legend_handles, title='Trial #',frameon=False,ncol=1,bbox_to_anchor=(1, 1),
                   title_fontsize=SMALL_SIZE)
         
-        #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300)
+        #plt.savefig('Sub_his.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
         
         trials = net.n_trial*np.linspace(0,1,int(100/params['every_perc']))
         fig, ax = plt.subplots(figsize=(2,1.5))
@@ -266,7 +266,7 @@ if n_CS == 1:
         ax.yaxis.set_major_locator(MultipleLocator(.5))
         ax.yaxis.set_minor_locator(MultipleLocator(.25))
         ax.set_xlim([0,net.n_trial])
-        ax.set_ylabel('Expectation')
+        ax.set_ylabel('Expectation $E$')
         ax.set_xlabel('Trials')
         
         color = 'red'
@@ -282,7 +282,7 @@ if n_CS == 1:
         ax1.yaxis.set_major_locator(MultipleLocator(.1))
         ax1.set_ylim([0,.25])
         
-        #plt.savefig('Cond_his.png',bbox_inches='tight',format='png',dpi=300)
+        #plt.savefig('Cond_his.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
     
         # Scatterplot of actual and decoded US digits
         
@@ -303,7 +303,7 @@ if n_CS == 1:
         ax.yaxis.set_major_locator(MultipleLocator(.5))
         ax.yaxis.set_minor_locator(MultipleLocator(.25))
         
-        #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300)
+        #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
         
         # Plot of CS, US, and jointly induced responses as a function of trial number
         
@@ -402,7 +402,7 @@ if net.est_every:
         ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
         #ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction',zorder=0)
         ax.set_xlabel('Trials')
-        ax.set_ylabel('Expectation')
+        ax.set_ylabel('Expectation $E$')
         ax.set_xlim([-.02*n_trial,n_trial])
         ax.set_ylim([-.02,1.02])
         ax.spines['top'].set_visible(False)
@@ -430,7 +430,7 @@ if net.est_every:
         ax.plot(E,c='green',linewidth=2,zorder=1)
         ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
         ax.set_xlabel('Trials')
-        ax.set_ylabel('Expectation')
+        ax.set_ylabel('Expectation $E$')
         ax.set_xlim([0,n_trial])
         ax.set_ylim([-.02*R_max,2.02*R_max])
         ax.spines['top'].set_visible(False)

@@ -11,6 +11,7 @@ from matplotlib.ticker import MultipleLocator, NullLocator
 import numpy as np
 import scipy.stats as st
 from scipy.optimize import curve_fit
+from scipy.stats import sem
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -22,7 +23,7 @@ params = {
     'n_in': 20,          # size of patterns
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
-    'a': 1,              # deviation from self-consistency
+    'a': 0.95,           # deviation from self-consistency
     'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
@@ -57,7 +58,7 @@ params = {
     'm': 2               # order of gaussian for radial basis function
     }
 
-data_path = str(Path(os.getcwd()).parent) + '\\trained_networks\\'
+data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 
 # Fontsize appropriate for plots
 SMALL_SIZE = 7
@@ -72,6 +73,79 @@ plt.rc('ytick', labelsize=SMALL_SIZE)     # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)     # legend fontsize
 plt.rc('figure', titlesize=MEDIUM_SIZE)   # fontsize of the figure title
 
+
+# Multiple conditioning examples
+
+runs = np.arange(5)
+
+fig, ax = plt.subplots(figsize=(2, 1.5))
+
+for i, run in enumerate(runs):
+    
+    params['run'] = run
+    
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+        net = pickle.load(f)
+
+    trials = net.n_trial * np.linspace(0, 1, int(100 / params['every_perc']))
+    avg_E = np.mean(net.E, axis=1)
+    sem_E = sem(net.E, axis=1)
+    ci_lower = avg_E - 1.96 * sem_E
+    ci_upper = avg_E + 1.96 * sem_E
+
+    ax.plot(trials, avg_E, linewidth=1.5)
+    ax.fill_between(trials, ci_lower, ci_upper, alpha=0.3)
+    
+ax.axhline(y=1, c='black', linewidth=0.5)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', -.05 * net.n_trial))
+ax.spines['bottom'].set_position(('data', -.05))
+ax.xaxis.set_major_locator(MultipleLocator(.5 * net.n_trial))
+ax.xaxis.set_minor_locator(MultipleLocator(.25 * net.n_trial))
+ax.yaxis.set_major_locator(MultipleLocator(.5))
+ax.yaxis.set_minor_locator(MultipleLocator(.25))
+ax.set_xlim([0, net.n_trial])
+ax.set_ylabel('Expectation $E$')
+ax.set_xlabel('Trials')
+
+#plt.savefig('Exp_multiple.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+
+# Do the same for errors
+
+fig, ax = plt.subplots(figsize=(2, 1.5))
+
+for i, run in enumerate(runs):
+    
+    params['run'] = run
+    
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+        net = pickle.load(f)
+        
+    US = net.US
+    US_est_hist = net.US_est
+        
+    ax.plot(trials,np.var(US_est_hist-US,axis=(1,2)),linewidth=1.5)
+    ax.set_ylabel('Var[$r_{US}$,$\hat{r}_{US}$]')
+
+
+ax.spines['top'].set_visible(False)
+ax.spines['left'].set_position(('data', -.05 * net.n_trial))
+ax.spines['bottom'].set_position(('data', -.01))
+ax.spines['right'].set_visible(False)
+ax.yaxis.set_major_locator(MultipleLocator(.1))
+ax.set_ylim([0,.25])
+ax.xaxis.set_major_locator(MultipleLocator(.5 * net.n_trial))
+ax.xaxis.set_minor_locator(MultipleLocator(.25 * net.n_trial))
+ax.yaxis.set_major_locator(MultipleLocator(.1))
+ax.yaxis.set_minor_locator(MultipleLocator(.05))
+ax.set_xlabel('Trials')
+
+#plt.savefig('var_multiple.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
 # ISI curve
 
