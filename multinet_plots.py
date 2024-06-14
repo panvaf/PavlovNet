@@ -58,6 +58,34 @@ params = {
     'm': 2               # order of gaussian for radial basis function
     }
 
+params2 = {
+    'dt': 1e-3,          # euler integration step size
+    'n_assoc': 64,       # number of associative neurons
+    'n_sigma': 0,        # input noise standard deviation
+    'tau_s': 100,        # synaptic delay in the network, in ms
+    'n_in': 20,          # size of patterns
+    'eta': 5e-4,         # learning rate
+    'a': 0.95,           # deviation from self-consistency
+    'n_trial': 1e2,      # number of trials
+    't_dur': 2,          # duration of trial
+    'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
+    'US_ap': 1,          # time in trial that US appears
+    'train': True,       # whether to train network or not
+    'fun': 'logistic',   # activation function of associative network
+    'every_perc': 1,     # store errors this often
+    'dale': True,        # whether the network respects Dale's law
+    'I_inh': 0,          # global inhibition to dendritic compartment
+    'est_every': True,   # whether to estimate US and expectation after every trial
+    'overexp': False,    # whether to test for overexpectation effects
+    'salience': 1,       # relative saliance of CSs
+    'cont': [1,1],       # contingencies of CSs
+    'cond_dep': False,   # whether one CS is conditionally dependent on the other
+    'filter': False,     # whether to filter the learning dynamics
+    'rule': 'Pred',      # learning rule used in associative network
+    'norm': None,        # normalization strenght for learning rule
+    'm': 2               # order of gaussian for radial basis function
+    }
+
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 
 # Fontsize appropriate for plots
@@ -130,9 +158,8 @@ for i, run in enumerate(runs):
     US_est_hist = net.US_est
         
     ax.plot(trials,np.var(US_est_hist-US,axis=(1,2)),linewidth=1.5)
-    ax.set_ylabel('Var[$r_{US}$,$\hat{r}_{US}$]')
 
-
+ax.set_ylabel('Var[$r_{US}$,$\hat{r}_{US}$]')
 ax.spines['top'].set_visible(False)
 ax.spines['left'].set_position(('data', -.05 * net.n_trial))
 ax.spines['bottom'].set_position(('data', -.01))
@@ -146,6 +173,48 @@ ax.yaxis.set_minor_locator(MultipleLocator(.05))
 ax.set_xlabel('Trials')
 
 #plt.savefig('var_multiple.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+
+
+# Contingency and speed of learning plot
+
+conts = [0.8,0.6,0.4]
+colors = ['dodgerblue','firebrick','magenta']
+
+fig, ax = plt.subplots(figsize=(2, 1.5))
+
+for i, cont in enumerate(conts):
+    
+    params2['cont'] = [cont,0]
+    
+    filename = util.filename2(params2) + 'gsh3gD2gL1taul20'
+
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+        net = pickle.load(f)
+        
+    E_1 = net.E_1
+    n_trial = net.n_trial
+        
+    ax.plot(E_1,linewidth=2,label=cont,color=colors[i])
+    ax.set_ylabel('Var[$r_{US}$,$\hat{r}_{US}$]')
+
+ax.axhline(y=1,c='gray',linestyle='-',linewidth=.5)
+ax.set_xlabel('Trials')
+ax.set_ylabel('Expectation $E$')
+ax.set_xlim([0,n_trial])
+ax.set_ylim([-.02,1.02])
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', -.05*n_trial))
+ax.spines['bottom'].set_position(('data', -.05))
+ax.xaxis.set_major_locator(MultipleLocator(int(n_trial/2)))
+ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
+ax.yaxis.set_major_locator(MultipleLocator(1/2))
+ax.yaxis.set_minor_locator(MultipleLocator(1/4))
+fig.legend(frameon=False,ncol=1,bbox_to_anchor=(1, .6),title='$P(CS)$')
+
+#plt.savefig('cont_speed.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+#plt.savefig('cont_speed.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+
 
 # ISI curve
 

@@ -645,8 +645,9 @@ class network2:
         
         # Simulation time
         end = time()
-        self.sim_time = round((end-start)/3600,2)
-        print("The simulation ran for {} hours".format(self.sim_time))
+        self.sim_time = end-start
+        print('Execution time: {} minutes {} seconds'.format(int(self.sim_time // 60),
+                                                             int(self.sim_time % 60)))
 
             
     
