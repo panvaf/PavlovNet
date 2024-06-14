@@ -70,8 +70,8 @@ params2 = {
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
     'eta': 5e-4,         # learning rate
-    'a': .97,           # deviation from self-consistency
-    'n_trial': 5e2,      # number of trials
+    'a': 0.95,           # deviation from self-consistency
+    'n_trial': 1e2,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
@@ -83,8 +83,8 @@ params2 = {
     'est_every': True,   # whether to estimate US and expectation after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative saliance of CSs
-    'cont': [.8,.4],       # contingencies of CSs
-    'cond_dep': True,   # whether one CS is conditionally dependent on the other
+    'cont': [1,1],       # contingencies of CSs
+    'cond_dep': False,   # whether one CS is conditionally dependent on the other
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
@@ -254,7 +254,7 @@ if n_CS == 1:
         
         trials = net.n_trial*np.linspace(0,1,int(100/params['every_perc']))
         fig, ax = plt.subplots(figsize=(2,1.5))
-        ax.plot(trials,net.E,linewidth=.5,alpha=.5)
+        ax.plot(trials,net.E,linewidth=.5,alpha=.3)
         ax.plot(trials,np.average(net.E,axis=1),c='green',linewidth=1.5)
         ax.axhline(y=1,c='black',linewidth=0.5)
         ax.spines['top'].set_visible(False)
@@ -399,7 +399,7 @@ if net.est_every:
         
         fig, ax = plt.subplots(figsize=(1.5,1.5))
         ax.plot(E,label='$E$',c='green',linewidth=2)
-        ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
+        ax.axhline(y=1,c='black',linestyle='-',linewidth=.5)
         #ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction',zorder=0)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Expectation $E$')
@@ -425,26 +425,26 @@ if net.est_every:
         ax.plot(E_1,c='dodgerblue',linewidth=2,zorder=1)
         ax.plot(E_2,c='darkorange',linewidth=2,zorder=1)
         #ax.plot([],[],linestyle='',label='\n')
-        ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented, $CS_1$ removed',zorder=0)
-        ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented',zorder=0)
+        #ax.axvline(x=100,linestyle='dotted',c='darkorange',linewidth=1.5,label='$CS_2$ presented, $CS_1$ removed',zorder=0)
+        #ax.axvline(x=200,linestyle='dotted',c='green',linewidth=1.5,label='Both $CS$s presented',zorder=0)
         ax.plot(E,c='green',linewidth=2,zorder=1)
-        ax.axhline(y=1,c='black',linestyle='--',linewidth=2)
+        ax.axhline(y=1,c='black',linestyle='-',linewidth=.5)
         ax.set_xlabel('Trials')
         ax.set_ylabel('Expectation $E$')
         ax.set_xlim([0,n_trial])
-        ax.set_ylim([-.02*R_max,2.02*R_max])
+        ax.set_ylim([-.02*R_max,1.02*R_max])
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_position(('data', -.05*n_trial))
         ax.spines['bottom'].set_position(('data', -.05*R_max))
         ax.xaxis.set_major_locator(MultipleLocator(int(n_trial/2)))
         ax.xaxis.set_minor_locator(MultipleLocator(int(n_trial/4)))
-        ax.yaxis.set_major_locator(MultipleLocator(R_max))
-        ax.yaxis.set_minor_locator(MultipleLocator(R_max/2))
-        fig.legend(frameon=False,ncol=1,bbox_to_anchor=(.85, 1.15))
+        ax.yaxis.set_major_locator(MultipleLocator(R_max/2))
+        ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
+        #fig.legend(frameon=False,ncol=1,bbox_to_anchor=(.85, 1.15))
     
-    #plt.savefig('Cond.png',bbox_inches='tight',format='png',dpi=300)
-    #plt.savefig('Cond.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('exp.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+    #plt.savefig('exp.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
 
 if n_CS == 1 and net.trial_dyn:
     
