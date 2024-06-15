@@ -12,6 +12,7 @@ import numpy as np
 import scipy.stats as st
 from scipy.optimize import curve_fit
 from scipy.stats import sem
+import matplotlib.lines as mlines
 
 params = {
     'dt': 1e-3,          # euler integration step size
@@ -126,7 +127,7 @@ for i, run in enumerate(runs):
     ax.plot(trials, avg_E, linewidth=1.5)
     ax.fill_between(trials, ci_lower, ci_upper, alpha=0.3)
     
-ax.axhline(y=1, c='black', linewidth=0.5)
+ax.axhline(y=1, c='gray', linewidth=0.5)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.spines['left'].set_position(('data', -.05 * net.n_trial))
@@ -232,6 +233,7 @@ perc_CR_975 = np.zeros(len(delays))
 
 for i, t_d in enumerate(delays):
     
+    # Trace conditioning examples have shorter CS duration
     if i>0:   
         params['US_ap'] = 1 + t_d
         params['t_dur'] = 2 + t_d
@@ -246,8 +248,6 @@ for i, t_d in enumerate(delays):
     perc_CR_mean[i] = np.mean(perc_CR[i])
     (perc_CR_025[i], perc_CR_975[i]) = st.t.interval(confidence=0.95, 
         df=len(perc_CR[i])-1, loc=np.mean(perc_CR[i]), scale=st.sem(perc_CR[i]))
-
-params['CS_disap'] = 2; params['US_ap'] = 1; params['t_dur'] = 2
 
 fig, ax = plt.subplots(figsize=(2,1.5))
 plt.scatter(delays,perc_CR_mean,color = 'green',s=10)
@@ -267,6 +267,90 @@ ax.xaxis.set_minor_locator(MultipleLocator(1))
 
 #plt.savefig('trace_cond.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 #plt.savefig('trace_cond.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+
+params['CS_disap'] = 2; params['US_ap'] = 1; params['t_dur'] = 2
+
+# Stimulus substitution and conditioning history plots
+
+delays = np.arange(-1,6,2)
+colors = ['green','firebrick','dodgerblue','magenta']
+
+US_est = np.zeros((len(delays),params['n_pat'],params['n_in']))
+US = np.zeros(US_est.shape)
+
+fig, ax = plt.subplots(figsize=(2, 1.5))
+
+for i, t_d in enumerate(delays):
+    
+    if i>0:
+        params['US_ap'] = 1 + t_d
+        params['t_dur'] = 2 + t_d
+        params['CS_disap'] = 1
+    
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+        net = pickle.load(f)
+
+    trials = net.n_trial * np.linspace(0, 1, int(100 / params['every_perc']))
+    avg_E = np.mean(net.E, axis=1)
+    sem_E = sem(net.E, axis=1)
+    ci_lower = avg_E - 1.96 * sem_E
+    ci_upper = avg_E + 1.96 * sem_E
+
+    ax.plot(trials, avg_E, linewidth=1.5, color = colors[i])
+    ax.fill_between(trials, ci_lower, ci_upper, alpha=0.3, color = colors[i])
+    
+    # Store for future use
+    US_est[i] = net.US_est[49]
+    US[i] = net.US
+    
+ax.axhline(y=1, c='gray', linewidth=0.5)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', -.05 * net.n_trial))
+ax.spines['bottom'].set_position(('data', -.05))
+ax.xaxis.set_major_locator(MultipleLocator(.5 * net.n_trial))
+ax.xaxis.set_minor_locator(MultipleLocator(.25 * net.n_trial))
+ax.yaxis.set_major_locator(MultipleLocator(.5))
+ax.yaxis.set_minor_locator(MultipleLocator(.25))
+ax.set_xlim([0, net.n_trial])
+ax.set_ylabel('Expectation $E$')
+ax.set_xlabel('Trials')
+
+#plt.savefig('trace_multiple.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+
+x_bias = np.linspace(-.15,.15,4)
+
+fig, ax = plt.subplots(figsize=(1.5,1.5))
+ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0, linewidth=1)
+
+legend_handles = []
+for i, t_d in enumerate(delays):
+    ax.scatter(US[i].flatten()+x_bias[i]+np.random.normal(scale=.02,size=np.size(US[i])),
+               US_est[i].flatten(),s=.25,color=colors[i],alpha=.5,zorder=1)
+    # Create custom legend handles
+    legend_handles.append(mlines.Line2D([], [], marker='o', markersize=1.5, 
+            color=colors[i], label=t_d, linestyle='None'))
+    
+ax.set_xlim([-.5,1.5])
+ax.set_ylim([-.5,1.5])
+ax.set_xlabel('$r_{US}$ element')
+ax.set_ylabel('$\hat{r}_{US}$ element')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', -.55))
+ax.spines['bottom'].set_position(('data', -.55))
+ax.xaxis.set_major_locator(MultipleLocator(1))
+ax.xaxis.set_minor_locator(MultipleLocator(.5))
+ax.yaxis.set_major_locator(MultipleLocator(1))
+ax.yaxis.set_minor_locator(MultipleLocator(.5))
+fig.legend(handles=legend_handles, title='$t_{delay}$ (s)',frameon=False,ncol=1,bbox_to_anchor=(1.3, .8),
+          title_fontsize=SMALL_SIZE)
+
+#plt.savefig('trace_multiple_sub.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+
+params['CS_disap'] = 2; params['US_ap'] = 1; params['t_dur'] = 2
 
 
 # Rate of acquisition as a function of number of entrained patterns
