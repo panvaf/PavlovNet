@@ -353,6 +353,50 @@ fig.legend(handles=legend_handles, title='$t_{delay}$ (s)',frameon=False,ncol=1,
 params['CS_disap'] = 2; params['US_ap'] = 1; params['t_dur'] = 2
 
 
+# Reacquisition with and without US flip
+
+params['eta'] = 5e-4; params['n_trial'] = 5e2; params['n_pat'] = 1
+params['est_every'] = True; params['reacquire'] = True
+
+flips = [False,True]
+labels = ['Same $US$','Different $US$']
+
+fig, ax = plt.subplots(figsize=(3.5,1.5))
+
+for i, flip in enumerate(flips):
+    
+    params['flip'] = flip
+    
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+        net = pickle.load(f)
+
+    n_trial = net.n_trial
+    ax.plot(net.E,label=labels[i],linewidth=2)
+    
+ax.axhline(y=1,c='gray',linestyle='-',linewidth=.5)
+#ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction',zorder=0)
+ax.set_xlabel('Trials')
+ax.set_ylabel('Expectation $E$')
+ax.set_xlim([-.02*n_trial,n_trial])
+ax.set_ylim([-.02,1.02])
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', -.05*n_trial))
+ax.spines['bottom'].set_position(('data', -.05))
+ax.xaxis.set_major_locator(MultipleLocator(int(n_trial/4)))
+ax.xaxis.set_minor_locator(MultipleLocator(n_trial/8))
+ax.yaxis.set_major_locator(MultipleLocator(1/2))
+ax.yaxis.set_minor_locator(MultipleLocator(1/4))
+fig.legend(frameon=False,ncol=1,bbox_to_anchor=(.75, .7))
+
+#plt.savefig('reacquisition.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+#plt.savefig('reacquisition.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+
+params['est_every'] = False; params['reacquire'] = False
+
+
 # Rate of acquisition as a function of number of entrained patterns
 
 n_pat = [2,4,8,16]
