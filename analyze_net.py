@@ -91,6 +91,9 @@ params2 = {
     'm': 2               # order of gaussian for radial basis function
     }
 
+# Include regression lines in stimulus substitution plots
+reg_lines = True
+
 # Load network
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')
 if n_CS == 1:    
@@ -162,8 +165,8 @@ if n_CS == 1:
                color='green',alpha=.5,zorder=1)
     ax.set_xlim([0,100])
     ax.set_ylim([0,102])
-    ax.set_xlabel('$f(\mathbf{V})\mid_{US}$ (spikes/s)')
-    ax.set_ylabel('$f(\mathbf{V})\mid_{CS}$ (spikes/s)')
+    ax.set_xlabel('$r^{us-only}_{rnn}$ (spikes/s)')
+    ax.set_ylabel('$r^{cs-only}_{rnn}$ (spikes/s)')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_position(('data', -5))
@@ -212,7 +215,7 @@ if n_CS == 1:
     if net.Phi_est.ndim==3 and not net.est_every:
         
         snaps = np.array([0,2,9,49])
-        trials = (snaps+1)/100 * net.n_trial; trials = trials.astype('int')
+        trials = (snaps+1)/100 * net.n_trial * net.every_perc; trials = trials.astype('int')
         cols = ['dodgerblue','darkslateblue','darkorange','green']
 
         fig, ax = plt.subplots(figsize=(1.5,1.5))
@@ -224,13 +227,14 @@ if n_CS == 1:
             y = Phi_est_hist[tr,:].flatten()*1000
             ax.scatter(x, y, s=.25, color=cols[i], alpha=.3, zorder=i+1)
 
-            # Calculate slope and intercept of regression line
-            slope, intercept = np.polyfit(x, y, 1)
-
-            # Plot regression line
-            x_reg = np.array([x.min(), x.max()])
-            y_reg = slope * x_reg + intercept
-            ax.plot(x_reg, y_reg, color=cols[i], linestyle='-', linewidth=1.5, zorder=i+1)
+            if reg_lines:
+                # Calculate slope and intercept of regression line
+                slope, intercept = np.polyfit(x, y, 1)
+    
+                # Plot regression line
+                x_reg = np.array([x.min(), x.max()])
+                y_reg = slope * x_reg + intercept
+                ax.plot(x_reg, y_reg, color=cols[i], linestyle='-', linewidth=1.5, zorder=i+1)
 
             # Create custom legend handles
             legend_handles.append(mlines.Line2D([], [], marker='o', markersize=1, color=cols[i], label='{}'.format(trials[i]), linestyle='None'))

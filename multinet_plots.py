@@ -360,6 +360,7 @@ params['est_every'] = True; params['reacquire'] = True
 
 flips = [False,True]
 labels = ['Same $US$','Different $US$']
+colors = ['dodgerblue','red']
 
 fig, ax = plt.subplots(figsize=(3.5,1.5))
 
@@ -373,7 +374,7 @@ for i, flip in enumerate(flips):
         net = pickle.load(f)
 
     n_trial = net.n_trial
-    ax.plot(net.E,label=labels[i],linewidth=2)
+    ax.plot(net.E,label=labels[i],linewidth=2,color=colors[i],zorder=1-i)
     
 ax.axhline(y=1,c='gray',linestyle='-',linewidth=.5)
 #ax.axvline(x=10,linestyle='dotted',c='darkorange',linewidth=1.5,label='Extinction',zorder=0)
