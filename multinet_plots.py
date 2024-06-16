@@ -440,7 +440,7 @@ for i, pat in enumerate(n_pat):
             axs[k,l].plot(trials,np.average(E,axis=1),c='green',linewidth=1)
             axs[k,l].axhline(y=1,c='gray',linestyle='-',linewidth=.5)
             axs[k,l].axvline(x=loc,c='red',ls='-',linewidth=1)
-            axs[k,l].set_title('$N^{as}=$'+'${}$'.format(pat))
+            axs[k,l].set_title('$N_{stim}=$'+'${}$'.format(pat))
             axs[k,l].set_xlim([0,n_trial[i]])
             axs[k,l].spines['top'].set_visible(False)
             axs[k,l].spines['right'].set_visible(False)
@@ -450,7 +450,7 @@ for i, pat in enumerate(n_pat):
             axs[k,l].xaxis.set_minor_locator(MultipleLocator(int(n_trial[i]/4)))
             
             if i==0:
-                axs[k,l].set_ylabel('Expectation')
+                axs[k,l].set_ylabel('Expectation $E$')
                 axs[k,l].set_ylim([-.02,1.02])
                 axs[k,l].yaxis.set_major_locator(MultipleLocator(1/2))
                 axs[k,l].yaxis.set_minor_locator(MultipleLocator(1/4))
@@ -482,7 +482,7 @@ ax.set_xscale("log", base=2)
 plt.scatter(n_pat,t_learned_mean,color = 'green',s=10,label='Data')
 plt.errorbar(n_pat,t_learned_mean,[t_learned_mean-t_learned_025,t_learned_975-t_learned_mean],color = 'green',linestyle='')
 plt.ylabel('# trials to learn')
-plt.xlabel('$N^{as}$')
+plt.xlabel('$N_{stim}$')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 #ax.spines['left'].set_position(('data', tau_tot[0]-15))
@@ -536,7 +536,7 @@ for i, h_d in enumerate(H_d):
             axs[k,l].axhline(y=1,c='gray',linestyle='-',linewidth=.5)
             axs[k,l].plot(trials,np.average(E,axis=1),c='green',linewidth=1)
             axs[k,l].axvline(x=loc,c='red',ls='-',linewidth=1)
-            axs[k,l].set_title('$H^{d}=$'+'${}$'.format(h_d))
+            axs[k,l].set_title('$H_d=$'+'${}$'.format(h_d))
             axs[k,l].set_xlim([0,n_trial[i]])
             axs[k,l].spines['top'].set_visible(False)
             axs[k,l].spines['right'].set_visible(False)
@@ -546,7 +546,7 @@ for i, h_d in enumerate(H_d):
             axs[k,l].xaxis.set_minor_locator(MultipleLocator(int(n_trial[i]/4)))
             
             if i==0:
-                axs[k,l].set_ylabel('Expectation')
+                axs[k,l].set_ylabel('Expectation $E$')
                 axs[k,l].set_ylim([-.02,1.02])
                 axs[k,l].yaxis.set_major_locator(MultipleLocator(1/2))
                 axs[k,l].yaxis.set_minor_locator(MultipleLocator(1/4))
@@ -574,17 +574,68 @@ plt.plot(x,fit_inv,color='black',linewidth=1,label='$1/x$ Fit')
 plt.scatter(H_d,t_learned_mean,color = 'green',s=10,label='Data')
 plt.errorbar(H_d,t_learned_mean,[t_learned_mean-t_learned_025,t_learned_975-t_learned_mean],color = 'green',linestyle='')
 plt.ylabel('# trials to learn')
-plt.xlabel('$H^{d}$')
+plt.xlabel('$H_{d}$')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 #ax.spines['left'].set_position(('data', tau_tot[0]-15))
 #ax.spines['bottom'].set_position(('data', 240))
-plt.legend(loc='upper center',markerscale=1,frameon=False)
+plt.legend(loc='upper right',markerscale=1,frameon=False)
 
 #plt.savefig('Hd_cond.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
 #plt.savefig('Hd_cond.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
-params['n_pat'] = 16; params['H_d'] = 8; params['n_trial'] = 1e3; params['exact'] = False
+params['n_pat'] = 16; params['H_d'] = 8; params['n_trial'] = 1e3
+params['exact'] = False; params['run'] = 0
+
+
+# Hebbian learning rule for different normalization strengths
+
+params['n_pat'] = 1; params['eta'] = 2e-4; params['rule'] = 'Hebb'
+params['est_every'] = True; params['a'] = 1; params['n_trial'] = 1e2
+
+norms = [10,20,40]
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+cols = ['dodgerblue','darkorange','green']
+
+legend_handles = []
+for i, norm in enumerate(norms):
+    
+    params['norm'] = norm
+    
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+        net = pickle.load(f)
+        
+    x = net.Phi.flatten()*1000
+    y = net.Phi_est[-1,:].flatten()*1000
+    ax.scatter(x, y, s=.25, color=cols[i], alpha=.5, zorder=i+1)
+
+    # Create custom legend handles
+    legend_handles.append(mlines.Line2D([], [], marker='o', markersize=1, 
+                color=cols[i], label='{}'.format(norm), linestyle='None'))
+    
+ax.plot([0,1],[0,1], transform=ax.transAxes, color = 'black',zorder=0)
+ax.set_xlim([0,100])
+ax.set_ylim([0,100])
+ax.set_xlabel('$r^{us-only}_{rnn}$ (spikes/s)')
+ax.set_ylabel('$r^{cs-only}_{rnn}$ (spikes/s)')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', -5))
+ax.spines['bottom'].set_position(('data', -5))
+ax.xaxis.set_major_locator(MultipleLocator(50))
+ax.xaxis.set_minor_locator(MultipleLocator(25))
+ax.yaxis.set_major_locator(MultipleLocator(50))
+ax.yaxis.set_minor_locator(MultipleLocator(25))
+ax.legend(handles=legend_handles, title='Normalization \n strength',frameon=False,ncol=1,bbox_to_anchor=(1, .8),
+          title_fontsize=SMALL_SIZE)
+
+#plt.savefig('Sub_hebb_1patt.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+
+
+params['n_pat'] = 16; params['est_every'] = False; params['a'] = 1; params['n_trial'] = 1e3
 
 
 # BCM for different averaging windows and trial configurations
@@ -622,7 +673,7 @@ fig, ax = plt.subplots(figsize=(2,1.5))
 for j in range(len(tUSs)):
     plt.scatter(Ts,exp_mean[:,j],color = colors[j],s=10,label='{}'.format(tUSs[j]))
     plt.errorbar(Ts,exp_mean[:,j],[exp_mean[:,j]-exp_025[:,j],exp_975[:,j]-exp_mean[:,j]],color=colors[j],linestyle='')
-plt.ylabel('Expectation')
+plt.ylabel('Expectation $E$')
 fig.gca().set_xlabel(r'$\tau_\theta$ (s)')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
