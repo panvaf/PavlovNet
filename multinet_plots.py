@@ -395,16 +395,15 @@ fig.legend(frameon=False,ncol=1,bbox_to_anchor=(.75, .7))
 #plt.savefig('reacquisition.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 #plt.savefig('reacquisition.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
 
-params['est_every'] = False; params['reacquire'] = False
+params['est_every'] = False; params['reacquire'] = False; params['flip'] = False
 
 
 # Rate of acquisition as a function of number of entrained patterns
 
 n_pat = [2,4,8,16]
-n_trial = [100,100,200,2000]
-runs = [0]
+n_trial = [100,100,200,1000]
+runs = np.arange(5)
 params['eta'] = 5e-3
-params['dale'] = False; params['filter'] = True; params['mem_net_id'] = None; params['out'] = False 
 
 t_learned = np.zeros((len(n_pat),len(runs)))
 t_learned_mean = np.zeros(len(n_pat))
@@ -422,22 +421,25 @@ for i, pat in enumerate(n_pat):
         
         params['run'] = run
         
-        filename = util.filename(params) + 'gsh3gD2gL1taul20DA' + 'reprod'
-        with open(data_path+filename+'.pkl', 'rb') as f:
+        filename = util.filename(params) + 'gsh3gD2gL1taul20'
+        
+        with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
             net = pickle.load(f)
         
-        R_est = net.R_est
-        loc = np.where(np.all(R_est>.75,1))[0][0]
+        E = net.E
+        trials = net.n_trial*np.linspace(0,1,int(100/net.every_perc))
+        
+        loc = np.where(np.average(E,axis=1)>.8)[0][0] * net.n_trial/100
         
         if j==0:
             
             k = i // 2
             l = i % 2
             
-            axs[k,l].plot(R_est,linewidth=.5,alpha=.5)
-            axs[k,l].plot(np.average(R_est,axis=1),c='green',linewidth=1)
-            axs[k,l].axhline(y=1,c='black',linestyle='--',linewidth=1.5)
-            axs[k,l].axvline(x=loc,c='red',ls='--',linewidth=1)
+            axs[k,l].plot(trials,E,linewidth=.5,alpha=.5)
+            axs[k,l].plot(trials,np.average(E,axis=1),c='green',linewidth=1)
+            axs[k,l].axhline(y=1,c='gray',linestyle='-',linewidth=.5)
+            axs[k,l].axvline(x=loc,c='red',ls='-',linewidth=1)
             axs[k,l].set_title('$N^{as}=$'+'${}$'.format(pat))
             axs[k,l].set_xlim([0,n_trial[i]])
             axs[k,l].spines['top'].set_visible(False)
@@ -447,22 +449,24 @@ for i, pat in enumerate(n_pat):
             axs[k,l].xaxis.set_major_locator(MultipleLocator(int(n_trial[i]/2)))
             axs[k,l].xaxis.set_minor_locator(MultipleLocator(int(n_trial[i]/4)))
             
-            if i==2:
+            if i==0:
                 axs[k,l].set_ylabel('Expectation')
-                axs[k,l].set_xlabel('Trials')
                 axs[k,l].set_ylim([-.02,1.02])
                 axs[k,l].yaxis.set_major_locator(MultipleLocator(1/2))
                 axs[k,l].yaxis.set_minor_locator(MultipleLocator(1/4))
+                
+            if i==2:
+                axs[k,l].set_xlabel('Trials')
                 
         t_learned[i,j] = loc
     
     # Find mean and 95 % intervals of time to learn across runs
     t_learned_mean[i] = np.mean(t_learned[i])
-    (t_learned_025[i], t_learned_975[i]) = st.t.interval(alpha=0.95,
+    (t_learned_025[i], t_learned_975[i]) = st.t.interval(confidence=0.95,
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
     
 plt.tight_layout()
-#plt.savefig('1a.png',bbox_inches='tight',format='png',dpi=300)
+#plt.savefig('Npat_examples.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
 coeff = np.polyfit(n_pat,np.log(t_learned_mean),1)
 x = np.linspace(n_pat[0],n_pat[-1],1000)
@@ -485,12 +489,15 @@ ax.spines['right'].set_visible(False)
 #ax.spines['bottom'].set_position(('data', 240))
 plt.legend(loc='upper center',markerscale=1,frameon=False)
 
+#plt.savefig('Npat_cond.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+#plt.savefig('Npat_cond.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+
 
 # Effect of Hamming distance on learning rate
 
 H_d = [4,6,8,10]
 n_trial = [300,200,200,200]
-runs = [0]
+runs = np.arange(10)
 params['exact'] = True
 params['n_pat'] = 8
 
@@ -510,22 +517,25 @@ for i, h_d in enumerate(H_d):
         
         params['run'] = run
         
-        filename = util.filename(params) + 'gsh3gD2gL1taul20DA'
-        with open(data_path+filename+'.pkl', 'rb') as f:
+        filename = util.filename(params) + 'gsh3gD2gL1taul20'
+        
+        with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
             net = pickle.load(f)
         
-        R_est = net.R_est
-        loc = np.where(np.all(R_est>.75,1))[0][0]
+        E = net.E
+        trials = net.n_trial*np.linspace(0,1,int(100/net.every_perc))
+        
+        loc = np.where(np.average(E,axis=1)>.8)[0][0] * net.n_trial/100
         
         if j==0:
             
             k = i // 2
             l = i % 2
             
-            axs[k,l].plot(R_est,linewidth=.5,alpha=.5)
-            axs[k,l].axhline(y=1,c='black',linestyle='--',linewidth=1.5)
-            axs[k,l].plot(np.average(R_est,axis=1),c='green',linewidth=1)
-            axs[k,l].axvline(x=loc,c='red',ls='--',linewidth=1)
+            axs[k,l].plot(trials,E,linewidth=.5,alpha=.5)
+            axs[k,l].axhline(y=1,c='gray',linestyle='-',linewidth=.5)
+            axs[k,l].plot(trials,np.average(E,axis=1),c='green',linewidth=1)
+            axs[k,l].axvline(x=loc,c='red',ls='-',linewidth=1)
             axs[k,l].set_title('$H^{d}=$'+'${}$'.format(h_d))
             axs[k,l].set_xlim([0,n_trial[i]])
             axs[k,l].spines['top'].set_visible(False)
@@ -535,29 +545,32 @@ for i, h_d in enumerate(H_d):
             axs[k,l].xaxis.set_major_locator(MultipleLocator(int(n_trial[i]/2)))
             axs[k,l].xaxis.set_minor_locator(MultipleLocator(int(n_trial[i]/4)))
             
-            if i==2:
+            if i==0:
                 axs[k,l].set_ylabel('Expectation')
-                axs[k,l].set_xlabel('Trials')
                 axs[k,l].set_ylim([-.02,1.02])
                 axs[k,l].yaxis.set_major_locator(MultipleLocator(1/2))
                 axs[k,l].yaxis.set_minor_locator(MultipleLocator(1/4))
+                
+            if i==2:
+                axs[k,l].set_xlabel('Trials')
+                
                 
         t_learned[i,j] = loc
     
     # Find mean and 95 % intervals of time to learn across runs
     t_learned_mean[i] = np.mean(t_learned[i])
-    (t_learned_025[i], t_learned_975[i]) = st.t.interval(alpha=0.95,
+    (t_learned_025[i], t_learned_975[i]) = st.t.interval(confidence=0.95,
             df=len(t_learned[i])-1, loc=np.mean(t_learned[i]), scale=st.sem(t_learned[i]))
     
 plt.tight_layout()
-#plt.savefig('1b.png',bbox_inches='tight',format='png',dpi=300)
+#plt.savefig('Hd_examples.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
 coeff_inv,_,_,_ = np.linalg.lstsq(1/np.array(H_d)[:,np.newaxis],t_learned_mean)
 x = np.linspace(H_d[0],H_d[-1],1000)
 fit_inv = coeff_inv/x
 
 fig, ax = plt.subplots(figsize=(2,1.5))
-plt.plot(x,fit_inv,color='black',linewidth=1,label='Fit')
+plt.plot(x,fit_inv,color='black',linewidth=1,label='$1/x$ Fit')
 plt.scatter(H_d,t_learned_mean,color = 'green',s=10,label='Data')
 plt.errorbar(H_d,t_learned_mean,[t_learned_mean-t_learned_025,t_learned_975-t_learned_mean],color = 'green',linestyle='')
 plt.ylabel('# trials to learn')
@@ -568,12 +581,10 @@ ax.spines['right'].set_visible(False)
 #ax.spines['bottom'].set_position(('data', 240))
 plt.legend(loc='upper center',markerscale=1,frameon=False)
 
-#plt.savefig('4c.eps',bbox_inches='tight',format='eps',dpi=300)
+#plt.savefig('Hd_cond.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+#plt.savefig('Hd_cond.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
-params['n_pat'] = 16; params['H_d'] = 8; params['n_trial'] = 1e3
-params['dale'] = True; params['out'] = True; params['exact'] = False
-params['est_every'] = False; params['filter'] = False
-params['mem_net_id'] = 'MemNet64tdur3iter1e5Noise0.1'
+params['n_pat'] = 16; params['H_d'] = 8; params['n_trial'] = 1e3; params['exact'] = False
 
 
 # BCM for different averaging windows and trial configurations
