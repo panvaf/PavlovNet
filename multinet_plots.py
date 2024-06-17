@@ -204,7 +204,7 @@ for i, tUS in enumerate(tUSs):
     (exp_025[i], exp_975[i]) = st.t.interval(confidence=0.95,
             df=len(exp)-1, loc=np.mean(exp), scale=st.sem(exp))
 
-fig, ax = plt.subplots(figsize=(2,1.5))
+fig, ax = plt.subplots(figsize=(1.2,1.5))
 plt.scatter(tUSs,exp_mean,color = 'green',s=10)
 plt.errorbar(tUSs,exp_mean,[exp_mean-exp_025,exp_975-exp_mean],color='green',linestyle='')
 plt.ylabel('Expectation $E$')
@@ -218,6 +218,7 @@ ax.spines['bottom'].set_position(('data', -.05))
 plt.ylim([0,1])
 ax.yaxis.set_major_locator(MultipleLocator(.5))
 ax.yaxis.set_minor_locator(MultipleLocator(.25))
+ax.xaxis.set_major_locator(MultipleLocator(.25))
 
 #plt.savefig('tUSon_sweep.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 #plt.savefig('tUSon_sweep.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)

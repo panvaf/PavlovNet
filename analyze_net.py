@@ -472,26 +472,30 @@ if n_CS == 1 and net.trial_dyn:
         axs[1,j].set_ylabel('Learning rate $\eta$')
         
         # Firing rate error
-        axs[2,j].plot(t,net.error[trial,:].T*1000)
+        axs[2,j].plot(t,net.error[trial,:].T*1000,alpha=.1)
         axs[2,j].set_ylabel('Firing rate error \n $f(V^s_i)-f(p^\prime \, V^d_i)$')
         
         # PSPs
-        axs[3,j].plot(t,net.PSP[trial,:].T)
+        axs[3,j].plot(t,net.PSP[trial,:].T,alpha=.1)
         axs[3,j].set_ylabel('Post-synaptic \n potential $P_j$')
         
         # Weight change
-        axs[4,j].plot(t,dW_rec[trial,:].T)
-        axs[4,j].plot(t,dW_fb[trial,:].T)
+        axs[4,j].plot(t,dW_rec[trial,:].T,alpha=.1)
+        axs[4,j].plot(t,dW_fb[trial,:].T,alpha=.1)
         axs[4,j].set_ylabel('$\Delta W$')
         
+        if j == 0:
+            axs[4,j].set_xlabel('Time (s)')
+        else:
+            axs[4,j].set_xlabel('')
+        
     for ax in axs.flat:
-        ax.set_xlabel('Time (s)')
         ax.label_outer()
         
     fig.tight_layout()
 
-    #plt.savefig('trial_dyn.png',bbox_inches='tight',format='png',dpi=300)
-    #plt.savefig('trial_dyn.eps',bbox_inches='tight',format='eps',dpi=300)
+    #plt.savefig('trial_dyn.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+    
 
 ''' 
 # Similarity curves
