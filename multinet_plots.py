@@ -179,6 +179,50 @@ ax.set_xlabel('Trials')
 params['run'] = 0
 
 
+# Demonstrate insensitivity to trial details
+
+tUSs = [0.5,0.75,1]
+
+exp_mean = np.zeros(len(tUSs))
+exp_025 = np.zeros(len(tUSs))
+exp_975 = np.zeros(len(tUSs))
+
+for i, tUS in enumerate(tUSs):
+    
+    params['US_ap'] = tUS
+    params['CS_disap'] = tUS + 1
+    params['t_dur'] = tUS + 1
+    
+        
+    filename = util.filename(params) + 'gsh3gD2gL1taul20'
+    
+    with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+        net = pickle.load(f)
+        
+    exp = net.E[-1]
+    exp_mean[i] = np.mean(exp)
+    (exp_025[i], exp_975[i]) = st.t.interval(confidence=0.95,
+            df=len(exp)-1, loc=np.mean(exp), scale=st.sem(exp))
+
+fig, ax = plt.subplots(figsize=(2,1.5))
+plt.scatter(tUSs,exp_mean,color = 'green',s=10)
+plt.errorbar(tUSs,exp_mean,[exp_mean-exp_025,exp_975-exp_mean],color='green',linestyle='')
+plt.ylabel('Expectation $E$')
+plt.title('Predictive learning')
+fig.gca().set_xlabel(r'$t_{us-on}$ (s)')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', 0.45))
+ax.spines['bottom'].set_position(('data', -.05))
+#plt.xlim([Ts[0],Ts[-1]])
+plt.ylim([0,1])
+ax.yaxis.set_major_locator(MultipleLocator(.5))
+ax.yaxis.set_minor_locator(MultipleLocator(.25))
+
+#plt.savefig('tUSon_sweep.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+#plt.savefig('tUSon_sweep.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+
+
 # Contingency and speed of learning plot
 
 conts = [0.8,0.6,0.4]
@@ -660,13 +704,14 @@ for j, tUS in enumerate(tUSs):
         
         params['T'] = T
         
-        filename = util.filename(params) + 'gsh3gD2gL1taul20reprod'
-        with open(data_path+filename+'.pkl', 'rb') as f:
+        filename = util.filename(params) + 'gsh3gD2gL1taul20'
+        
+        with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
             net = pickle.load(f)
             
-        exp = net.R_est[-1]
+        exp = net.E[-1]
         exp_mean[i,j] = np.mean(exp)
-        (exp_025[i,j], exp_975[i,j]) = st.t.interval(alpha=0.95,
+        (exp_025[i,j], exp_975[i,j]) = st.t.interval(confidence=0.95,
                 df=len(exp)-1, loc=np.mean(exp), scale=st.sem(exp))
 
 fig, ax = plt.subplots(figsize=(2,1.5))
@@ -674,6 +719,7 @@ for j in range(len(tUSs)):
     plt.scatter(Ts,exp_mean[:,j],color = colors[j],s=10,label='{}'.format(tUSs[j]))
     plt.errorbar(Ts,exp_mean[:,j],[exp_mean[:,j]-exp_025[:,j],exp_975[:,j]-exp_mean[:,j]],color=colors[j],linestyle='')
 plt.ylabel('Expectation $E$')
+plt.title('$a={}$'.format(params['a']))
 fig.gca().set_xlabel(r'$\tau_\theta$ (s)')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
@@ -683,7 +729,59 @@ ax.spines['bottom'].set_position(('data', -.05))
 plt.ylim([0,1])
 ax.yaxis.set_major_locator(MultipleLocator(.5))
 ax.yaxis.set_minor_locator(MultipleLocator(.25))   
-fig.legend(frameon=False,loc='right',bbox_to_anchor=(.45,.8), title="$t_{US}$ (s)")
+fig.legend(frameon=False,loc='right',bbox_to_anchor=(1.3,.6), title="$t_{us-on}$ (s)")
 
-#plt.savefig('BCM_sweep.png',bbox_inches='tight',format='png',dpi=300)
-#plt.savefig('BCM_sweep.eps',bbox_inches='tight',format='eps',dpi=300)
+#plt.savefig('BCM_sweep.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+#plt.savefig('BCM_sweep.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+
+
+# Same for different a
+
+params['a'] = 1.05
+tUSs = [0.5,0.75,1]
+Ts = [0.2,0.3,0.4,0.5]
+
+exp_mean = np.zeros((len(Ts),len(tUSs)))
+exp_025 = np.zeros((len(Ts),len(tUSs)))
+exp_975 = np.zeros((len(Ts),len(tUSs)))
+
+
+for j, tUS in enumerate(tUSs):
+    
+    params['US_ap'] = tUS
+    params['CS_disap'] = tUS + 1
+    params['t_dur'] = tUS + 1
+    
+    for i, T in enumerate(Ts):
+        
+        params['T'] = T
+        
+        filename = util.filename(params) + 'gsh3gD2gL1taul20'
+        
+        with open(os.path.join(data_path,filename+'.pkl'), 'rb') as f:
+            net = pickle.load(f)
+            
+        exp = net.E[-1]
+        exp_mean[i,j] = np.mean(exp)
+        (exp_025[i,j], exp_975[i,j]) = st.t.interval(confidence=0.95,
+                df=len(exp)-1, loc=np.mean(exp), scale=st.sem(exp))
+
+fig, ax = plt.subplots(figsize=(2,1.5))
+for j in range(len(tUSs)):
+    plt.scatter(Ts,exp_mean[:,j],color = colors[j],s=10,label='{}'.format(tUSs[j]))
+    plt.errorbar(Ts,exp_mean[:,j],[exp_mean[:,j]-exp_025[:,j],exp_975[:,j]-exp_mean[:,j]],color=colors[j],linestyle='')
+plt.ylabel('Expectation $E$')
+plt.title('$a={}$'.format(params['a']))
+fig.gca().set_xlabel(r'$\tau_\theta$ (s)')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_position(('data', 0.17))
+ax.spines['bottom'].set_position(('data', -.05))
+#plt.xlim([Ts[0],Ts[-1]])
+plt.ylim([0,1])
+ax.yaxis.set_major_locator(MultipleLocator(.5))
+ax.yaxis.set_minor_locator(MultipleLocator(.25))   
+fig.legend(frameon=False,loc='right',bbox_to_anchor=(1.3,.6), title="$t_{us-on}$ (s)")
+
+#plt.savefig('BCM_sweep_a105.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+#plt.savefig('BCM_sweep_a105.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
