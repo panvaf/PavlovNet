@@ -48,7 +48,7 @@ params = {
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned association
-    't_wait': 0,         # time after US_ap that its considered an extinction trial
+    't_wait': 5,         # time after US_ap that its considered an extinction trial
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'filter': False,     # whether to filter the learning dynamics
@@ -401,7 +401,7 @@ params['CS_disap'] = 2; params['US_ap'] = 1; params['t_dur'] = 2
 # Reacquisition with and without US flip
 
 params['eta'] = 5e-4; params['n_trial'] = 5e2; params['n_pat'] = 1
-params['est_every'] = True; params['reacquire'] = True
+params['est_every'] = True; params['reacquire'] = True; params['t_dur'] = 7
 
 flips = [False,True]
 labels = ['Same $US$','Different $US$']
@@ -441,7 +441,7 @@ fig.legend(frameon=False,ncol=1,bbox_to_anchor=(.75, .7))
 #plt.savefig('reacquisition.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
 
 params['est_every'] = False; params['reacquire'] = False; params['flip'] = False
-
+params['t_dur'] = 2
 
 # Rate of acquisition as a function of number of entrained patterns
 
@@ -655,7 +655,7 @@ for i, norm in enumerate(norms):
         
     x = net.Phi.flatten()*1000
     y = net.Phi_est[-1,:].flatten()*1000
-    ax.scatter(x, y, s=.25, color=cols[i], alpha=.5, zorder=i+1)
+    ax.scatter(x, y, s=.25, color=cols[i], alpha=.7, zorder=i+1)
 
     # Create custom legend handles
     legend_handles.append(mlines.Line2D([], [], marker='o', markersize=1, 

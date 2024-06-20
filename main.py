@@ -158,7 +158,7 @@ class network:
         for j, trial in enumerate(trials):
             
             # Flip CS-US associations mid-learning
-            if self.flip and j == int(self.n_trial/2):
+            if self.flip and j == int(4*self.n_trial/5):
                 if self.n_pat == 1:
                     # If only one pattern available, generate new US with required H_d
                     flip = np.zeros(self.n_in,dtype=bool)

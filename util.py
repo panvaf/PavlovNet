@@ -114,7 +114,7 @@ def filename(params):
         ('DAplot' if params['DA_plot'] else '') + ('TrialDyn' if params['trial_dyn'] else '') + \
         ('Flip' if params['flip'] else '') + \
         ('Extinct' if params['extinct'] else '') + \
-        (('wait' + str(params['t_wait'])) if params['t_wait'] != 0 else '') + \
+        (('wait' + str(params['t_wait'])) if params['t_wait'] != 5 else '') + \
         ('Reacquire' if params['reacquire'] else '') + \
         ('Exact' if params['exact'] else '') + ('NoFilt' if not params['filter'] else '') + \
         (params['rule'] if params['rule'] != 'Pred' else '') + \

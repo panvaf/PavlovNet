@@ -52,7 +52,7 @@ params = {
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
-    't_wait': 0,         # time after US_ap that its considered an extinction trial
+    't_wait': 5,         # time after US_ap that its considered an extinction trial
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'filter': False,     # whether to filter the learning dynamics
