@@ -79,7 +79,7 @@ def learn_rate(C_p_u,C_n_u,eta):
 # Define learning rule dynamics
 
 def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,sign,filt=False,
-               rule='Pred',norm=10,r_m=.02,tau_d=100):
+               rule='Pred',norm=10,r_m=.02,tau_d=100,no_recurrent=False):
     
     n_neu = W_rec.shape[0]
     
@@ -106,7 +106,8 @@ def learn_rule(W_rec,W_fb,r,error,Delta,PSP,eta,dt,dale,sign,filt=False,
     dW_rec, dW_fb = np.split(dW,[n_neu],axis=1)
     
     # Perform weight updates
-    W_rec += dW_rec
+    if not no_recurrent:
+        W_rec += dW_rec
     W_fb += dW_fb
     
     # Set every weight that violates Dale's law to zero

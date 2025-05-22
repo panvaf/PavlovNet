@@ -56,7 +56,8 @@ params = {
     'norm': None,        # normalization strenght for learning rule
     'T': 1,              # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
-    'm': 2               # order of gaussian for radial basis function
+    'm': 2,              # order of gaussian for radial basis function
+    'no_recurrent': False # whether to set recurrent weights to zero
     }
 
 params2 = {

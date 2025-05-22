@@ -58,16 +58,17 @@ params = {
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
     'extinct': False,    # whether to undergo extinction of learned associations
-    't_wait': 0,         # time after US_ap that its considered an extinction trial
+    't_wait': 5,         # time after US_ap that its considered an extinction trial
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for Oja's learning rule
-    'T': .4,             # temporal window for averaging firing rates for BCM rule
+    'T': 0.4,             # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
-    'm': 2               # order of gaussian for radial basis function
-    }
+    'm': 2,              # order of gaussian for radial basis function
+    'no_recurrent': True  # Set to True to disable recurrent connections
+}
 
 params2 = {
     'dt': 1e-3,          # euler integration step size
@@ -95,7 +96,7 @@ params2 = {
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
     'm': 2               # order of gaussian for radial basis function
-    }
+}
 
 # Save directory
 data_path = os.path.join(str(Path(os.getcwd()).parent),'trained_networks')

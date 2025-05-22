@@ -72,6 +72,7 @@ class network:
         self.rule = params['rule']
         self.norm = params['norm']
         self.m = params['m']
+        self.no_recurrent = params['no_recurrent']
         
         # Constant inhibition, to motivate lower firing rates
         self.g_inh = 3*np.sqrt(1/self.n_assoc)
@@ -110,6 +111,10 @@ class network:
             self.W_ff = params['W_ff']
             self.W_fb = params['W_fb']
             self.sign = params['sign']
+
+        # Set recurrent weights to zero if no_recurrent is True
+        if params['no_recurrent']:
+            self.W_rec = np.zeros((self.n_assoc, self.n_assoc))
         
         # Compute decoder matrix
         self.est_decoder()
@@ -253,7 +258,8 @@ class network:
                 if self.train:
                     self.W_rec, self.W_fb, dW_rec, dW_fb = assoc_net.learn_rule(self.W_rec,
                                 self.W_fb,r,error,Delta,PSP,eta,self.dt_ms,
-                                self.dale,self.sign,self.filter,self.rule,self.norm,r_m)
+                                self.dale,self.sign,self.filter,self.rule,self.norm,r_m,
+                                no_recurrent=self.no_recurrent)
                     if i>self.n_US_ap+n_trans:
                         err[i-self.n_US_ap-n_trans,:] = error
                 

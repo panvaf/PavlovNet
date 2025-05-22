@@ -60,7 +60,8 @@ params = {
     'norm': None,        # normalization strenght for learning rule
     'T': 0.4,            # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
-    'm': 2               # order of gaussian for radial basis function
+    'm': 2,              # order of gaussian for radial basis function
+    'no_recurrent': True # whether to set recurrent weights to zero
     }
 
 params2 = {
@@ -175,6 +176,40 @@ if n_CS == 1:
     ax.xaxis.set_minor_locator(MultipleLocator(25))
     ax.yaxis.set_major_locator(MultipleLocator(50))
     ax.yaxis.set_minor_locator(MultipleLocator(25))
+
+    # Feedforward and feedback weights, and difference of the two
+    fig, axes = plt.subplots(1, 3, figsize=(6, 4))
+    cmap = plt.cm.seismic
+    cmap.set_bad('white')
+    
+    # Calculate symmetric limits for consistent scaling
+    vmax = max(abs(net.W_ff).max(), abs(net.W_fb).max(), abs(net.W_ff - net.W_fb).max())
+    vmin = -vmax  # Make it symmetric around 0
+
+    # Feedback weights
+    im = axes[0].imshow(net.W_fb, cmap=cmap, aspect='auto', vmin=vmin, vmax=vmax)
+    axes[0].set_title('Feedback Weights')
+    axes[0].set_xlabel('Input Neuron')
+    axes[0].set_ylabel('Output Neuron')
+    
+    # Feedforward weights
+    im = axes[1].imshow(net.W_ff, cmap=cmap, aspect='auto', vmin=vmin, vmax=vmax)
+    axes[1].set_title('Feedforward Weights')
+    
+    # Difference of feedforward and feedback weights
+    im = axes[2].imshow(net.W_ff - net.W_fb, cmap=cmap, aspect='auto', vmin=vmin, vmax=vmax)
+    axes[2].set_title('Difference')
+  
+    # Add a shared colorbar
+    cbar_ax = fig.add_axes([0.92, 0.08, 0.03, 0.5])  # [left, bottom, width, height]
+    cbar = fig.colorbar(im, cax=cbar_ax)
+    cbar.set_label('Weight')
+    cbar.set_ticks([vmin, 0, vmax])
+    cbar.ax.set_yticklabels([f'{vmin:.1f}', '0', f'{vmax:.1f}'])
+
+    plt.tight_layout()
+    plt.subplots_adjust(right=0.9)
+    plt.show()
     
     #plt.savefig('Stim_sub.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
 
@@ -287,6 +322,7 @@ if n_CS == 1:
         ax1.set_ylim([0,.25])
         
         #plt.savefig('Cond_his.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+        plt.show()
     
         # Scatterplot of actual and decoded US digits
         
@@ -308,6 +344,7 @@ if n_CS == 1:
         ax.yaxis.set_minor_locator(MultipleLocator(.25))
         
         #plt.savefig('USdec.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+        plt.show()
         
         # Plot of CS, US, and jointly induced responses as a function of trial number
         
@@ -346,7 +383,8 @@ if n_CS == 1:
         plt.tight_layout()
         plt.subplots_adjust(right=0.9)
         
-        #plt.savefig('firing_rates.png',bbox_inches='tight',format='png',dpi=300)        
+        #plt.savefig('firing_rates.png',bbox_inches='tight',format='png',dpi=300)
+        plt.show()
         
 
     # Short-term memory leak plot
@@ -446,9 +484,11 @@ if net.est_every:
         ax.yaxis.set_major_locator(MultipleLocator(R_max/2))
         ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
         #fig.legend(frameon=False,ncol=1,bbox_to_anchor=(.85, 1.15))
+        
     
     #plt.savefig('exp.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
     #plt.savefig('exp.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+    plt.show()
 
 if n_CS == 1 and net.trial_dyn:
     
@@ -495,7 +535,7 @@ if n_CS == 1 and net.trial_dyn:
     fig.tight_layout()
 
     #plt.savefig('trial_dyn.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
-    
+    plt.show()
 
 ''' 
 # Similarity curves

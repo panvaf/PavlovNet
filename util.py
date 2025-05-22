@@ -121,6 +121,7 @@ def filename(params):
         (str(params['norm']) if params['rule'] == 'Hebb' else '') + \
         (str(params['T']) if params['rule'] == 'BCM' else '') + \
         (str(params['norm']) if params['rule'] == 'W_decay' else '') + \
+        ('NoRec' if params['no_recurrent'] else '') + \
         (('run' + str(params['run'])) if params['run'] != 0 else '')
          
     return filename
