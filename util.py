@@ -130,10 +130,12 @@ def filename(params):
 def filename2(params):
     
     filename =  format(params['n_trial'],'.0e').replace('+0','') + 'trials' + \
+        (str(params['n_pat']) + 'pat' if params['n_pat'] != 1 else '') + \
         (('tdur' + str(params['t_dur'])) if params['t_dur'] != 2 else '') + \
         (('USap' + str(params['US_ap'])) if params['US_ap'] != 0 else '') + \
         (('CS2ap' + str(params['CS_2_ap_tr'])) if params['CS_2_ap_tr'] != 0 else '') + \
         (('insz' + str(params['n_in'])) if params['n_in'] != 20 else '') + \
+        (('Hd' + str(params['H_d'])) if params['H_d'] != 8 else '') + \
         (('m' + str(params['m'])) if params['m'] != 2 else '') + \
         (('taus' + str(params['tau_s'])) if params['tau_s'] != 10 else '') + \
         (('inh' + str(params['I_inh'])) if params['I_inh'] else '') + \
@@ -146,6 +148,7 @@ def filename2(params):
         (('sal' + str(params['salience'])) if params['salience'] != 1 else '') + \
         (('con' + ''.join(str(x) for x in params['cont'])) if np.any([element != 1 for element in params['cont']]) else '') + \
         ('CondDep' if params['cond_dep'] else '') + ('NoFilt' if not params['filter'] else '') + \
+        ('Exact' if params['exact'] else '') + \
         ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '')
         
     return filename

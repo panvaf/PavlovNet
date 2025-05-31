@@ -434,6 +434,45 @@ if n_CS == 1:
         #plt.savefig('mem_leak.png',bbox_inches='tight',format='png',dpi=300)
         #plt.savefig('mem_leak.eps',bbox_inches='tight',format='eps',dpi=300)
 
+elif n_CS == 2:
+    
+    trials = net.n_trial*np.linspace(0,1,int(100/params['every_perc']))
+    E_1 = net.E_1  # Shape: (n_trials, n_pat)
+    E_2 = net.E_2  # Shape: (n_trials, n_pat)
+    E = E_1 + E_2
+    E_max = np.max(E); R_max = np.ceil(10*np.max([E_max,1]))/10
+    
+    fig, ax = plt.subplots(figsize=(1.5,1.5))
+    
+    # Plot individual pattern traces (like the multiple associations style)
+    for i in range(net.n_pat):
+        ax.plot(trials,E_1[:,i], c='dodgerblue', alpha=0.3, linewidth=0.5)
+        ax.plot(trials,E_2[:,i], c='darkorange', alpha=0.3, linewidth=0.5)
+        ax.plot(trials,E[:,i], c='green', alpha=0.3, linewidth=0.5)
+    
+    # Plot mean lines (like network2 style)
+    ax.plot(trials,np.mean(E_1, axis=1), c='dodgerblue', linewidth=2, zorder=1)
+    ax.plot(trials,np.mean(E_2, axis=1), c='darkorange', linewidth=2, zorder=1)
+    ax.plot(trials,np.mean(E, axis=1), c='green', linewidth=2, zorder=1)
+    
+    # Standard network2 formatting
+    ax.axhline(y=1,c='gray',linestyle='-',linewidth=.5)
+    ax.set_xlabel('Trials')
+    ax.set_ylabel('Expectation $E$')
+    ax.set_xlim([0,trials[-1]])
+    ax.set_ylim([-.02*R_max,1.02*R_max])
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_position(('data', -.05*trials[-1]))
+    ax.spines['bottom'].set_position(('data', -.05*R_max))
+    ax.xaxis.set_major_locator(MultipleLocator(int(trials[-1]/2)))
+    ax.xaxis.set_minor_locator(MultipleLocator(int(trials[-1]/4)))
+    ax.yaxis.set_major_locator(MultipleLocator(R_max/2))
+    ax.yaxis.set_minor_locator(MultipleLocator(R_max/4))
+    
+    #plt.savefig('Cond_his_mult.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+    plt.show()
+
 # Conditioning plot
 
 if net.est_every:
