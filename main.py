@@ -748,6 +748,7 @@ class network2:
         self.Phi_2 = r_ss_2
 
 
+
 # Two associative networks class
 
 class network2multi:
@@ -796,10 +797,23 @@ class network2multi:
         self.g_inh = 3*np.sqrt(1/self.n_assoc)
         
         # Generate US and CS patterns
-        self.US = self.rng.choice([0,1],self.n_in)
-        self.CS_1 = self.salience * self.rng.choice([0,1],self.n_in)
-        self.CS_2 = self.rng.choice([0,1],self.n_in)
+        self.n_pat = int(params.get('n_pat', 1))  
+        self.H_d = params.get('H_d', 8)  # Hamming distance constraint
+        self.exact = params.get('exact', False)  # Exact Hamming distance
         
+        if self.n_pat == 1:
+            # Single pattern mode (network2 behavior)
+            self.US = self.rng.choice([0,1], (1, self.n_in))  # Shape: (1, n_in)
+            self.CS_1 = self.salience * self.rng.choice([0,1], (1, self.n_in))
+            self.CS_2 = self.rng.choice([0,1], (1, self.n_in))
+        else:
+            # Multi-pattern mode: use the existing pattern generation function
+            self.US, self.CS_2 = util.gen_US_CS(self.n_pat, self.n_in, self.H_d, self.exact)
+            _, CS_1_temp = util.gen_US_CS(self.n_pat, self.n_in, self.H_d, self.exact)
+            
+            # Apply salience to CS_1
+            self.CS_1 = self.salience * CS_1_temp  # Shape: (n_pat, n_in)  
+            
         # Weights
         self.W_rec_1 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
         self.W_rec_2 = self.rng.normal(0,np.sqrt(1/self.n_assoc),(self.n_assoc,self.n_assoc))
@@ -823,6 +837,9 @@ class network2multi:
         # Simulation method
         start = time()
         
+        # Get random trials
+        trials = self.rng.choice(range(self.n_pat), self.n_trial, replace=True)
+        
         # Save average errors across simulation
         batch_size = int(self.every_perc/100*self.n_trial)
         t_sampl = int(100/self.every_perc)
@@ -836,12 +853,12 @@ class network2multi:
         else:
             store_size = t_sampl    
             
-        self.US_est_1 = np.zeros((store_size,self.n_in))
-        self.US_est_2 = np.zeros((store_size,self.n_in))
-        self.Phi_1_est = np.zeros((store_size,self.n_assoc))
-        self.Phi_2_est = np.zeros((store_size,self.n_assoc))
-        self.E_1 = np.zeros(store_size)
-        self.E_2 = np.zeros(store_size)
+        self.US_est_1 = np.zeros((store_size, self.n_pat, self.n_in))
+        self.US_est_2 = np.zeros((store_size, self.n_pat, self.n_in))
+        self.Phi_1_est = np.zeros((store_size, self.n_pat, self.n_assoc))
+        self.Phi_2_est = np.zeros((store_size, self.n_pat, self.n_assoc))
+        self.E_1 = np.zeros((store_size, self.n_pat))
+        self.E_2 = np.zeros((store_size, self.n_pat))
             
         # Transduction delays for perception of US
         n_trans = int(2*self.tau_s/self.dt_ms)
@@ -867,7 +884,7 @@ class network2multi:
             keep.sort(); CS_2_pr = CS_2_pr[keep]
         
         # Inputs to network
-        I_ff = np.zeros((self.n_time,self.n_in)); I_ff[self.n_US_ap:,:] = self.US
+        I_ff = np.zeros((self.n_time,self.n_in))
         g_inh = np.zeros(self.n_time); g_inh[self.n_US_ap:] = self.g_inh
         I_fb_1 = np.zeros((self.n_time,self.n_in))
         I_fb_2 = np.zeros((self.n_time,self.n_in))
@@ -875,11 +892,12 @@ class network2multi:
         # Expectation history
         E = 0; E_hist = deque(maxlen=n_trans+1); E_hist.append(E); E_hist.append(E)
         
-        for j in range(self.n_trial):
+        for j, trial in enumerate(trials):
             
             # Feedback inputs to networks
-            I_fb_1[:] = self.CS_1 if j in CS_1_pr else 0
-            I_fb_2[:] = self.CS_2 if j in CS_2_pr else 0
+            I_fb_1[:] = self.CS_1[trial,:] if j in CS_1_pr else 0
+            I_fb_2[:] = self.CS_2[trial,:] if j in CS_2_pr else 0
+            I_ff[self.n_US_ap:,:] = self.US[trial,:]
             
             # Initialize networks
             r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, \
@@ -913,8 +931,8 @@ class network2multi:
                 US_est_2 = np.dot(self.D_2,r_2)
                 
                 # Form expectation
-                E_1, _ = self.expectation(US_est_1[None,:])
-                E_2, _ = self.expectation(US_est_2[None,:])                    
+                E_1 = self.expectation(US_est_1[None,:])[0][0]
+                E_2 = self.expectation(US_est_2[None,:])[0][0]                 
                 E = E_1 + E_2
                 
                 # Append to history and obtain delayed value
@@ -922,7 +940,7 @@ class network2multi:
                     
                 # Surprise signal activates at t_trigger
                 if i==n_trigger:                
-                    S = self.surprise(E_del)
+                    S = self.surprise(trial,E_del)
                 else:
                     S = 0
                 
@@ -949,8 +967,8 @@ class network2multi:
             if self.est_every:
                 [self.US_est_1[j,:], self.US_est_2[j,:]], [self.Phi_1_est[j,:], 
                                          self.Phi_2_est[j,:]] = self.est_US()
-                self.E_1[j], _ = self.expectation(self.US_est_1[j,:][None,:])
-                self.E_2[j], _ = self.expectation(self.US_est_2[j,:][None,:])
+                self.E_1[j,:] = np.diag(self.expectation(self.US_est_1[j,:])[0])
+                self.E_2[j,:] = np.diag(self.expectation(self.US_est_2[j,:])[0])
             
             
             # Obtain average error at the end of every batch of trials
@@ -968,9 +986,10 @@ class network2multi:
                     [self.US_est_1[batch_num,:], self.US_est_2[batch_num,:]], \
                                 [self.Phi_1_est[batch_num,:],
                                  self.Phi_2_est[batch_num,:]] = self.est_US()
-                    self.E_1[batch_num,:], _ = self.expectation(self.US_est_1[batch_num,:][None,:])
-                    self.E_2[batch_num,:], _ = self.expectation(self.US_est_2[batch_num,:][None,:])
-                
+                    self.E_1[batch_num,:] = np.diag(self.expectation(self.US_est_1[batch_num,:])[0])
+                    self.E_2[batch_num,:] = np.diag(self.expectation(self.US_est_2[batch_num,:])[0])
+                    
+
                 batch_num += 1
         
         # Simulation time
@@ -985,8 +1004,8 @@ class network2multi:
         # Compute decoders of US from associative networks
         
         self.get_Phis()
-        self.D_1 = np.dot(np.linalg.pinv(self.Phi_1[None,:]),self.US[None,:]).T
-        self.D_2 = np.dot(np.linalg.pinv(self.Phi_2[None,:]),self.US[None,:]).T
+        self.D_1 = np.dot(np.linalg.pinv(self.Phi_1), self.US).T
+        self.D_2 = np.dot(np.linalg.pinv(self.Phi_2), self.US).T
     
     
     def init_net(self):
@@ -1002,41 +1021,50 @@ class network2multi:
         return r, V, I_d, V_d, Delta, PSP, I_PSP, g_e, g_i, C_p_u, C_p_r, C_n_u, C_n_r
     
     
-    def est_US(self,t_mult=5):
+    def est_US(self, t_mult=5):
         # Computes estimated US from all CSs after learning
         
         # Time to settle is defined as multiple of synaptic time constant
         n_settle = int(t_mult*self.tau_s/self.dt_ms)
         
-        # CSs are only input to the networks
-        I_fb_1 = np.repeat(self.CS_1[None,:],n_settle,axis=0)
-        I_fb_2 = np.repeat(self.CS_2[None,:],n_settle,axis=0)
-        I_ff = np.zeros(self.n_in)
+        # Initialize
+        US_est_1 = np.zeros((self.n_pat, self.n_in))
+        US_est_2 = np.zeros((self.n_pat, self.n_in))
+        Phi_1_est = np.zeros((self.n_pat, self.n_assoc))
+        Phi_2_est = np.zeros((self.n_pat, self.n_assoc))
         
-        # initialize networks
-        r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, _, _, _, _ = self.init_net()
-        r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, _, _, _, _ = self.init_net()
-        
-        for i in range(1,n_settle):
+        # Process ALL patterns
+        for i in range(self.n_pat):
             
-            # One-step forward dynamics
-            r_1, V_1, I_d_1, V_d_1, error_1, PSP_1, I_PSP_1, g_e_1, g_i_1 = \
-                            assoc_net.dynamics(r_1,I_ff,I_fb_1[i,:],self.W_rec_1,
-                            self.W_ff_1,self.W_fb_1,V_1,I_d_1,V_d_1,PSP_1,I_PSP_1,
-                            g_e_1,g_i_1,self.dt_ms,self.n_sigma,0,self.I_inh,
-                            self.fun,self.a,self.tau_s)
-                            
-            r_2, V_2, I_d_2, V_d_2, error_2, PSP_2, I_PSP_2, g_e_2, g_i_2 = \
-                            assoc_net.dynamics(r_2,I_ff,I_fb_2[i,:],self.W_rec_2,
-                            self.W_ff_2,self.W_fb_2,V_2,I_d_2,V_d_2,PSP_2,I_PSP_2,
-                            g_e_2,g_i_2,self.dt_ms,self.n_sigma,0,self.I_inh,
-                            self.fun,self.a,self.tau_s)
-        
-        # Decode US from firing rates of associative nets
-        Phi_1_est = r_1
-        Phi_2_est = r_2
-        US_est_1 = np.dot(self.D_1,r_1)
-        US_est_2 = np.dot(self.D_2,r_2)
+            # CSs are only input to the networks
+            I_fb_1 = np.repeat(self.CS_1[i,:][None,:], n_settle, axis=0)
+            I_fb_2 = np.repeat(self.CS_2[i,:][None,:], n_settle, axis=0)
+            I_ff = np.zeros(self.n_in)
+            
+            # initialize networks
+            r_1, V_1, I_d_1, V_d_1, Delta_1, PSP_1, I_PSP_1, g_e_1, g_i_1, _, _, _, _ = self.init_net()
+            r_2, V_2, I_d_2, V_d_2, Delta_2, PSP_2, I_PSP_2, g_e_2, g_i_2, _, _, _, _ = self.init_net()
+            
+            for j in range(1,n_settle):
+                
+                # One-step forward dynamics
+                r_1, V_1, I_d_1, V_d_1, error_1, PSP_1, I_PSP_1, g_e_1, g_i_1 = \
+                                assoc_net.dynamics(r_1,I_ff,I_fb_1[j,:],self.W_rec_1,
+                                self.W_ff_1,self.W_fb_1,V_1,I_d_1,V_d_1,PSP_1,I_PSP_1,
+                                g_e_1,g_i_1,self.dt_ms,self.n_sigma,0,self.I_inh,
+                                self.fun,self.a,self.tau_s)
+                                
+                r_2, V_2, I_d_2, V_d_2, error_2, PSP_2, I_PSP_2, g_e_2, g_i_2 = \
+                                assoc_net.dynamics(r_2,I_ff,I_fb_2[j,:],self.W_rec_2,
+                                self.W_ff_2,self.W_fb_2,V_2,I_d_2,V_d_2,PSP_2,I_PSP_2,
+                                g_e_2,g_i_2,self.dt_ms,self.n_sigma,0,self.I_inh,
+                                self.fun,self.a,self.tau_s)
+            
+            # Store results for this pattern
+            Phi_1_est[i,:] = r_1
+            Phi_2_est[i,:] = r_2
+            US_est_1[i,:] = np.dot(self.D_1, r_1)
+            US_est_2[i,:] = np.dot(self.D_2, r_2)
         
         return [US_est_1, US_est_2], [Phi_1_est, Phi_2_est]
     
@@ -1044,32 +1072,41 @@ class network2multi:
     def expectation(self,US_est):
         # Form an expectation of a US
         
-        # Find adjecency to RBF kernel
-        k = 1
-        d = np.sqrt(np.sum((US_est - self.US)**2,1))
-        E = np.exp(-k*d**self.m)
+        # Ensure US_est is 2D for consistent processing
+        if len(US_est.shape) == 1:
+            US_est = US_est[None,:]
+        
+        # Find adjacency to RBF kernels  
+        k = (8/self.H_d)**self.m
+        d = np.sqrt(np.sum((US_est[:,None,:] - self.US[None,:])**2, 2))
+        E = np.exp(-k * d**self.m)
         
         return E, d
     
     
-    def surprise(self,E):
+    def surprise(self,trial,E):
         
-        return 1 - E
+        return 1 - E[trial]
         
     
     def get_Phis(self):
         # Finds and stores steady-state firing rates for US
         
-        # US is only input to the network
-        I_ff = self.US
+        # Always create 2D arrays for consistency
+        self.Phi_1 = np.zeros((self.n_pat, self.n_assoc))
+        self.Phi_2 = np.zeros((self.n_pat, self.n_assoc))
         
-        # Find the steady-state firing rate
-        r_ss_1 = assoc_net.ss_fr(I_ff,self.W_ff_1,self.g_inh,self.fun)
-        r_ss_2 = assoc_net.ss_fr(I_ff,self.W_ff_2,self.g_inh,self.fun)
-        
-        # Store steady-state firing rate
-        self.Phi_1 = r_ss_1
-        self.Phi_2 = r_ss_2
+        for i in range(self.n_pat):
+            # US is only input to the network
+            I_ff = self.US[i,:]  # Extract individual pattern
+            
+            # Find the steady-state firing rate for both networks
+            r_ss_1 = assoc_net.ss_fr(I_ff, self.W_ff_1, self.g_inh, self.fun)
+            r_ss_2 = assoc_net.ss_fr(I_ff, self.W_ff_2, self.g_inh, self.fun)
+            
+            # Store steady-state firing rates
+            self.Phi_1[i,:] = r_ss_1
+            self.Phi_2[i,:] = r_ss_2
 
 
 

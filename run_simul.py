@@ -10,7 +10,7 @@ import util
 import numpy as np
 
 # Which network and how many CS-US associations to run
-n_CS = 1
+n_CS = 2
 n_pat = 16
 
 # Seed for reproducibility
@@ -35,8 +35,8 @@ params = {
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': 0.95,           # deviation from self-consistency
-    'n_trial': 5e3,      # number of trials
-    't_dur': 7,          # duration of trial
+    'n_trial': 1e3,      # number of trials
+    't_dur': 2,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
@@ -57,7 +57,7 @@ params = {
     'DA_plot': False,    # whether to keep track of expectation within trial
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': True,    # whether to undergo extinction of learned associations
+    'extinct': False,    # whether to undergo extinction of learned associations
     't_wait': 5,         # time after US_ap that its considered an extinction trial
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
@@ -76,9 +76,9 @@ params2 = {
     'n_sigma': 0,        # input noise standard deviation
     'tau_s': 100,        # synaptic delay in the network, in ms
     'n_in': 20,          # size of patterns
-    'eta': 5e-4,         # learning rate
+    'eta': 5e-3,         # learning rate
     'a': 0.95,           # deviation from self-consistency
-    'n_trial': 1e2,      # number of trials
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
     'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
@@ -87,7 +87,7 @@ params2 = {
     'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
-    'est_every': True,   # whether to estimate US and expectation after every trial
+    'est_every': False,   # whether to estimate US and expectation after every trial
     'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs
     'cont': [1,1],       # contingencies of CSs
@@ -95,7 +95,10 @@ params2 = {
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for learning rule
-    'm': 2               # order of gaussian for radial basis function
+    'm': 2,              # order of gaussian for radial basis function
+    'n_pat': n_pat,         # Number of US-CS patterns  
+    'H_d': 8,            # Hamming distance between patterns
+    'exact': False       # Exact Hamming distance constraint
 }
 
 # Save directory
@@ -112,7 +115,7 @@ seed += params['run']
 if n_CS == 1:    
     net = main.network(params,seed=seed)
 elif n_CS == 2:
-    net = main.network2(params2,seed=seed)
+    net = main.network2multi(params2,seed=seed)
 
 
 # Start simulation
