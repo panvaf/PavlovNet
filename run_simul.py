@@ -35,8 +35,8 @@ params = {
     'H_d': 8,            # minimal acceptable Hamming distance between patterns
     'eta': 5e-3,         # learning rate
     'a': 0.95,           # deviation from self-consistency
-    'n_trial': 1e3,      # number of trials
-    't_dur': 2,          # duration of trial
+    'n_trial': 5e3,      # number of trials
+    't_dur': 7,          # duration of trial
     'CS_disap': 2,       # time in trial that CS disappears
     'US_ap': 1,          # time in trial that US appears
     'US_jit': 0,         # random jitter in the time that the US appears
@@ -57,17 +57,17 @@ params = {
     'DA_plot': False,    # whether to keep track of expectation within trial
     'trial_dyn': False,  # whether to store trial dynamics
     'flip': False,       # whether to flip the US-CS associations mid-learning
-    'extinct': False,    # whether to undergo extinction of learned associations
+    'extinct': True,    # whether to undergo extinction of learned associations
     't_wait': 5,         # time after US_ap that its considered an extinction trial
     'reacquire': False,  # whether to undergo extinction and reacquisition of learned association
     'exact': False,      # whether to demand an exact Hamming distance between patterns
     'filter': False,     # whether to filter the learning dynamics
     'rule': 'Pred',      # learning rule used in associative network
     'norm': None,        # normalization strenght for Oja's learning rule
-    'T': 0.4,             # temporal window for averaging firing rates for BCM rule
+    'T': 0.4,            # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2,              # order of gaussian for radial basis function
-    'no_recurrent': True  # Set to True to disable recurrent connections
+    'no_recurrent': False  # whether to disable recurrent weights
 }
 
 params2 = {

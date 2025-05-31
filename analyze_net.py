@@ -61,7 +61,7 @@ params = {
     'T': 0.4,            # temporal window for averaging firing rates for BCM rule
     'run': 0,            # number of run for many runs of same simulation
     'm': 2,              # order of gaussian for radial basis function
-    'no_recurrent': True # whether to set recurrent weights to zero
+    'no_recurrent': False # whether to disable recurrent weights
     }
 
 params2 = {
