@@ -149,7 +149,8 @@ def filename2(params):
         (('con' + ''.join(str(x) for x in params['cont'])) if np.any([element != 1 for element in params['cont']]) else '') + \
         ('CondDep' if params['cond_dep'] else '') + ('NoFilt' if not params['filter'] else '') + \
         ('Exact' if params['exact'] else '') + \
-        ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '')
+        ((params['rule'] + str(params['norm'])) if params['rule'] != 'Pred' else '') + \
+        ('NoRec' if params['no_recurrent'] else '')
         
     return filename
 
