@@ -10,7 +10,7 @@ import util
 import numpy as np
 
 # Which network and how many CS-US associations to run
-n_CS = 2
+n_CS = 1
 n_pat = 16
 
 # Seed for reproducibility
@@ -78,17 +78,17 @@ params2 = {
     'n_in': 20,          # size of patterns
     'eta': 5e-3,         # learning rate
     'a': 0.95,           # deviation from self-consistency
-    'n_trial': 3e3,      # number of trials
+    'n_trial': 1e3,      # number of trials
     't_dur': 2,          # duration of trial
-    'CS_2_ap_tr': 1e3,     # trial number in which CS 2 appears
+    'CS_2_ap_tr': 0,     # trial number in which CS 2 appears
     'US_ap': 1,          # time in trial that US appears
     'train': True,       # whether to train network or not
     'fun': 'logistic',   # activation function of associative network
     'every_perc': 1,     # store errors this often
     'dale': True,        # whether the network respects Dale's law
     'I_inh': 0,          # global inhibition to dendritic compartment
-    'est_every': False,   # whether to estimate US and expectation after every trial
-    'overexp': True,    # whether to test for overexpectation effects
+    'est_every': False,  # whether to estimate US and expectation after every trial
+    'overexp': False,    # whether to test for overexpectation effects
     'salience': 1,       # relative salience of CSs 
     'cont': [1,1],       # contingencies of CSs
     'cond_dep': False,   # whether one CS is conditionally dependent on the other
@@ -99,7 +99,7 @@ params2 = {
     'n_pat': n_pat,      # Number of US-CS patterns  
     'H_d': 8,            # Hamming distance between patterns
     'exact': False,      # Exact Hamming distance constraint
-    'no_recurrent': True  # whether to disable recurrent weights
+    'no_recurrent': False  # whether to disable recurrent weights
 }
 
 # Save directory
