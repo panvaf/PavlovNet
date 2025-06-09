@@ -527,29 +527,29 @@ for k in range(len(US_ap)):
     plt.tight_layout()
     #plt.savefig('Npat_examples.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
     
-    coeff = np.polyfit(n_pat,np.log(t_learned_mean),1)
-    x = np.linspace(n_pat[0],n_pat[-1],1000)
-    fit_ln = np.exp(coeff[0]*x+coeff[1])
-    
-    p0 = (coeff[0], coeff[1])
-    [m, t], _ = curve_fit(util.Exp,n_pat,t_learned_mean,p0)
-    fit = np.exp(m*x+t)
-    
+    # Linear fit in log-log space (power law: y = a * x^b)
+    log_coeffs = np.polyfit(np.log(n_pat), np.log(t_learned_mean), 1)
+    b = log_coeffs[0]  # slope (exponent)
+    log_a = log_coeffs[1]  # intercept
+    a = np.exp(log_a)  # coefficient
+
+    x = np.linspace(n_pat[0], n_pat[-1], 1000)
+    fit_power = a * x**b
+
     fig, ax = plt.subplots(figsize=(2,1.5))
-    plt.loglog(x,fit_ln,color='black',linewidth=1,label='Exponential Fit')
+    plt.loglog(x, fit_power, color='black', linewidth=1, label=f'Power Law Fit')
     ax.set_xscale("log", base=2)
-    plt.scatter(n_pat,t_learned_mean,color = 'green',s=10,label='Data')
-    plt.errorbar(n_pat,t_learned_mean,[t_learned_mean-t_learned_025,t_learned_975-t_learned_mean],color = 'green',linestyle='')
+    plt.scatter(n_pat, t_learned_mean, color='green', s=10, label='Data')
+    plt.errorbar(n_pat, t_learned_mean, [t_learned_mean-t_learned_025, t_learned_975-t_learned_mean], 
+                 color='green', linestyle='')
     plt.ylabel('# trials to learn')
     plt.xlabel('$N_{stim}$')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    #ax.spines['left'].set_position(('data', tau_tot[0]-15))
-    #ax.spines['bottom'].set_position(('data', 240))
-    plt.legend(loc='upper center',markerscale=1,frameon=False)
+    plt.legend(loc='upper center', markerscale=1, frameon=False)
     
-    #plt.savefig('Npat_cond.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
-    #plt.savefig('Npat_cond.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
+    #plt.savefig('Npat_cond_power_law.png',bbox_inches='tight',format='png',dpi=300,transparent=True)
+    #plt.savefig('Npat_cond_power_law.eps',bbox_inches='tight',format='eps',dpi=300,transparent=True)
 
 # Effect of Hamming distance on learning rate
 
